@@ -36,8 +36,6 @@ at http://mozilla.org/MPL/2.0/.
 
 using namespace std;
 
-
-
 template<typename T>
 void full_copy(basic_istream<T> &in_file, basic_ostream<T> &out_file)
 {
