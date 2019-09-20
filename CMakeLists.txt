@@ -10,6 +10,9 @@ else()
 	set(RC_FILE "")
 endif()
 
+set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp)
+set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h)
+
 if(MSVC)
 
 	foreach(flag_var
@@ -22,12 +25,14 @@ if(MSVC)
 
 	endforeach(flag_var)
 
-	SET( CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "/NODEFAULTLIBS:MSVCRT" )
+	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
+	set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:MSVCRTD")
 
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-add_executable (v8unpack src/main.cpp src/V8File.cpp ${RC_FILE})
+add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
 set (Boost_USE_STATIC_LIBS ON)

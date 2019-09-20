@@ -44,7 +44,7 @@ int usage(vector<string> &argv)
 	cout << "Unpack, pack, deflate and inflate 1C v8 file (*.cf)" << endl;
 	cout << endl;
 	cout << "V8UNPACK" << endl;
-	cout << "  -U[NPACK]            in_filename.cf     out_dirname" << endl;
+	cout << "  -U[NPACK]            in_filename.cf     out_dirname [block_name]" << endl;
 	cout << "  -U[NPACK]  -L[IST]   listfile" << endl;
 	cout << "  -PA[CK]              in_dirname         out_filename.cf" << endl;
 	cout << "  -PA[CK]    -L[IST]   listfile" << endl;
@@ -52,7 +52,7 @@ int usage(vector<string> &argv)
 	cout << "  -I[NFLATE] -L[IST]   listfile" << endl;
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
-	cout << "  -P[ARSE]             in_filename        out_dirname" << endl;
+	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
