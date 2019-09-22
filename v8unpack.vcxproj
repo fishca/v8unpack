@@ -67,16 +67,21 @@
     <LibraryPath>D:\zlib\bin_msvs\Debug;C:\local\boost_1_63_0\lib32-msvc-14.0;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\zlib;C:\local\boost_1_63_0;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\zlib\bin_msvs\Debug;C:\local\boost_1_63_0\lib32-msvc-14.0;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\work\repo_git\fishca_v8unpack\src\SystemClasses;D:\zlib;C:\local\boost_1_63_0;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\work\repo_git\fishca_v8unpack\Debug;D:\zlib\bin_msvs\Debug;C:\local\boost_1_63_0\lib32-msvc-14.0;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
-  <ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\work\repo_git\fishca_v8unpack\src\SystemClasses;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\metaread\Base64.cpp" />
     <ClCompile Include="src\V8File.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\metaread\Base64.h" />
     <ClInclude Include="src\V8File.h" />
     <ClInclude Include="src\version.h" />
     <ClInclude Include="src\zconf.h" />
