@@ -244,6 +244,14 @@ public:
 		      bool                        boolInflate = true,
 		      bool                        UnpackWhenNeed = false
 	);
+
+	static int UnpackToDirectoryNoLoad16(
+		const std::string                &directory,
+		      std::basic_istream<char>   &file,
+		const std::vector<std::string>   &filter,
+		      bool                        boolInflate = true,
+		      bool                        UnpackWhenNeed = false
+	);
 	
 	static int Parse(
 		const std::string                &filename,
