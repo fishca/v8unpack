@@ -1,7 +1,7 @@
-/*----------------------------------------------------------
-This Source Code Form is subject to the terms of the 
-Mozilla Public License, v.2.0. If a copy of the MPL 
-was not distributed with this file, You can obtain one 
+﻿/*----------------------------------------------------------
+This Source Code Form is subject to the terms of the
+Mozilla Public License, v.2.0. If a copy of the MPL
+was not distributed with this file, You can obtain one
 at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------*/
 /////////////////////////////////////////////////////////////////////////////
@@ -14,11 +14,11 @@ at http://mozilla.org/MPL/2.0/.
 /////////////////////////////////////////////////////////////////////////////
 
 /**
-    2014-2017       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
+	2014-2017       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
  */
 
-// main.cpp : Defines the entry point for the console application.
-//
+ // main.cpp : Defines the entry point for the console application.
+ //
 
 #include "V8File.h"
 #include "version.h"
@@ -30,15 +30,15 @@ at http://mozilla.org/MPL/2.0/.
 
 using namespace std;
 
-typedef int (*handler_t)(vector<string> &argv);
-void read_param_file(const char *filename, vector< vector<string> > &list);
-handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_listfile);
+typedef int (*handler_t)(vector<string>& argv);
+void read_param_file(const char* filename, vector< vector<string> >& list);
+handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_listfile);
 
-int usage(vector<string> &argv)
+int usage(vector<string>& argv)
 {
 	cout << endl;
 	cout << "V8Upack Version " << V8P_VERSION
-		 << " Copyright (c) " << V8P_RIGHT << endl;
+		<< " Copyright (c) " << V8P_RIGHT << endl;
 
 	cout << endl;
 	cout << "Unpack, pack, deflate and inflate 1C v8 file (*.cf)" << endl;
@@ -53,12 +53,11 @@ int usage(vector<string> &argv)
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
-	cout << "  -P16[ARSE]           in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
 	cout << "  -L[IST]              listfile" << endl;
-	
+
 	cout << "  -LISTFILES|-LF       in_filename" << endl;
 
 	cout << "  -E[XAMPLE]" << endl;
@@ -68,68 +67,69 @@ int usage(vector<string> &argv)
 	return 0;
 }
 
-int version(vector<string> &argv)
+int version(vector<string>& argv)
 {
 	cout << V8P_VERSION << endl;
 	return 0;
 }
 
-int inflate(vector<string> &argv)
+int inflate(vector<string>& argv)
 {
 	int ret = Inflate(argv[0], argv[1]);
 	return ret;
 }
 
-int deflate(vector<string> &argv)
+int deflate(vector<string>& argv)
 {
 	int ret = Deflate(argv[0], argv[1]);
 	return ret;
 }
 
-int unpack(vector<string> &argv)
+int unpack(vector<string>& argv)
 {
 	int ret = CV8File::UnpackToFolder(argv[0], argv[1], argv[2], true);
 	return ret;
 }
 
-int pack(vector<string> &argv)
+int pack(vector<string>& argv)
 {
 	CV8File V8File;
 	int ret = V8File.PackFromFolder(argv[0], argv[1]);
 	return ret;
 }
 
-int parse(vector<string> &argv)
+int parse(vector<string>& argv)
 {
+	int ret;
+
 	vector<string> filter;
+
 	for (size_t i = 2; i < argv.size(); i++) {
 		if (!argv[i].empty()) {
 			filter.push_back(argv[i]);
 		}
 	}
-	int ret = CV8File::Parse(argv[0], argv[1], filter);
-	return ret;
-}
 
-int parse16(vector<string> &argv)
-{
-	vector<string> filter;
-	for (size_t i = 2; i < argv.size(); i++) {
-		if (!argv[i].empty()) {
-			filter.push_back(argv[i]);
-		}
+	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
+
+	if (CV8File::IsV8File16(src)) {
+		src.close();
+		ret = CV8File::Parse16(argv[0], argv[1], filter);
 	}
-	int ret = CV8File::Parse16(argv[0], argv[1], filter);
+	else {
+		ret = CV8File::Parse(argv[0], argv[1], filter);
+	}
+	
 	return ret;
 }
 
-int list_files(vector<string> &argv)
+int list_files(vector<string>& argv)
 {
 	int ret = CV8File::ListFiles(argv[0]);
 	return ret;
 }
 
-int process_list(vector<string> &argv)
+int process_list(vector<string>& argv)
 {
 	if (argv.size() < 1) {
 		return SHOW_USAGE;
@@ -156,7 +156,7 @@ int process_list(vector<string> &argv)
 	return 0;
 }
 
-int bat(vector<string> &argv)
+int bat(vector<string>& argv)
 {
 	cout << "if %1 == P GOTO PACK" << endl;
 	cout << "if %1 == p GOTO PACK" << endl;
@@ -180,7 +180,7 @@ int bat(vector<string> &argv)
 	return 0;
 }
 
-int example(vector<string> &argv)
+int example(vector<string>& argv)
 {
 	cout << "" << endl;
 	cout << "" << endl;
@@ -200,21 +200,21 @@ int example(vector<string> &argv)
 	return 0;
 }
 
-int build(vector<string> &argv)
+int build(vector<string>& argv)
 {
 	const bool dont_pack = false;
 	int ret = CV8File::BuildCfFile(argv[0], argv[1], dont_pack);
 	return ret;
 }
 
-int build_nopack(vector<string> &argv)
+int build_nopack(vector<string>& argv)
 {
 	const bool dont_pack = true;
 	int ret = CV8File::BuildCfFile(argv[0], argv[1], dont_pack);
 	return ret;
 }
 
-handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_listfile)
+handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_listfile)
 {
 	if (args.size() - arg_base < 1) {
 		allow_listfile = false;
@@ -247,12 +247,9 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 		return pack;
 	}
 
+	
 	if (cur_mode == "-parse" || cur_mode == "-p") {
 		return parse;
-	}
-
-	if (cur_mode == "-parse16" || cur_mode == "-p16") {
-		return parse16;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {
@@ -290,7 +287,7 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 	return nullptr;
 }
 
-void read_param_file(const char *filename, vector< vector<string> > &list)
+void read_param_file(const char* filename, vector< vector<string> >& list)
 {
 	boost::filesystem::ifstream in(filename);
 	string line;
@@ -314,6 +311,7 @@ void read_param_file(const char *filename, vector< vector<string> > &list)
 		list.push_back(current_line);
 	}
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -366,4 +364,6 @@ int main(int argc, char* argv[])
 		usage(cli_args);
 	}
 	return ret;
+
 }
+
