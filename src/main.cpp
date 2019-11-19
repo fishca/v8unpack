@@ -249,10 +249,6 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 		return parse;
 	}
 
-	if (cur_mode == "-parse16" || cur_mode == "-p16") {
-		return parse16;
-	}
-
 	if (cur_mode == "-build" || cur_mode == "-b") {
 
 		bool dont_pack = false;
