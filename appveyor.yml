@@ -1,50 +1,51 @@
 version: 3.0.41.{build}
 pull_requests:
   do_not_increment_build_number: true
+
+
+#---------------------------------#
+#    environment configuration    #
+#---------------------------------#
+
+# Build worker image (VM template)
+image: Visual Studio 2017
+
+# clone directory
+clone_folder: c:\projects\v8unpack
 clone_depth: 1
 
-os: Visual Studio 2017
-
 environment:
-  BOOST_ROOT: 'C:\Libraries\boost_1_69_0'
-  BOOST_LIBRARYDIR: 'C:\Libraries\boost_1_69_0\lib32-msvc-15.0'
-
   matrix:
     - COMPILER: MSVC_15
       ARCHITECTURE: x86
       TESTS_ONLY: false
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017  
 
+# Настройки сборки
 build:  
   verbosity: detailed      
   
+# Скрипты, которые запускаются после клонирования репозитория.  
 install:
 
+  - cmd: set BOOST_ROOT=C:\Libraries\boost_1_69_0
+  
+  - cmd: set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0
+  
   - cmd: >-
-    
-    appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
+      appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
+      7z x zlib-1.2.8.zip > NUL
+      cd zlib-1.2.8
+      md build
+      cd build
+      cmake --version    
+      cmake -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+      cmake --build . --config Release --target zlibstatic
+      copy zconf.h ..
+      cd ..
+      cd ..
 
-    7z x zlib-1.2.8.zip > NUL
-
-    cd zlib-1.2.8
-
-    md build
-
-    cd build
-
-    cmake --version    
-
-    cmake -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
-
-    cmake --build . --config Release --target zlibstatic
-
-    copy zconf.h ..
-
-    cd ..
-
-    cd ..
-
-
+# Запуск перед сборкой
 before_build:
   IF "%ARCHITECTURE%" == "x86" 
     IF "%COMPILER%" == "MSVC_15" 
