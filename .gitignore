@@ -17,3 +17,4 @@ Makefile
 gmon.out
 /build
 
+.vscode/*
