@@ -50,13 +50,13 @@ install:
   #######################################################################################
   # CMake
   #######################################################################################
-  cmake --version    
+  - cmake --version    
 
   #######################################################################################
   # setup boost
   #######################################################################################
-  set BOOST_ROOT=C:\Libraries\boost_1_69_0
-  set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
+  - set BOOST_ROOT=C:\Libraries\boost_1_69_0
+  - set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
 
 before_build:
   IF "%ARCHITECTURE%" == "x86" 
