@@ -49,6 +49,11 @@ typedef uint64_t ULONGLONG;
 const size_t V8_DEFAULT_PAGE_SIZE = 512;
 const uint32_t V8_FF_SIGNATURE = 0x7fffffff;
 
+// Для конфигурации старше 8.3.15, без режима совместимости 
+const uint64_t V8_FF64_SIGNATURE = 0xffffffffffffffff;
+const size_t Offset_816 = 0x1359;  // волшебное смещение, откуда такая цифра неизвестно...
+
+
 #define CHUNK 16384
 #ifndef DEF_MEM_LEVEL
 #  if MAX_MEM_LEVEL >= 8
@@ -94,6 +99,19 @@ public:
 		}
 	};
 
+	struct stFileHeader64
+	{
+		ULONGLONG next_page_addr;  // 64 бита стало
+		DWORD page_size;
+		DWORD storage_ver;
+		DWORD reserved; // всегда 0x00000000 ?
+
+		static const UINT Size()
+		{
+			return 8 + 4 + 4 + 4;
+		}
+	};
+
 	struct stElemAddr
 	{
 		DWORD elem_header_addr;
@@ -103,6 +121,20 @@ public:
 		static const UINT Size()
 		{
 			return 4 + 4 + 4;
+		}
+
+	};
+
+	struct stElemAddr64
+	{
+		// каждый элемент стал 64 бита
+		ULONGLONG elem_header_addr;
+		ULONGLONG elem_data_addr;
+		ULONGLONG fffffff; //всегда 0xffffffffffffffff ?
+
+		static const UINT Size()
+		{
+			return 8 + 8 + 8;
 		}
 
 	};
@@ -145,6 +177,46 @@ public:
 		}
 	};
 
+	struct stBlockHeader64
+	{
+		char EOL_0D;
+		char EOL_0A;
+		char data_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+		char space1;
+		char page_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+		char space2;
+		char next_page_addr_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+		char space3;
+		char EOL2_0D;
+		char EOL2_0A;
+
+		stBlockHeader64() :
+			EOL_0D(0xd), EOL_0A(0xa),
+			space1(' '), space2(' '), space3(' '),
+			EOL2_0D(0xd), EOL2_0A(0xa)
+		{
+			
+		}
+
+		static stBlockHeader64 create(ULONGLONG block_data_size, ULONGLONG page_size, ULONGLONG next_page_addr);
+
+		static const UINT Size()
+		{
+			return 1 + 1 + 16 + 1 + 16 + 1 + 16 + 1 + 1 + 1; // 55 теперь
+		};
+
+		bool IsCorrect() const
+		{
+			return EOL_0D == 0x0d
+				&& EOL_0A == 0x0a
+				&& space1 == 0x20
+				&& space2 == 0x20
+				&& space3 == 0x20
+				&& EOL2_0D == 0x0d
+				&& EOL2_0A == 0x0a;
+		}
+	};
+
 	int GetData(char **DataBufer, ULONG *DataBuferSize);
 	int Pack();
 	int LoadFileFromFolder(const std::string &dirname);
@@ -172,6 +244,14 @@ public:
 		      bool                        boolInflate = true,
 		      bool                        UnpackWhenNeed = false
 	);
+
+	static int UnpackToDirectoryNoLoad16(
+		const std::string                &directory,
+		      std::basic_istream<char>   &file,
+		const std::vector<std::string>   &filter,
+		      bool                        boolInflate = true,
+		      bool                        UnpackWhenNeed = false
+	);
 	
 	static int Parse(
 		const std::string                &filename,
@@ -179,13 +259,24 @@ public:
 		const std::vector< std::string > &filter
 	);
 
+	static int Parse16(
+		const std::string& filename,
+		const std::string& dirname,
+		const std::vector< std::string >& filter
+	);
+
 	static int ListFiles(const std::string &filename);
 	static int SaveBlockDataToBuffer(char** Buffer, const char* pBlockData, UINT BlockDataSize, UINT PageSize = 512);
 	static bool IsV8File(const char *pFileData, ULONG FileDataSize);
+	static bool IsV8File16(const char *pFileData, ULONG FileDataSize);
 	static bool IsV8File(std::basic_istream<char> &file);
+	static bool IsV8File16(std::basic_istream<char>& file);
 	static int ReadBlockData(char *pFileData, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
+	static int ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
+	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
+	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
 
 private:
 	stFileHeader                FileHeader;
@@ -242,3 +333,4 @@ int Deflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
 int Inflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
 
 DWORD _httoi(const char *value);
+ULONGLONG _httoi64(const char *value);

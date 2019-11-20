@@ -100,13 +100,24 @@ int pack(vector<string> &argv)
 
 int parse(vector<string> &argv)
 {
+	int ret;
 	vector<string> filter;
 	for (size_t i = 2; i < argv.size(); i++) {
 		if (!argv[i].empty()) {
 			filter.push_back(argv[i]);
 		}
 	}
-	int ret = CV8File::Parse(argv[0], argv[1], filter);
+
+	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
+
+	if (CV8File::IsV8File16(src)) {
+		src.close();
+		ret = CV8File::Parse16(argv[0], argv[1], filter);
+	}
+	else {
+		ret = CV8File::Parse(argv[0], argv[1], filter);
+	}
+
 	return ret;
 }
 
