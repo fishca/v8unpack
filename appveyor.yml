@@ -76,9 +76,9 @@ build_script:
 
     cmake -G "Visual Studio 15 2017" 
      -DBUILD_BINDING_DOTNET=OFF
-     -DBOOST_ROOT=C:\Libraries\boost_1_69_0 
-     -DBoost_INCLUDE_DIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0 
-     -DBoost_LIBRARY_DIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0 
+     -DBOOST_ROOT=C:\Libraries\boost_1_60_0 
+     -DBoost_INCLUDE_DIR=C:\Libraries\boost_1_60_0\lib32-msvc-15.0 
+     -DBoost_LIBRARY_DIR=C:\Libraries\boost_1_60_0\lib32-msvc-15.0 
      -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlibstatic.lib 
      -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 .
 
