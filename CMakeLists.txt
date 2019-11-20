@@ -45,13 +45,13 @@ set (Boost_USE_STATIC_RUNTIME ON)
 
 #find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
 
-#FIND_PACKAGE(Boost)
-#IF (Boost_FOUND)
-#    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-#    ADD_DEFINITIONS( "-DHAS_BOOST" )
-#ENDIF()
+FIND_PACKAGE(Boost)
+IF (Boost_FOUND)
+    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+    ADD_DEFINITIONS( "-DHAS_BOOST" )
+ENDIF()
 
-include_directories (${Boost_INCLUDE_DIRS})
+#include_directories (${Boost_INCLUDE_DIRS})
 
 target_link_libraries (v8unpack ${Boost_LIBRARIES})
 
