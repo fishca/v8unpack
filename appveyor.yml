@@ -37,6 +37,11 @@ install:
 
     cd build
 
+    set BOOST_ROOT=C:\Libraries\boost_1_69_0
+    set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
+
+    cmake --version    
+
     cmake -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
 
     cmake --build . --config Release --target zlibstatic
@@ -47,16 +52,10 @@ install:
 
     cd ..
 
-  #######################################################################################
-  # CMake
-  #######################################################################################
-  - cmake --version    
+  
 
-  #######################################################################################
-  # setup boost
-  #######################################################################################
-  - set BOOST_ROOT=C:\Libraries\boost_1_69_0
-  - set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
+  
+  
 
 before_build:
   IF "%ARCHITECTURE%" == "x86" 
