@@ -8,14 +8,22 @@ image:
 
 environment:
 
+ matrix:
+  - COMPILER: MSVC_15
+    ARCHITECTURE: x86
+    TESTS_ONLY: false
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017  
+
   #VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\
   VCDIR: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
   
 
-  BOOST_ROOT: C:/Libraries/boost_1_69_0
-  BOOST_LIBRARYDIR: C:/Libraries/boost_1_69_0/lib32-msvc-15.0
-  BOOST_INCLUDEDIR: C:/Libraries/boost_1_69_0
+  #BOOST_ROOT: C:/Libraries/boost_1_69_0
+  #BOOST_LIBRARYDIR: C:/Libraries/boost_1_69_0/lib32-msvc-15.0
+  #BOOST_INCLUDEDIR: C:/Libraries/boost_1_69_0
   
+build:  
+  verbosity: detailed      
   
 install:
 - cmd: >-
@@ -38,6 +46,22 @@ install:
     cd ..
 
     cd ..
+
+  #######################################################################################
+  # CMake
+  #######################################################################################
+  cmake --version    
+
+  #######################################################################################
+  # setup boost
+  #######################################################################################
+  set BOOST_ROOT=C:\Libraries\boost_1_69_0
+  set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
+
+before_build:
+  IF "%ARCHITECTURE%" == "x86" 
+    IF "%COMPILER%" == "MSVC_15" 
+      call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\Tools\vsdevcmd.bat" -arch=x86 -host_arch=x86  
 build_script:
 - cmd: >-
 
@@ -46,7 +70,7 @@ build_script:
     echo %BOOST_ROOT%
     echo %BOOST_LIBRARYDIR%
     echo %BOOST_INCLUDEDIR%
-    echo %PATH%
+    
 
 
     cmake -G "Visual Studio 15 2017" 
@@ -57,6 +81,8 @@ build_script:
      -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 .
 
     cmake --build . --config Release
+
+
 
 after_build:
 - cmd: >-
