@@ -33,6 +33,8 @@ install:
   - cmd: set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0
   
   - cmd: set BOOST_INCLUDEDIR=C:\Libraries\boost_1_69_0
+
+  - cmd: cmake --check-system-vars
   
   - cmd: >-
       appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
