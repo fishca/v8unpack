@@ -22,6 +22,8 @@ environment:
   #BOOST_LIBRARYDIR: C:/Libraries/boost_1_69_0/lib32-msvc-15.0
   #BOOST_INCLUDEDIR: C:/Libraries/boost_1_69_0
   
+  #"%VCDIR%"\vcvarsall.bat x86
+
 build:  
   verbosity: detailed      
   
@@ -64,7 +66,7 @@ before_build:
 build_script:
 - cmd: >-
 
-    #"%VCDIR%"\vcvarsall.bat x86
+    
 
     echo %BOOST_ROOT%
     echo %BOOST_LIBRARYDIR%
