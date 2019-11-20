@@ -53,7 +53,6 @@ int usage(vector<string> &argv)
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
-	cout << "  -P16[ARSE]           in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
@@ -101,25 +100,24 @@ int pack(vector<string> &argv)
 
 int parse(vector<string> &argv)
 {
+	int ret;
 	vector<string> filter;
 	for (size_t i = 2; i < argv.size(); i++) {
 		if (!argv[i].empty()) {
 			filter.push_back(argv[i]);
 		}
 	}
-	int ret = CV8File::Parse(argv[0], argv[1], filter);
-	return ret;
-}
 
-int parse16(vector<string> &argv)
-{
-	vector<string> filter;
-	for (size_t i = 2; i < argv.size(); i++) {
-		if (!argv[i].empty()) {
-			filter.push_back(argv[i]);
-		}
+	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
+
+	if (CV8File::IsV8File16(src)) {
+		src.close();
+		ret = CV8File::Parse16(argv[0], argv[1], filter);
 	}
-	int ret = CV8File::Parse16(argv[0], argv[1], filter);
+	else {
+		ret = CV8File::Parse(argv[0], argv[1], filter);
+	}
+
 	return ret;
 }
 
@@ -249,10 +247,6 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 
 	if (cur_mode == "-parse" || cur_mode == "-p") {
 		return parse;
-	}
-
-	if (cur_mode == "-parse16" || cur_mode == "-p16") {
-		return parse16;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {
