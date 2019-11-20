@@ -3,6 +3,8 @@ pull_requests:
   do_not_increment_build_number: true
 clone_depth: 1
 
+setpolicy
+
 image:
   - Visual Studio 2017
 
@@ -28,7 +30,10 @@ build:
   verbosity: detailed      
   
 install:
-- cmd: >-
+
+  - set BOOST_ROOT=C:\Libraries\boost_1_69_0
+  - set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
+  - cmd: >-
     appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
 
     7z x zlib-1.2.8.zip > NUL
@@ -38,9 +43,6 @@ install:
     md build
 
     cd build
-
-    set BOOST_ROOT=C:\Libraries\boost_1_69_0
-    set BOOST_LIBRARYDIR=C:\Libraries\boost_1_69_0\lib32-msvc-15.0    
 
     cmake --version    
 
@@ -54,10 +56,6 @@ install:
 
     cd ..
 
-  
-
-  
-  
 
 before_build:
   IF "%ARCHITECTURE%" == "x86" 
@@ -66,13 +64,13 @@ before_build:
 build_script:
 - cmd: >-
 
-    
-
     echo %BOOST_ROOT%
     echo %BOOST_LIBRARYDIR%
     echo %BOOST_INCLUDEDIR%
-    
 
+    md build
+
+    cd build
 
     cmake -G "Visual Studio 15 2017" 
      -DBOOST_ROOT="%BOOST_ROOT%" 
