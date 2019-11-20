@@ -1,6 +1,9 @@
 cmake_minimum_required (VERSION 2.8)
-cmake_policy(SET CMP0074 NEW)
+#cmake_policy(SET CMP0074 NEW)
 project (v8unpack)
+
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:\Libraries\boost")
+SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:\Libraries\boost\lib")
 
 set (v8unpack_VERSION_MAJOR 3)
 set (v8unpack_VERSION_MINOR 0)
