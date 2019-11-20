@@ -15,7 +15,7 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017  
 
   #VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\
-  VCDIR: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
+  #VCDIR: C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build
   
 
   #BOOST_ROOT: C:/Libraries/boost_1_69_0
