@@ -64,7 +64,7 @@ before_build:
 build_script:
 - cmd: >-
 
-    "%VCDIR%"\vcvarsall.bat x86
+    #"%VCDIR%"\vcvarsall.bat x86
 
     echo %BOOST_ROOT%
     echo %BOOST_LIBRARYDIR%
