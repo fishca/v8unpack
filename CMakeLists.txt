@@ -43,7 +43,7 @@ set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_RUNTIME ON)
 
 #find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
-find_package(Boost 1.53 EXACT REQUIRED COMPONENTS system filesystem)
+find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem)
 
 include_directories (${Boost_INCLUDE_DIRS})
 
