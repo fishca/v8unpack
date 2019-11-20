@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 2.8)
 cmake_policy(SET CMP0074 NEW)
 project (v8unpack)
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:\\Libraries\\boost")
-SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:\\Libraries\\boost\\lib")
+#SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:\\Libraries\\boost")
+#SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:\\Libraries\\boost\\lib")
 
 set (v8unpack_VERSION_MAJOR 3)
 set (v8unpack_VERSION_MINOR 0)
@@ -45,11 +45,11 @@ set (Boost_USE_STATIC_RUNTIME ON)
 
 find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
 
-FIND_PACKAGE(Boost)
-IF (Boost_FOUND)
-    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
-    ADD_DEFINITIONS( "-DHAS_BOOST" )
-ENDIF()
+#FIND_PACKAGE(Boost)
+#IF (Boost_FOUND)
+#    INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
+#    ADD_DEFINITIONS( "-DHAS_BOOST" )
+#ENDIF()
 
 include_directories (${Boost_INCLUDE_DIRS})
 

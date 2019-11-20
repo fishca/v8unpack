@@ -5,8 +5,11 @@ clone_depth: 1
 environment:
   VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\
   BOOST_ROOT: c:\Libraries\boost
-  BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
-  BOOST_INCLUDEDIR: C:\Libraries\boost
+  #BOOST_LIBRARYDIR: C:\Libraries\boost\lib32-msvc-12.0
+  Boost_LIBRARY_DIRS: C:\Libraries\boost\lib32-msvc-12.0
+  #BOOST_INCLUDEDIR: C:\Libraries\boost
+  Boost_INCLUDE_DIRS: C:\Libraries\boost
+  
 install:
 - cmd: >-
     appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
