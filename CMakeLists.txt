@@ -1,4 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
+
+cmake_policy(SET CMP0074 NEW)
+
 project (v8unpack)
 
 set (v8unpack_VERSION_MAJOR 3)
@@ -9,6 +12,9 @@ if(WIN32)
 else()
 	set(RC_FILE "")
 endif()
+
+set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp)
+set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h)
 
 if(MSVC)
 
@@ -22,23 +28,31 @@ if(MSVC)
 
 	endforeach(flag_var)
 
-	SET( CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS} "/NODEFAULTLIBS:MSVCRT" )
+	set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
+	set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:MSVCRT")
+	set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /NODEFAULTLIB:MSVCRTD")
 
 endif()
 
 set(CMAKE_CXX_STANDARD 11)
-add_executable (v8unpack src/main.cpp src/V8File.cpp ${RC_FILE})
+add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
+
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
+SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+
+
 set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_RUNTIME ON)
 
-find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
+#find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
+find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem)
 
 include_directories (${Boost_INCLUDE_DIRS})
-target_link_libraries (v8unpack ${Boost_LIBRARIES})
 
+target_link_libraries (v8unpack ${Boost_LIBRARIES})
 
 find_package (ZLIB REQUIRED)
 
