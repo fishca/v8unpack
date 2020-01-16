@@ -1,4 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
+
+cmake_policy(SET CMP0074 NEW)
+
 project (v8unpack)
 
 set (v8unpack_VERSION_MAJOR 3)
@@ -35,15 +38,21 @@ set(CMAKE_CXX_STANDARD 11)
 add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
+
+SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
+SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+
+
 set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_RUNTIME ON)
 
-find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
+#find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
+find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem)
 
 include_directories (${Boost_INCLUDE_DIRS})
-target_link_libraries (v8unpack ${Boost_LIBRARIES})
 
+target_link_libraries (v8unpack ${Boost_LIBRARIES})
 
 find_package (ZLIB REQUIRED)
 
