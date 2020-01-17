@@ -1,55 +1,55 @@
-#pragma once
-constexpr const char* Alls                        = "Общие";
-// ++ подветка общие
-constexpr const char* Subsystems                  = "Подсистемы";
-constexpr const char* CommonModules               = "Общие модули";
-constexpr const char* SessionParameters           = "Параметры сеанса";
-constexpr const char* Roles                       = "Роли";
-constexpr const char* CommonAttributes            = "Общие реквизиты";
-constexpr const char* ExchangePlans               = "Планы обмена";
-constexpr const char* FilterCriteria              = "Критерии отбора";
-constexpr const char* EventSubscriptions          = "Подписки на события";
-constexpr const char* ScheduledJobs               = "Регламентные задания";
-constexpr const char* FunctionalOptions           = "Функциональные опции";
-constexpr const char* FunctionalOptionsParameters = "Параметры функциональных опций";
-constexpr const char* DefinedTypes                = "Определяемые типы";
-constexpr const char* SettingsStorages            = "Хранилища настроек";
-constexpr const char* CommonForms                 = "Общие формы";
-constexpr const char* CommonCommands              = "Общие команды";
-constexpr const char* CommandGroups               = "Группы команд";
-constexpr const char* Interfaces                  = "Интерфейсы";
-constexpr const char* CommonTemplates             = "Общие макеты";
-constexpr const char* CommonPictures              = "Общие картинки";
-constexpr const char* XDTOPackages                = "XDTO-пакеты";
-constexpr const char* WebServices                 = "Web-сервисы";
-constexpr const char* HTTPServices                = "HTTP-сервисы";
-constexpr const char* WSReferences                = "WS-ссылки";
-constexpr const char* StyleItems                  = "Элементы стиля";
-constexpr const char* Styles                      = "Стили";
-constexpr const char* Languages                   = "Языки";
-// ++ подветка общие
-constexpr const char* Constants                   = "Константы";
-constexpr const char* Catalogs                    = "Справочники";
+п»ї#pragma once
+constexpr const char* Alls                        = "РћР±С‰РёРµ";
+// ++ РїРѕРґРІРµС‚РєР° РѕР±С‰РёРµ
+constexpr const char* Subsystems                  = "РџРѕРґСЃРёСЃС‚РµРјС‹";
+constexpr const char* CommonModules               = "РћР±С‰РёРµ РјРѕРґСѓР»Рё";
+constexpr const char* SessionParameters           = "РџР°СЂР°РјРµС‚СЂС‹ СЃРµР°РЅСЃР°";
+constexpr const char* Roles                       = "Р РѕР»Рё";
+constexpr const char* CommonAttributes            = "РћР±С‰РёРµ СЂРµРєРІРёР·РёС‚С‹";
+constexpr const char* ExchangePlans               = "РџР»Р°РЅС‹ РѕР±РјРµРЅР°";
+constexpr const char* FilterCriteria              = "РљСЂРёС‚РµСЂРёРё РѕС‚Р±РѕСЂР°";
+constexpr const char* EventSubscriptions          = "РџРѕРґРїРёСЃРєРё РЅР° СЃРѕР±С‹С‚РёСЏ";
+constexpr const char* ScheduledJobs               = "Р РµРіР»Р°РјРµРЅС‚РЅС‹Рµ Р·Р°РґР°РЅРёСЏ";
+constexpr const char* FunctionalOptions           = "Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅС‹Рµ РѕРїС†РёРё";
+constexpr const char* FunctionalOptionsParameters = "РџР°СЂР°РјРµС‚СЂС‹ С„СѓРЅРєС†РёРѕРЅР°Р»СЊРЅС‹С… РѕРїС†РёР№";
+constexpr const char* DefinedTypes                = "РћРїСЂРµРґРµР»СЏРµРјС‹Рµ С‚РёРїС‹";
+constexpr const char* SettingsStorages            = "РҐСЂР°РЅРёР»РёС‰Р° РЅР°СЃС‚СЂРѕРµРє";
+constexpr const char* CommonForms                 = "РћР±С‰РёРµ С„РѕСЂРјС‹";
+constexpr const char* CommonCommands              = "РћР±С‰РёРµ РєРѕРјР°РЅРґС‹";
+constexpr const char* CommandGroups               = "Р“СЂСѓРїРїС‹ РєРѕРјР°РЅРґ";
+constexpr const char* Interfaces                  = "РРЅС‚РµСЂС„РµР№СЃС‹";
+constexpr const char* CommonTemplates             = "РћР±С‰РёРµ РјР°РєРµС‚С‹";
+constexpr const char* CommonPictures              = "РћР±С‰РёРµ РєР°СЂС‚РёРЅРєРё";
+constexpr const char* XDTOPackages                = "XDTO-РїР°РєРµС‚С‹";
+constexpr const char* WebServices                 = "Web-СЃРµСЂРІРёСЃС‹";
+constexpr const char* HTTPServices                = "HTTP-СЃРµСЂРІРёСЃС‹";
+constexpr const char* WSReferences                = "WS-СЃСЃС‹Р»РєРё";
+constexpr const char* StyleItems                  = "Р­Р»РµРјРµРЅС‚С‹ СЃС‚РёР»СЏ";
+constexpr const char* Styles                      = "РЎС‚РёР»Рё";
+constexpr const char* Languages                   = "РЇР·С‹РєРё";
+// ++ РїРѕРґРІРµС‚РєР° РѕР±С‰РёРµ
+constexpr const char* Constants                   = "РљРѕРЅСЃС‚Р°РЅС‚С‹";
+constexpr const char* Catalogs                    = "РЎРїСЂР°РІРѕС‡РЅРёРєРё";
 
-constexpr const char* Documents                   = "Документы";
-// ++ подветка документы
-constexpr const char* Numerators                  = "Нумераторы";
-constexpr const char* Sequences                   = "Последовательности";
-// ++ подветка документы
-constexpr const char* JournDocuments              = "Журналы документов";
-constexpr const char* Enums                       = "Перечисления";
-constexpr const char* Reports                     = "Отчеты";
-constexpr const char* DataProcessors              = "Обработки";
-constexpr const char* ChartOfCharacteristicTypes  = "Планы видов характеристик";
-constexpr const char* ChartsOfAccounts            = "Планы счетов";
-constexpr const char* ChartsOfCalculationTypes    = "Планы видов расчета";
-constexpr const char* InformationRegisters        = "Регистры сведений";
-constexpr const char* AccumulationRegisters       = "Регистры накопления";
-constexpr const char* AccountingRegisters         = "Регистры бухгалтерии";
-constexpr const char* CalculationRegisters        = "Регистры расчета";
-constexpr const char* BusinessProcesses           = "Бизнес-процессы";
-constexpr const char* Tasks                       = "Задачи";
-constexpr const char* ExternalDataSources         = "Внешние источники данных";
+constexpr const char* Documents                   = "Р”РѕРєСѓРјРµРЅС‚С‹";
+// ++ РїРѕРґРІРµС‚РєР° РґРѕРєСѓРјРµРЅС‚С‹
+constexpr const char* Numerators                  = "РќСѓРјРµСЂР°С‚РѕСЂС‹";
+constexpr const char* Sequences                   = "РџРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё";
+// ++ РїРѕРґРІРµС‚РєР° РґРѕРєСѓРјРµРЅС‚С‹
+constexpr const char* JournDocuments              = "Р–СѓСЂРЅР°Р»С‹ РґРѕРєСѓРјРµРЅС‚РѕРІ";
+constexpr const char* Enums                       = "РџРµСЂРµС‡РёСЃР»РµРЅРёСЏ";
+constexpr const char* Reports                     = "РћС‚С‡РµС‚С‹";
+constexpr const char* DataProcessors              = "РћР±СЂР°Р±РѕС‚РєРё";
+constexpr const char* ChartOfCharacteristicTypes  = "РџР»Р°РЅС‹ РІРёРґРѕРІ С…Р°СЂР°РєС‚РµСЂРёСЃС‚РёРє";
+constexpr const char* ChartsOfAccounts            = "РџР»Р°РЅС‹ СЃС‡РµС‚РѕРІ";
+constexpr const char* ChartsOfCalculationTypes    = "РџР»Р°РЅС‹ РІРёРґРѕРІ СЂР°СЃС‡РµС‚Р°";
+constexpr const char* InformationRegisters        = "Р РµРіРёСЃС‚СЂС‹ СЃРІРµРґРµРЅРёР№";
+constexpr const char* AccumulationRegisters       = "Р РµРіРёСЃС‚СЂС‹ РЅР°РєРѕРїР»РµРЅРёСЏ";
+constexpr const char* AccountingRegisters         = "Р РµРіРёСЃС‚СЂС‹ Р±СѓС…РіР°Р»С‚РµСЂРёРё";
+constexpr const char* CalculationRegisters        = "Р РµРіРёСЃС‚СЂС‹ СЂР°СЃС‡РµС‚Р°";
+constexpr const char* BusinessProcesses           = "Р‘РёР·РЅРµСЃ-РїСЂРѕС†РµСЃСЃС‹";
+constexpr const char* Tasks                       = "Р—Р°РґР°С‡Рё";
+constexpr const char* ExternalDataSources         = "Р’РЅРµС€РЅРёРµ РёСЃС‚РѕС‡РЅРёРєРё РґР°РЅРЅС‹С…";
 
 // GUID-s
 
