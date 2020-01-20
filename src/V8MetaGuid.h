@@ -1,4 +1,5 @@
 ﻿#pragma once
+constexpr const char* Config                      = "Конфигурация";
 constexpr const char* Alls                        = "Общие";
 // ++ подветка общие
 constexpr const char* Subsystems                  = "Подсистемы";
