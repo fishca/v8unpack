@@ -22,14 +22,19 @@ at http://mozilla.org/MPL/2.0/.
 //
 
 #include "V8File.h"
+#include "V8MetaGuid.h"
 #include "version.h"
 #include <iostream>
+#include <fstream> // подключаем файлы
 #include <algorithm>
 #include <sstream>
+#include <regex>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
 using namespace std;
+
+namespace bfs = boost::filesystem;
 
 typedef int (*handler_t)(vector<string> &argv);
 void read_param_file(const char *filename, vector< vector<string> > &list);
@@ -54,6 +59,7 @@ int usage(vector<string> &argv)
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
+	cout << "  -DD[ECOMPILE]        in_filename        out_dirname out_dirname_decompile [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
@@ -120,6 +126,160 @@ int parse(vector<string> &argv)
 	}
 
 	return ret;
+}
+
+void create_tree_metadata(vector<string>& argv)
+{
+	bfs::path c_path = bfs::current_path();
+
+	bfs::path alls = argv[2];
+
+	bfs::create_directories(alls / Constants);
+	bfs::create_directories(alls / Catalogs);
+	bfs::create_directories(alls / Documents);
+	bfs::create_directories(alls / Documents / Numerators);
+	bfs::create_directories(alls / Documents / Sequences);
+	bfs::create_directories(alls / JournDocuments);
+	bfs::create_directories(alls / Enums);
+	bfs::create_directories(alls / Reports);
+	bfs::create_directories(alls / DataProcessors);
+	bfs::create_directories(alls / ChartOfCharacteristicTypes);
+	bfs::create_directories(alls / ChartsOfAccounts);
+	bfs::create_directories(alls / ChartsOfCalculationTypes);
+	bfs::create_directories(alls / InformationRegisters);
+	bfs::create_directories(alls / AccumulationRegisters);
+	bfs::create_directories(alls / AccountingRegisters);
+	bfs::create_directories(alls / CalculationRegisters);
+	bfs::create_directories(alls / BusinessProcesses);
+	bfs::create_directories(alls / Tasks);
+	bfs::create_directories(alls / ExternalDataSources);
+	bfs::create_directories(alls / Config);
+
+
+	// Ветка "общие"
+	bfs::create_directories(alls / Alls);
+
+	bfs::create_directories(alls / Alls / Subsystems);
+	bfs::create_directories(alls / Alls / CommonModules);
+	bfs::create_directories(alls / Alls / SessionParameters);
+	bfs::create_directories(alls / Alls / Roles);
+	bfs::create_directories(alls / Alls / CommonAttributes);
+	bfs::create_directories(alls / Alls / ExchangePlans);
+	bfs::create_directories(alls / Alls / FilterCriteria);
+	bfs::create_directories(alls / Alls / EventSubscriptions);
+	bfs::create_directories(alls / Alls / ScheduledJobs);
+	bfs::create_directories(alls / Alls / FunctionalOptions);
+	bfs::create_directories(alls / Alls / FunctionalOptionsParameters);
+	bfs::create_directories(alls / Alls / DefinedTypes);
+	bfs::create_directories(alls / Alls / SettingsStorages);
+	bfs::create_directories(alls / Alls / CommonForms);
+	bfs::create_directories(alls / Alls / CommonCommands);
+	bfs::create_directories(alls / Alls / CommandGroups);
+	bfs::create_directories(alls / Alls / Interfaces);
+	bfs::create_directories(alls / Alls / CommonTemplates);
+	bfs::create_directories(alls / Alls / CommonPictures);
+	bfs::create_directories(alls / Alls / XDTOPackages);
+	bfs::create_directories(alls / Alls / WebServices);
+	bfs::create_directories(alls / Alls / HTTPServices);
+	bfs::create_directories(alls / Alls / WSReferences);
+	bfs::create_directories(alls / Alls / StyleItems);
+	bfs::create_directories(alls / Alls / Styles);
+	bfs::create_directories(alls / Alls / Languages);
+
+}
+
+int ddecompile(vector<string>& argv)
+{
+	int ret = 0;
+
+	vector<string> filter;
+
+	for (size_t i = 2; i < argv.size(); i++) {
+	
+		if (!argv[i].empty()) {
+
+			filter.push_back(argv[i]);
+
+		}
+
+	}
+		
+	/*
+	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
+
+	if (CV8File::IsV8File16(src)) {
+
+		src.close();
+		ret = CV8File::Parse16(argv[0], argv[1], filter);
+
+	}
+	else {
+
+		ret = CV8File::Parse(argv[0], argv[1], filter);
+
+	}
+	*/
+
+	// добавляем раскладывание по каталогам
+	// argv[0] - имя конфигурации
+	// argv[1] - каталог куда распаковали конфигурацию
+	// argv[2] - каталог куда будем раскладывать в соответствии с метаданными
+	
+	bfs::path pin = argv[1]; // - каталог куда распаковали конфигурацию
+	bfs::path pout = argv[2];
+	bfs::path froot = pout;
+	
+	if (ret == 0)
+	{
+		create_tree_metadata(argv);
+
+		//pin /= "root";
+		
+
+		if (bfs::exists(pin / "root"))
+		{
+			bfs::copy_file(pin / "root", pout / Config / "root");
+
+			froot /= Config;
+			froot /= "root";
+
+			static const std::regex regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+			
+			string s; // сюда будем класть считанные строки
+			std::ifstream file(froot.c_str()); // файл из которого читаем (для линукс путь будет выглядеть по другому)
+
+			getline(file, s);
+			//std::wstring sample = L"850fe1da-0ea6-c1a8-9810-0c1cece30698"; // сюда надо затолкать строку
+			std::string sample = s;
+
+			//std::match_results<std::wstring::const_iterator> match;
+			std::cmatch match;
+
+			if (std::regex_match(sample.c_str(), match, regex))
+			{
+
+			}
+
+		}
+
+		if (bfs::exists(pin / "versions"))
+		{
+			bfs::copy_file(pin / "versions", pout / Config / "versions");
+		}
+		if (bfs::exists(pin / "version"))
+		{
+			bfs::copy_file(pin / "version", pout / Config / "version");
+		}
+
+		
+		return ret;
+
+	}
+	else
+		return ret;
+
+
+	
 }
 
 int list_files(vector<string> &argv)
@@ -250,6 +410,11 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 		return parse;
 	}
 
+	if (cur_mode == "-ddecompile" || cur_mode == "-dd") {
+		return ddecompile;
+	}
+
+
 	if (cur_mode == "-build" || cur_mode == "-b") {
 
 		bool dont_pack = false;
@@ -312,6 +477,8 @@ void read_param_file(const char *filename, vector< vector<string> > &list)
 
 int main(int argc, char* argv[])
 {
+	setlocale(LC_ALL, "rus");
+
 	int arg_base = 1;
 	bool allow_listfile = false;
 	vector<string> args;
