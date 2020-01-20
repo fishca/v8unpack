@@ -28,6 +28,8 @@ at http://mozilla.org/MPL/2.0/.
 #include <fstream> // подключаем файлы
 #include <algorithm>
 #include <sstream>
+#include <locale>
+#include <codecvt>
 #include <regex>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -253,12 +255,60 @@ int ddecompile(vector<string>& argv)
 			std::string sample = s;
 
 			//std::match_results<std::wstring::const_iterator> match;
+
+			std::string guidConfig = "";
+			std::sregex_iterator next(s.begin(), s.end(), regex);
+			std::sregex_iterator end;
+			while (next != end) {
+				std::smatch match = *next;
+				guidConfig = match.str();
+				//std::cout << match.str() << "\n";
+				next++;
+			}
+
+			// читаем файл описания конфигурации
+			std::string line;
+
+			bfs::path cfg = argv[1];
+			
+			//cfg /= Config;
+			cfg /= guidConfig;
+
+			std::wstring fileCFG = L"";
+
+			bfs::ifstream inFileUTF(cfg);
+
+			std::wbuffer_convert<std::codecvt_utf8<wchar_t>> inFilebufConverted(inFileUTF.rdbuf());
+			
+			std::wistream inFileConverted(&inFilebufConverted);
+
+			for (std::wstring s; getline(inFileConverted, s); )
+			{
+				fileCFG += s;
+			}
+
+			inFileUTF.close();
+			/*
+			std::ifstream in(cfg.c_str()); // окрываем файл для чтения
+			if (in.is_open())
+			{
+				while (getline(in, line))
+				{
+					fileCFG += (line+"\n\r");
+				}
+			}
+			in.close();     // закрываем файл
+			*/
+
+
+			/*
 			std::cmatch match;
 
 			if (std::regex_match(sample.c_str(), match, regex))
 			{
 
 			}
+			*/
 
 		}
 
