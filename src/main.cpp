@@ -190,9 +190,72 @@ void create_tree_metadata(vector<string>& argv)
 
 }
 
+std::wstring readFile(std::string filename)
+{
+	std::wifstream wif(filename);
+	wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	std::wstringstream wss;
+	wss << wif.rdbuf();
+	wif.close();
+
+	return wss.str();
+}
+
+#pragma region MyRegion
+
+#pragma endregion
+
+
+#pragma region Windows_only 
+
+size_t GetSizeOfFile(const std::wstring& path)
+{
+	
+	struct _stat fileinfo;
+	_wstat(path.c_str(), &fileinfo);
+
+	return fileinfo.st_size;
+
+}
+
+std::wstring LoadUtf8FileToWString(const std::wstring& filename)
+{
+	
+	std::wstring buffer;            // stores file contents
+	
+	FILE* f = _wfopen(filename.c_str(), L"rtS, ccs=UTF-8");
+
+	// Failed to open file
+	if (f == NULL)
+	{
+		// ...handle some error...
+		return buffer;
+	}
+
+	size_t filesize = GetSizeOfFile(filename);
+
+	// Read entire file contents in to memory
+	if (filesize > 0)
+	{
+		buffer.resize(filesize);
+		size_t wchars_read = fread(&(buffer.front()), sizeof(wchar_t), filesize, f);
+		buffer.resize(wchars_read);
+		buffer.shrink_to_fit();
+	}
+
+	fclose(f);
+
+	return buffer;
+
+}
+#pragma endregion
+
+
 int ddecompile(vector<string>& argv)
 {
 	int ret = 0;
+
+	//typedef std::regex_token_iterator<const char*> Myiter;
 
 	vector<string> filter;
 
@@ -274,41 +337,31 @@ int ddecompile(vector<string>& argv)
 			//cfg /= Config;
 			cfg /= guidConfig;
 
-			std::wstring fileCFG = L"";
+			//const_cast<char*>(cfg.c_str())
+			std::wstring fileCFG = readFile(cfg.string());
+			std::string sfileCFG = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fileCFG);
+			//bfs::ifstream inFileUTF(cfg);
 
-			bfs::ifstream inFileUTF(cfg);
+			// РегулярноеВыражениеX = Новый COMОбъект("VBScript.RegExp");     //для получения из текстового файла объекта пары идентификатор/наименование
+			// РегулярноеВыражениеX.Multiline = Истина;
+			// РегулярноеВыражениеX.Pattern = "\{\d,[\d]+,(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})\},""(\S+?)"",\n?";
 
-			std::wbuffer_convert<std::codecvt_utf8<wchar_t>> inFilebufConverted(inFileUTF.rdbuf());
-			
-			std::wistream inFileConverted(&inFilebufConverted);
+			vector<string> data_cfg;
 
-			for (std::wstring s; getline(inFileConverted, s); )
-			{
-				fileCFG += s;
+			static const std::regex regex_X("\{\d,[\d]+,(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})\},""(\S+?)"",\n?");
+			//std::wcregex_iterator next_X(fileCFG.begin(), fileCFG.end(), regex_X);
+			std::sregex_iterator next_X(sfileCFG.begin(), sfileCFG.end(),regex_X);
+			std::sregex_iterator end_X;
+			while (next_X != end_X) {
+
+				std::smatch match = *next_X;
+				
+				data_cfg.push_back(match.str());
+				//guidConfig = match.str();
+				
+				next++;
 			}
 
-			inFileUTF.close();
-			/*
-			std::ifstream in(cfg.c_str()); // окрываем файл для чтения
-			if (in.is_open())
-			{
-				while (getline(in, line))
-				{
-					fileCFG += (line+"\n\r");
-				}
-			}
-			in.close();     // закрываем файл
-			*/
-
-
-			/*
-			std::cmatch match;
-
-			if (std::regex_match(sample.c_str(), match, regex))
-			{
-
-			}
-			*/
 
 		}
 
