@@ -24,6 +24,9 @@ at http://mozilla.org/MPL/2.0/.
 #include "V8File.h"
 #include "V8MetaGuid.h"
 #include "version.h"
+//#include "utf8.h"
+#include "conv.h"
+#include <string>
 #include <iostream>
 #include <fstream> // подключаем файлы
 #include <algorithm>
@@ -190,6 +193,38 @@ void create_tree_metadata(vector<string>& argv)
 
 }
 
+string UTF8readFile(string filename)
+{
+	/*
+	ifstream fs8(filename);
+	
+	if (!fs8.is_open()) {
+		cout << "Could not open " << filename << endl;
+		return 0;
+	}
+
+	string line;
+	unsigned line_count = 1;
+
+	while (getline(fs8, line)) {
+		
+		string::iterator end_it = utf8::find_invalid(line.begin(), line.end());
+		if (end_it != line.end()) {
+
+			cout << "Invalid UTF-8 encoding detected at line " << line_count << "\n";
+			cout << "This part is fine: " << string(line.begin(), end_it) << "\n";
+		}
+
+		int length = utf8::distance(line.begin(), end_it);
+		line += line;
+	}
+	fs8.close();
+
+	return line;
+	*/
+	return "";
+}
+
 std::wstring readFile(std::string filename)
 {
 	std::wifstream wif(filename);
@@ -200,10 +235,6 @@ std::wstring readFile(std::string filename)
 
 	return wss.str();
 }
-
-#pragma region MyRegion
-
-#pragma endregion
 
 
 #pragma region Windows_only 
@@ -339,7 +370,19 @@ int ddecompile(vector<string>& argv)
 
 			//const_cast<char*>(cfg.c_str())
 			std::wstring fileCFG = readFile(cfg.string());
-			std::string sfileCFG = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fileCFG);
+			//std::string sfileCFG = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fileCFG);
+			
+			
+#if defined(__GNUC__) || defined(__MINGW32__) || defined(__MINGW__)
+
+			std::string sfileCFG = conv::utf8::convert(fileCFG);
+
+#else
+			std::string sfileCFG = conv::stdlocal::convert(fileCFG);
+#endif
+			
+			
+
 			//bfs::ifstream inFileUTF(cfg);
 
 			// РегулярноеВыражениеX = Новый COMОбъект("VBScript.RegExp");     //для получения из текстового файла объекта пары идентификатор/наименование
@@ -348,19 +391,30 @@ int ddecompile(vector<string>& argv)
 
 			vector<string> data_cfg;
 
-			static const std::regex regex_X("\{\d,[\d]+,(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})\},""(\S+?)"",\n?");
-			//std::wcregex_iterator next_X(fileCFG.begin(), fileCFG.end(), regex_X);
-			std::sregex_iterator next_X(sfileCFG.begin(), sfileCFG.end(),regex_X);
+			//static const std::wregex regex_X(L"\\{\\d,[\\d]+,(\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12})\\},""(\\S+?)"",\\n?");
+			static const std::regex regex_X("\\{\\d,[\\d]+,(\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12})\\},""(\\S+?)"",\\n?");
+			std::sregex_iterator next_X(sfileCFG.begin(), sfileCFG.end(), regex_X);
 			std::sregex_iterator end_X;
+
+			int count = 1;
+
+			std::smatch match = *next_X;
+
+			data_cfg.push_back(match[1].str()); // здесь располагается GUID конфигурации
+			data_cfg.push_back(match[2].str()); // здесь располагается ИМЯ конфигурации
+			/*
 			while (next_X != end_X) {
 
 				std::smatch match = *next_X;
+				data_cfg.push_back(match[count].str());
+				data_cfg.push_back(match[count+1].str());
 				
-				data_cfg.push_back(match.str());
-				//guidConfig = match.str();
-				
-				next++;
+				count++;
+				next_X++;
+
 			}
+			*/
+
 
 
 		}
