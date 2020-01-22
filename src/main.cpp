@@ -378,7 +378,9 @@ int ddecompile(vector<string>& argv)
 			std::string sfileCFG = conv::utf8::convert(fileCFG);
 
 #else
+
 			std::string sfileCFG = conv::stdlocal::convert(fileCFG);
+
 #endif
 			
 			
@@ -402,18 +404,7 @@ int ddecompile(vector<string>& argv)
 
 			data_cfg.push_back(match[1].str()); // здесь располагается GUID конфигурации
 			data_cfg.push_back(match[2].str()); // здесь располагается ИМЯ конфигурации
-			/*
-			while (next_X != end_X) {
 
-				std::smatch match = *next_X;
-				data_cfg.push_back(match[count].str());
-				data_cfg.push_back(match[count+1].str());
-				
-				count++;
-				next_X++;
-
-			}
-			*/
 
 
 
