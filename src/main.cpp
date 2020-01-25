@@ -23,6 +23,7 @@ at http://mozilla.org/MPL/2.0/.
 
 #include "V8File.h"
 #include "V8MetaGuid.h"
+#include "Parse_tree.h"
 #include "version.h"
 //#include "utf8.h"
 #include "conv.h"
@@ -329,9 +330,6 @@ int ddecompile(vector<string>& argv)
 	{
 		create_tree_metadata(argv);
 
-		//pin /= "root";
-		
-
 		if (bfs::exists(pin / "root"))
 		{
 			bfs::copy_file(pin / "root", pout / Config / "root");
@@ -341,14 +339,12 @@ int ddecompile(vector<string>& argv)
 
 			static const std::regex regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
 			
-			string s; // сюда будем класть считанные строки
+			string s;                          // сюда будем класть считанные строки
 			std::ifstream file(froot.c_str()); // файл из которого читаем (для линукс путь будет выглядеть по другому)
 
 			getline(file, s);
-			//std::wstring sample = L"850fe1da-0ea6-c1a8-9810-0c1cece30698"; // сюда надо затолкать строку
+			
 			std::string sample = s;
-
-			//std::match_results<std::wstring::const_iterator> match;
 
 			std::string guidConfig = "";
 			std::sregex_iterator next(s.begin(), s.end(), regex);
@@ -356,7 +352,6 @@ int ddecompile(vector<string>& argv)
 			while (next != end) {
 				std::smatch match = *next;
 				guidConfig = match.str();
-				//std::cout << match.str() << "\n";
 				next++;
 			}
 
@@ -365,13 +360,9 @@ int ddecompile(vector<string>& argv)
 
 			bfs::path cfg = argv[1];
 			
-			//cfg /= Config;
 			cfg /= guidConfig;
 
-			//const_cast<char*>(cfg.c_str())
 			std::wstring fileCFG = readFile(cfg.string());
-			//std::string sfileCFG = std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(fileCFG);
-			
 			
 #if defined(__GNUC__) || defined(__MINGW32__) || defined(__MINGW__)
 
@@ -382,18 +373,11 @@ int ddecompile(vector<string>& argv)
 			std::string sfileCFG = conv::stdlocal::convert(fileCFG);
 
 #endif
-			
-			
 
-			//bfs::ifstream inFileUTF(cfg);
-
-			// РегулярноеВыражениеX = Новый COMОбъект("VBScript.RegExp");     //для получения из текстового файла объекта пары идентификатор/наименование
-			// РегулярноеВыражениеX.Multiline = Истина;
-			// РегулярноеВыражениеX.Pattern = "\{\d,[\d]+,(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})\},""(\S+?)"",\n?";
-
+			//sfileCFG = sfileCFG.replace(sfileCFG.begin(), sfileCFG.begin() + 1, "?", "");
+			//sfileCFG = sfileCFG.substr(1, sfileCFG.length() - 1);
 			vector<string> data_cfg;
 
-			//static const std::wregex regex_X(L"\\{\\d,[\\d]+,(\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12})\\},""(\\S+?)"",\\n?");
 			static const std::regex regex_X("\\{\\d,[\\d]+,(\\w{8}-\\w{4}-\\w{4}-\\w{4}-\\w{12})\\},""(\\S+?)"",\\n?");
 			std::sregex_iterator next_X(sfileCFG.begin(), sfileCFG.end(), regex_X);
 			std::sregex_iterator end_X;
@@ -405,9 +389,14 @@ int ddecompile(vector<string>& argv)
 			data_cfg.push_back(match[1].str()); // здесь располагается GUID конфигурации
 			data_cfg.push_back(match[2].str()); // здесь располагается ИМЯ конфигурации
 
+			tree* res = parse_1Ctext(sfileCFG, "");
 
+			// пробуем обратное преобразование
+			string testCFG = "";
 
+			testCFG = outtext(res);
 
+			delete res;
 		}
 
 		if (bfs::exists(pin / "versions"))
