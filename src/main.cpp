@@ -360,6 +360,9 @@ int ddecompile(vector<string>& argv)
 
 			bfs::path cfg = argv[1];
 			
+			// времянка
+			guidConfig = "f7a4a6dc-a20e-4f92-a5c5-3b22948f0cbd";
+
 			cfg /= guidConfig;
 
 			std::wstring fileCFG = readFile(cfg.string());

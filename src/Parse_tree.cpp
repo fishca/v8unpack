@@ -30,6 +30,17 @@ const regex exp_link("^[0-9]+:[0-9a-fA-F]{32}$");
 const regex exp_binary_d("^#data:[0-9a-zA-Z\\+=\\r\\n\\/]*$");
 
 //---------------------------------------------------------------------------
+
+enum _state {
+	s_value,              // ожидание начала значения
+	s_delimitier,         // ожидание разделителя
+	s_string,             // режим ввода строки
+	s_quote_or_endstring, // режим ожидания конца строки или двойной кавычки
+	s_nonstring           // режим ввода значения не строки
+};
+
+
+
 tree::tree(const string& _value, const node_type _type, tree* _parent)
 {
 	value = _value;
@@ -116,8 +127,11 @@ int tree::get_num_subnode()
 //---------------------------------------------------------------------------
 tree* tree::get_subnode(int _index)
 {
-	if(_index >= num_subnode) return NULL;
+	if(_index >= num_subnode) 
+		return NULL;
+	
 	tree* t = first;
+	
 	while(_index)
 	{
 		t = t->next;
@@ -132,7 +146,9 @@ tree* tree::get_subnode(const string& node_name)
 	tree* t = first;
 	while(t)
 	{
-		if(t->value == node_name) return t;
+		if(t->value == node_name) 
+			return t;
+
 		t = t->next;
 	}
 	return NULL;
@@ -159,9 +175,11 @@ tree* tree::get_first()
 //---------------------------------------------------------------------------
 tree& tree::operator [](int _index)
 {
-	if(!this) return *this; //-V704
+	if(!this) 
+		return *this; //-V704
 
 	tree* ret = first;
+
 	while(_index)
 	{
 		if(ret) ret = ret->next;
@@ -245,7 +263,6 @@ string tree::path()
 	tree* t;
 
 	char buf[80];
-	//string buf = ""
 
 	if(!this) 
 		return ":??"; //-V704
@@ -262,14 +279,14 @@ string tree::path()
 //---------------------------------------------------------------------------
 node_type classification_value(const string& value)
 {
-	if(value.length() == 0) return nd_empty;
-	if(regex_match(value.c_str(), exp_number)) return nd_number;
+	if(value.length() == 0)                        return nd_empty;
+	if(regex_match(value.c_str(), exp_number))     return nd_number;
 	if(regex_match(value.c_str(), exp_number_exp)) return nd_number_exp;
-	if(regex_match(value.c_str(), exp_guid)) return nd_guid;
-	if(regex_match(value.c_str(), exp_binary)) return nd_binary;
-	if(regex_match(value.c_str(), exp_link)) return nd_link;
-	if(regex_match(value.c_str(), exp_binary2)) return nd_binary2;
-	if(regex_match(value.c_str(), exp_binary_d)) return nd_binary_d;
+	if(regex_match(value.c_str(), exp_guid))       return nd_guid;
+	if(regex_match(value.c_str(), exp_binary))     return nd_binary;
+	if(regex_match(value.c_str(), exp_link))       return nd_link;
+	if(regex_match(value.c_str(), exp_binary2))    return nd_binary2;
+	if(regex_match(value.c_str(), exp_binary_d))   return nd_binary_d;
 	return nd_unknown;
 }
 
@@ -277,13 +294,7 @@ tree* parse_1Ctext(const string& text, const string& path)
 {
 	string __curvalue__;
 
-	enum _state{
-		s_value, // ожидание начала значения
-		s_delimitier, // ожидание разделителя
-		s_string, // режим ввода строки
-		s_quote_or_endstring, // режим ожидания конца строки или двойной кавычки
-		s_nonstring // режим ввода значения не строки
-	}state = s_value;
+	_state state = s_value;
 
 	string curvalue;
 	tree* ret;
@@ -498,13 +509,7 @@ bool test_parse_1Ctext(const string& str, const string& path)
 {
 	string __curvalue__;
 
-	enum _state{
-		s_value, // ожидание начала значения
-		s_delimitier, // ожидание разделителя
-		s_string, // режим ввода строки
-		s_quote_or_endstring, // режим ожидания конца строки или двойной кавычки
-		s_nonstring // режим ввода значения не строки
-	}state = s_value;
+	_state state = s_value;
 
 	string curvalue;
 	int i;
@@ -516,9 +521,6 @@ bool test_parse_1Ctext(const string& str, const string& path)
 
 	__curvalue__ = "";
 
-	
-
-	//reader = new TStreamReader(str, true);
 	level = 0;
 
 	//for(i = 1, _sym = reader->Read(); _sym >= 0; i++, _sym = reader->Read())
@@ -553,7 +555,6 @@ bool test_parse_1Ctext(const string& str, const string& path)
 						level--;
 						break;
 					default:
-						//curvalue = String(sym);
 						__curvalue__.clear();
 						__curvalue__ += sym;
 						state = s_nonstring;

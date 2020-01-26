@@ -2314,14 +2314,13 @@ CV8File::stBlockHeader64 CV8File::stBlockHeader64::create(ULONGLONG block_data_s
 	stBlockHeader64 BlockHeader;
 	char buf[17];
 
-	//sprintf(buf, "%16x", block_data_size);
-	sprintf(buf, "%llx", block_data_size);
+	sprintf(buf, "%16x", block_data_size);
 	strncpy(BlockHeader.data_size_hex, buf, 16);
 
-	sprintf(buf, "%llx", page_size);
+	sprintf(buf, "%16x", page_size);
 	strncpy(BlockHeader.page_size_hex, buf, 16);
 
-	sprintf(buf, "%llx", next_page_addr);
+	sprintf(buf, "%16x", next_page_addr);
 	strncpy(BlockHeader.next_page_addr_hex, buf, 16);
 
 	return BlockHeader;
