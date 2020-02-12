@@ -1334,7 +1334,7 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF64_SIGNATURE) { // есть следующая страница
-			file.seekg(next_page_addr, std::ios_base::beg);
+			file.seekg(next_page_addr + Offset_816, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
 		else
