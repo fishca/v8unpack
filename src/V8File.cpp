@@ -1245,7 +1245,7 @@ int CV8File::ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, cha
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF_SIGNATURE) // есть следующая страница
-			pBlockHeader = (stBlockHeader64*)&pFileData[next_page_addr];
+			pBlockHeader = (stBlockHeader64*)&pFileData[next_page_addr + Offset_816];
 		else
 			break;
 	}
@@ -1334,7 +1334,7 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF64_SIGNATURE) { // есть следующая страница
-			file.seekg(next_page_addr, std::ios_base::beg);
+			file.seekg(next_page_addr + Offset_816, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
 		else
@@ -1437,7 +1437,7 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 
 		if (next_page_addr != V8_FF_SIGNATURE) { // есть следующая страница
 			//pBlockHeader = (stBlockHeader*) &pFileData[next_page_addr];
-			file.seekg(next_page_addr, std::ios_base::beg);
+			file.seekg(next_page_addr + Offset_816, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
 		else
@@ -1479,9 +1479,15 @@ bool CV8File::IsV8File16(std::basic_istream<char>& file)
 	std::ifstream::pos_type offset = Offset_816;
 
 	file.seekg(offset);
-	file.read((char*)& FileHeader, FileHeader.Size());
-	//file.seekg(offset+= FileHeader.Size());
-	file.read((char*)& BlockHeader, BlockHeader.Size());
+	
+	file.read((char*)&FileHeader, FileHeader.Size());
+	file.read((char*)&BlockHeader, BlockHeader.Size());
+	//file.read((char*)&FileHeader, sizeof(FileHeader));
+	//file.read((char*)&BlockHeader, sizeof(BlockHeader));
+
+	//file.read((char*)& FileHeader, FileHeader.Size());
+	////file.seekg(offset+= FileHeader.Size());
+	//file.read((char*)& BlockHeader, BlockHeader.Size());
 
 	
 	file.clear();
@@ -1640,6 +1646,23 @@ int CV8File::SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istrea
 	return 0;
 }
 
+int CV8File::SaveBlockData64(std::basic_ostream<char>& file_out, std::basic_istream<char>& file_in, UINT BlockDataSize, UINT PageSize)
+{
+    if (PageSize < BlockDataSize)
+        PageSize = BlockDataSize;
+
+    stBlockHeader64 CurBlockHeader = stBlockHeader64::create(BlockDataSize, PageSize, V8_FF64_SIGNATURE);
+    file_out.write(reinterpret_cast<char*>(&CurBlockHeader), sizeof(CurBlockHeader));
+    full_copy(file_in, file_out);
+
+    for (UINT i = 0; i < PageSize - BlockDataSize; i++) {
+        file_out << (char)0;
+    }
+
+    return 0;
+}
+
+
 int CV8File::SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, UINT BlockDataSize, UINT PageSize)
 {
 	if (PageSize < BlockDataSize)
@@ -1655,6 +1678,23 @@ int CV8File::SaveBlockData(std::basic_ostream<char> &file_out, const char *pBloc
 
 	return 0;
 }
+
+int CV8File::SaveBlockData64(std::basic_ostream<char>& file_out, const char* pBlockData, UINT BlockDataSize, UINT PageSize)
+{
+    if (PageSize < BlockDataSize)
+        PageSize = BlockDataSize;
+
+    stBlockHeader64 CurBlockHeader = stBlockHeader64::create(BlockDataSize, PageSize, V8_FF64_SIGNATURE);
+    file_out.write(reinterpret_cast<char*>(&CurBlockHeader), sizeof(CurBlockHeader));
+    file_out.write(reinterpret_cast<const char*>(pBlockData), BlockDataSize);
+
+    for (UINT i = 0; i < PageSize - BlockDataSize; i++) {
+        file_out << (char)0;
+    }
+
+    return 0;
+}
+
 
 int CV8File::Parse(const std::string &filename_in, const std::string &dirname, const std::vector< std::string > &filter)
 {
@@ -1868,6 +1908,66 @@ int CV8File::LoadFileFromFolder(const std::string &dirname)
 
 }
 
+int CV8File::LoadFileFromFolder64(const std::string& dirname)
+{
+    boost::filesystem::ifstream file_in;
+
+    FileHeader64.next_page_addr = V8_FF64_SIGNATURE;
+    FileHeader64.page_size      = V8_DEFAULT_PAGE_SIZE;
+    FileHeader64.storage_ver    = 0;
+    FileHeader64.reserved       = 0;
+
+    Elems.clear();
+
+    boost::filesystem::directory_iterator d_end;
+    boost::filesystem::directory_iterator dit(dirname);
+
+    for (; dit != d_end; ++dit) {
+        boost::filesystem::path current_file(dit->path());
+        if (current_file.filename().string().at(0) == '.')
+            continue;
+
+        CV8Elem elem;
+        std::string name = current_file.filename().string();
+
+        elem.HeaderSize = CV8Elem::stElemHeaderBegin::Size() + name.size() * 2 + 4; // последние четыре всегда нули?
+        elem.pHeader = new char[elem.HeaderSize];
+
+        memset(elem.pHeader, 0, elem.HeaderSize);
+
+        elem.SetName(name);
+
+        if (boost::filesystem::is_directory(current_file)) {
+
+            elem.IsV8File = true;
+
+            std::string new_dirname(dirname);
+            new_dirname += "/";
+            new_dirname += name;
+
+            elem.UnpackedData.LoadFileFromFolder64(new_dirname);
+            elem.Pack(false);
+
+        }
+        else {
+            elem.IsV8File = false;
+
+            elem.DataSize = boost::filesystem::file_size(current_file);
+            elem.pData = new char[elem.DataSize];
+
+            boost::filesystem::ifstream file_in(current_file, std::ios_base::binary);
+            file_in.read(reinterpret_cast<char*>(elem.pData), elem.DataSize);
+        }
+
+        Elems.push_back(elem);
+
+    } // for directory_iterator
+
+    return 0;
+
+}
+
+
 int CV8File::BuildCfFile(const std::string &in_dirname, const std::string &out_filename, bool dont_deflate)
 {
     //filename can't be empty
@@ -2048,6 +2148,206 @@ int CV8File::BuildCfFile(const std::string &in_dirname, const std::string &out_f
 
     return 0;
 }
+
+int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out_filename, bool dont_deflate)
+{
+    //filename can't be empty
+    if (!in_dirname.size()) {
+        std::cerr << "Argument error - Set of `in_dirname' argument" << std::endl;
+        return SHOW_USAGE;
+    }
+
+    if (!out_filename.size()) {
+        std::cerr << "Argument error - Set of `out_filename' argument" << std::endl;
+        return SHOW_USAGE;
+    }
+
+    if (!boost::filesystem::exists(in_dirname)) {
+        std::cerr << "Source directory does not exist!" << std::endl;
+        return -1;
+    }
+
+    UINT ElemsNum = 0;
+    {
+        boost::filesystem::directory_iterator d_end;
+        boost::filesystem::directory_iterator dit(in_dirname);
+
+        for (; dit != d_end; ++dit) {
+
+            boost::filesystem::path current_file(dit->path());
+            std::string name = current_file.filename().string();
+
+            if (name.at(0) == '.')
+                continue;
+
+            ++ElemsNum;
+        }
+    }
+
+    //stFileHeader FileHeader;
+    stFileHeader64 FileHeader;
+
+    //Предварительные расчеты длины заголовка таблицы содержимого TOC файла
+    FileHeader.next_page_addr = V8_FF64_SIGNATURE;
+    FileHeader.page_size      = V8_DEFAULT_PAGE_SIZE;
+    FileHeader.storage_ver    = 0;
+    FileHeader.reserved       = 0;
+    
+    //DWORD cur_block_addr = stFileHeader::Size() + stBlockHeader::Size();
+    
+    // скорее всего сюда надо сместить на 1359
+    DWORD cur_block_addr = stFileHeader64::Size() + stBlockHeader64::Size();
+
+    //stElemAddr* pTOC;
+    stElemAddr64* pTOC;
+    
+    //pTOC = new stElemAddr[ElemsNum];
+    pTOC = new stElemAddr64[ElemsNum];
+
+    //cur_block_addr += MAX(stElemAddr::Size() * ElemsNum, V8_DEFAULT_PAGE_SIZE);
+    cur_block_addr += MAX(stElemAddr64::Size() * ElemsNum, V8_DEFAULT_PAGE_SIZE);
+
+    cur_block_addr += Offset_816;
+
+    boost::filesystem::ofstream file_out(out_filename, std::ios_base::binary);
+    
+    //Открываем выходной файл контейнер на запись
+    if (!file_out) {
+        delete[] pTOC;
+        std::cout << "SaveFile. Error in creating file!" << std::endl;
+        return -1;
+    }
+
+    //Резервируем место в начале файла под заголовок и TOC
+    for (unsigned i = 0; i < cur_block_addr; i++) {
+        file_out << '\0';
+    }
+
+    UINT one_percent = ElemsNum / 50;
+    if (one_percent) {
+        std::cout << "Progress (50 points): " << std::flush;
+    }
+
+    UINT ElemNum = 0;
+
+    boost::filesystem::directory_iterator d_end;
+    boost::filesystem::directory_iterator dit(in_dirname);
+    for (; dit != d_end; ++dit) {
+
+        boost::filesystem::path current_file(dit->path());
+        std::string name = current_file.filename().string();
+
+        if (name.at(0) == '.')
+            continue;
+
+
+        //Progress bar ->
+        {
+            if (ElemNum && one_percent && ElemNum % one_percent == 0) {
+                if (ElemNum % (one_percent * 10) == 0)
+                    std::cout << "|" << std::flush;
+                else
+                    std::cout << ".";
+            }
+        }//<- Progress bar
+
+        CV8Elem pElem;
+
+        pElem.HeaderSize = CV8Elem::stElemHeaderBegin::Size() + name.size() * 2 + 4; // последние четыре всегда нули?
+        pElem.pHeader = new char[pElem.HeaderSize];
+
+        memset(pElem.pHeader, 0, pElem.HeaderSize);
+
+        pElem.SetName(name);
+
+        pTOC[ElemNum].elem_header_addr = file_out.tellp();
+        
+        SaveBlockData64(file_out, pElem.pHeader, pElem.HeaderSize, pElem.HeaderSize);
+
+        pTOC[ElemNum].elem_data_addr = file_out.tellp();
+        pTOC[ElemNum].fffffff = V8_FF64_SIGNATURE;
+
+        if (boost::filesystem::is_directory(current_file)) {
+
+            pElem.IsV8File = true;
+
+            std::string new_dirname(in_dirname);
+            new_dirname += "/";
+            new_dirname += name;
+
+            pElem.UnpackedData.LoadFileFromFolder64(new_dirname);
+            pElem.Pack(!dont_deflate);
+
+            SaveBlockData64(file_out, pElem.pData, pElem.DataSize);
+
+        }
+        else {
+
+            pElem.IsV8File = false;
+
+            pElem.DataSize = boost::filesystem::file_size(current_file);
+
+            boost::filesystem::path p_filename(in_dirname);
+            p_filename /= name;
+            boost::filesystem::ifstream file_in(p_filename, std::ios_base::binary);
+
+            if (pElem.DataSize < SmartUnpackedLimit) {
+
+                pElem.pData = new char[pElem.DataSize];
+
+                file_in.read(reinterpret_cast<char*>(pElem.pData), pElem.DataSize);
+
+                pElem.Pack(!dont_deflate);
+
+                SaveBlockData64(file_out, pElem.pData, pElem.DataSize);
+
+            }
+            else {
+
+                if (dont_deflate) {
+                    SaveBlockData64(file_out, file_in, pElem.DataSize);
+                }
+                else {
+                    // Упаковка через промежуточный файл
+                    boost::filesystem::path tmp_file_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+                    {
+                        boost::filesystem::ofstream tmp_file(tmp_file_path, std::ios_base::binary);
+                        Deflate(file_in, tmp_file);
+                        tmp_file.close();
+                    }
+
+                    {
+                        pElem.DataSize = boost::filesystem::file_size(tmp_file_path);
+                        boost::filesystem::ifstream tmp_file(tmp_file_path, std::ios_base::binary);
+                        SaveBlockData64(file_out, tmp_file, pElem.DataSize);
+                        tmp_file.close();
+
+                        boost::filesystem::remove(tmp_file_path);
+                    }
+                }
+            }
+        }
+
+        pElem.Dispose();
+
+        ElemNum++;
+    }
+
+    //Записывем заголовок файла
+    file_out.seekp(0, std::ios_base::beg);
+    file_out.write(reinterpret_cast<const char*>(&FileHeader), sizeof(FileHeader));
+
+    //Записываем блок TOC
+    SaveBlockData64(file_out, (const char*)pTOC, stElemAddr::Size() * ElemsNum);
+
+    delete[] pTOC;
+
+    std::cout << std::endl << "Build `" << out_filename << "` OK!" << std::endl << std::flush;
+
+    return 0;
+}
+
 
 int CV8Elem::Pack(bool deflate)
 {
@@ -2314,13 +2614,13 @@ CV8File::stBlockHeader64 CV8File::stBlockHeader64::create(ULONGLONG block_data_s
 	stBlockHeader64 BlockHeader;
 	char buf[17];
 
-	sprintf(buf, "%16x", block_data_size);
+	sprintf(buf, "%08x", block_data_size);
 	strncpy(BlockHeader.data_size_hex, buf, 16);
 
-	sprintf(buf, "%16x", page_size);
+	sprintf(buf, "%08x", page_size);
 	strncpy(BlockHeader.page_size_hex, buf, 16);
 
-	sprintf(buf, "%16x", next_page_addr);
+	sprintf(buf, "%08x", next_page_addr);
 	strncpy(BlockHeader.next_page_addr_hex, buf, 16);
 
 	return BlockHeader;

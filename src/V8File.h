@@ -182,7 +182,8 @@ public:
 	{
 		char EOL_0D;
 		char EOL_0A;
-		char data_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+		//char data_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+		char data_size_hex[16];
 		char space1;
 		char page_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
 		char space2;
@@ -221,6 +222,7 @@ public:
 	int GetData(char **DataBufer, ULONG *DataBuferSize);
 	int Pack();
 	int LoadFileFromFolder(const std::string &dirname);
+	int LoadFileFromFolder64(const std::string& dirname);
 	int LoadFile(char *pFileData, ULONG FileData, bool boolInflate = true, bool UnpackWhenNeed = false);
 	int SaveFileToFolder(const boost::filesystem::path &directiory) const;
 
@@ -234,8 +236,11 @@ public:
 
 	static int PackFromFolder(const std::string &dirname, const std::string &filename);
 	static int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate = false);
+	static int BuildCfFile64(const std::string& dirname, const std::string& filename, bool dont_deflate = false);
 	static int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, UINT BlockDataSize, UINT PageSize = 512);
+	static int SaveBlockData64(std::basic_ostream<char>& file_out, const char* pBlockData, UINT BlockDataSize, UINT PageSize = 512);
 	static int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, UINT BlockDataSize, UINT PageSize = 512);
+	static int SaveBlockData64(std::basic_ostream<char>& file_out, std::basic_istream<char>& file_in, UINT BlockDataSize, UINT PageSize = 512);
 	static int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
 	
 	static int UnpackToDirectoryNoLoad(
@@ -281,9 +286,12 @@ public:
 
 private:
 	stFileHeader                FileHeader;
+	stFileHeader64              FileHeader64;
 	std::vector<stElemAddr>     ElemsAddrs;
+	std::vector<stElemAddr64>   ElemsAddrs64;
 
 	std::vector<CV8Elem>        Elems;
+	
 	bool                        IsDataPacked;
 };
 
