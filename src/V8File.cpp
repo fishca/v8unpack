@@ -24,6 +24,7 @@ at http://mozilla.org/MPL/2.0/.
 
 
 #include "V8File.h"
+#include "guids.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <iostream>
@@ -2149,7 +2150,46 @@ int CV8File::BuildCfFile(const std::string &in_dirname, const std::string &out_f
     return 0;
 }
 
-int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out_filename, bool dont_deflate)
+int CreateV8File(boost::filesystem::ofstream &file_out, std::string nname, const char* name_data, int ElemNum, CV8File::stElemAddr* pTOC, bool dont_deflate)
+{
+    std::string name = nname;
+
+    CV8Elem pElem;
+
+    pElem.HeaderSize = CV8Elem::stElemHeaderBegin::Size() + name.size() * 2 + 4; // последние четыре всегда нули?
+    pElem.pHeader = new char[pElem.HeaderSize];
+
+    memset(pElem.pHeader, 0, pElem.HeaderSize);
+
+    pElem.SetName(name);
+
+    pTOC[ElemNum].elem_header_addr = file_out.tellp();
+
+    CV8File::SaveBlockData(file_out, pElem.pHeader, pElem.HeaderSize, pElem.HeaderSize);
+
+    pTOC[ElemNum].elem_data_addr = file_out.tellp();
+    pTOC[ElemNum].fffffff = V8_FF_SIGNATURE;
+
+    pElem.IsV8File = false;
+    
+    //pElem.DataSize = 2 * std::strlen(name_data);
+    pElem.DataSize = std::strlen(name_data);
+
+    pElem.pData = new char[pElem.DataSize];
+
+    pElem.pData = const_cast<char*>(name_data);
+
+    pElem.Pack(!dont_deflate);
+
+    CV8File::SaveBlockData(file_out, pElem.pData, pElem.DataSize);
+
+    pElem.Dispose();
+
+    return 0;
+
+}
+
+int CV8File::BuildCf_old(const std::string& in_dirname, const std::string& out_filename, bool dont_deflate)
 {
     //filename can't be empty
     if (!in_dirname.size()) {
@@ -2159,6 +2199,293 @@ int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out
 
     if (!out_filename.size()) {
         std::cerr << "Argument error - Set of `out_filename' argument" << std::endl;
+        return SHOW_USAGE;
+    }
+
+    if (!boost::filesystem::exists(in_dirname)) {
+        std::cerr << "Source directory does not exist!" << std::endl;
+        return -1;
+    }
+
+    UINT ElemsNum = 0;
+
+    
+    // 30ffe4cc-eef2-4371-8b26-046597e37e22
+    // ae3cd3da-a1c0-4b8e-8edf-4d25e853a54e
+    // root
+    // version
+    // versions
+    
+    
+    ElemsNum = 5;
+
+
+    stFileHeader FileHeader;
+
+    //Предварительные расчеты длины заголовка таблицы содержимого TOC файла
+    FileHeader.next_page_addr = V8_FF_SIGNATURE;
+    FileHeader.page_size      = V8_DEFAULT_PAGE_SIZE;
+    FileHeader.storage_ver    = 0;
+    FileHeader.reserved       = 0;
+
+    DWORD cur_block_addr = stFileHeader::Size() + stBlockHeader::Size();
+    
+    stElemAddr* pTOC;
+    
+    pTOC = new stElemAddr[ElemsNum];
+    
+    cur_block_addr += MAX(stElemAddr::Size() * ElemsNum, V8_DEFAULT_PAGE_SIZE);
+
+    boost::filesystem::ofstream file_out(out_filename, std::ios_base::binary);
+
+    //Открываем выходной файл контейнер на запись
+    if (!file_out) {
+        delete[] pTOC;
+        std::cout << "SaveFile. Error in creating file!" << std::endl;
+        return -1;
+    }
+
+    //Резервируем место в начале файла под заголовок и TOC
+    for (unsigned i = 0; i < cur_block_addr; i++) {
+        file_out << '\0';
+    }
+
+    UINT ElemNum = 0;
+
+    int res = 0;
+
+    std::string name;
+    const char* name_data = "";
+
+    for (int ElemNum = 0; ElemNum < ElemsNum; ElemNum++)
+    {
+        switch (ElemNum)
+        {
+        case 0:
+        {
+            name = GUID_ROOT;
+            name_data = _conf_root_83_;
+            break;
+        }
+        case 1:
+        {
+            name = GUID_LANG;
+            name_data = _lang_83_;
+            break;
+        }
+        case 2:
+        {
+            name = "root";
+            name_data = _root_;
+            break;
+        }
+        case 3:
+        {
+            name = "version";
+            name_data = _version_;
+            break;
+        }
+        case 4:
+        {
+            name = "versions";
+            name_data = _versions_;
+            break;
+        }
+        default:
+            break;
+        }
+        res = CreateV8File(file_out, name, name_data, ElemNum, pTOC, dont_deflate);
+    }
+
+    //Записывем заголовок файла
+    file_out.seekp(0, std::ios_base::beg);
+    file_out.write(reinterpret_cast<const char*>(&FileHeader), sizeof(FileHeader));
+
+    //Записываем блок TOC
+    SaveBlockData(file_out, (const char*)pTOC, stElemAddr::Size() * ElemsNum);
+
+    delete[] pTOC;
+
+    ////////////////////////////////// 64 битная запись ////////////////////////////////////////
+    //
+    //ElemsNum = 0;
+    //{
+    //    boost::filesystem::directory_iterator d_end;
+    //    boost::filesystem::directory_iterator dit(in_dirname);
+
+    //    for (; dit != d_end; ++dit) {
+
+    //        boost::filesystem::path current_file(dit->path());
+    //        std::string name = current_file.filename().string();
+
+    //        if (name.at(0) == '.')
+    //            continue;
+
+    //        ++ElemsNum;
+    //    }
+    //}
+
+    //stFileHeader64 FileHeader64;
+
+    ////Предварительные расчеты длины заголовка таблицы содержимого TOC файла
+    //FileHeader64.next_page_addr = V8_FF64_SIGNATURE;
+    //FileHeader64.page_size = V8_DEFAULT64_PAGE_SIZE;
+    //FileHeader64.storage_ver = 0;
+    //FileHeader64.reserved = 0;
+
+    ////DWORD cur_block_addr = stFileHeader::Size() + stBlockHeader::Size();
+
+    //// скорее всего сюда надо сместить на 1359
+    //DWORD cur_block_addr64 = stFileHeader64::Size() + stBlockHeader64::Size();
+
+    //cur_block_addr64 += Offset_816;
+
+
+    //stElemAddr64* pTOC64;
+
+    //pTOC64 = new stElemAddr64[ElemsNum];
+
+    //cur_block_addr64 += MAX(stElemAddr64::Size() * ElemsNum, V8_DEFAULT64_PAGE_SIZE);
+
+    //file_out.seekp(cur_block_addr64, std::ios_base::beg);
+
+    //UINT one_percent = ElemsNum / 50;
+    //if (one_percent) {
+    //    std::cout << "Progress (50 points): " << std::flush;
+    //}
+
+    //ElemNum = 0;
+
+    //boost::filesystem::directory_iterator d_end;
+    //boost::filesystem::directory_iterator dit(in_dirname);
+    //for (; dit != d_end; ++dit) {
+
+    //    boost::filesystem::path current_file(dit->path());
+    //    std::string name = current_file.filename().string();
+
+    //    if (name.at(0) == '.')
+    //        continue;
+
+
+    //    //Progress bar ->
+    //    {
+    //        if (ElemNum && one_percent && ElemNum % one_percent == 0) {
+    //            if (ElemNum % (one_percent * 10) == 0)
+    //                std::cout << "|" << std::flush;
+    //            else
+    //                std::cout << ".";
+    //        }
+    //    }//<- Progress bar
+
+    //    CV8Elem pElem64;
+
+    //    pElem64.HeaderSize = CV8Elem::stElemHeaderBegin::Size() + name.size() * 2 + 4; // последние четыре всегда нули?
+    //    pElem64.pHeader = new char[pElem64.HeaderSize];
+
+    //    memset(pElem64.pHeader, 0, pElem64.HeaderSize);
+
+    //    pElem64.SetName(name);
+
+    //    pTOC64[ElemNum].elem_header_addr = file_out.tellp();
+
+    //    SaveBlockData64(file_out, pElem64.pHeader, pElem64.HeaderSize, pElem64.HeaderSize);
+
+    //    pTOC64[ElemNum].elem_data_addr = file_out.tellp();
+    //    pTOC64[ElemNum].fffffff = V8_FF64_SIGNATURE;
+
+    //    if (boost::filesystem::is_directory(current_file)) {
+
+    //        pElem64.IsV8File = true;
+
+    //        std::string new_dirname(in_dirname);
+    //        new_dirname += "/";
+    //        new_dirname += name;
+
+    //        pElem64.UnpackedData.LoadFileFromFolder64(new_dirname);
+    //        pElem64.Pack(!dont_deflate);
+
+    //        SaveBlockData64(file_out, pElem64.pData, pElem64.DataSize);
+
+    //    }
+    //    else {
+
+    //        pElem64.IsV8File = false;
+
+    //        pElem64.DataSize = boost::filesystem::file_size(current_file);
+
+    //        boost::filesystem::path p_filename(in_dirname);
+    //        p_filename /= name;
+    //        boost::filesystem::ifstream file_in(p_filename, std::ios_base::binary);
+
+    //        if (pElem64.DataSize < SmartUnpackedLimit) {
+
+    //            pElem64.pData = new char[pElem64.DataSize];
+
+    //            file_in.read(reinterpret_cast<char*>(pElem64.pData), pElem64.DataSize);
+
+    //            pElem64.Pack(!dont_deflate);
+
+    //            SaveBlockData64(file_out, pElem64.pData, pElem64.DataSize);
+
+    //        }
+    //        else {
+
+    //            if (dont_deflate) {
+    //                SaveBlockData64(file_out, file_in, pElem64.DataSize);
+    //            }
+    //            else {
+    //                // Упаковка через промежуточный файл
+    //                boost::filesystem::path tmp_file_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+
+    //                {
+    //                    boost::filesystem::ofstream tmp_file(tmp_file_path, std::ios_base::binary);
+    //                    Deflate(file_in, tmp_file);
+    //                    tmp_file.close();
+    //                }
+
+    //                {
+    //                    pElem64.DataSize = boost::filesystem::file_size(tmp_file_path);
+    //                    boost::filesystem::ifstream tmp_file(tmp_file_path, std::ios_base::binary);
+    //                    SaveBlockData64(file_out, tmp_file, pElem64.DataSize);
+    //                    tmp_file.close();
+
+    //                    boost::filesystem::remove(tmp_file_path);
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    pElem64.Dispose();
+
+    //    ElemNum++;
+    //}
+
+    ////Записывем заголовок файла
+    //file_out.seekp(Offset_816, std::ios_base::beg);
+    //file_out.write(reinterpret_cast<const char*>(&FileHeader64), sizeof(FileHeader64));
+
+    ////Записываем блок TOC
+    //SaveBlockData64(file_out, (const char*)pTOC64, stElemAddr64::Size() * ElemsNum);
+
+    //delete[] pTOC64;
+
+
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    std::cout << std::endl << "Build `" << out_filename << "` OK!" << std::endl << std::flush;
+
+    return CV8File::BuildCfFile64(in_dirname, file_out, dont_deflate);
+
+    //return 0;
+}
+
+
+int CV8File::BuildCfFile64(const std::string& in_dirname, boost::filesystem::ofstream& file_out, bool dont_deflate)
+{
+    //filename can't be empty
+    if (!in_dirname.size()) {
+        std::cerr << "Argument error - Set of `in_dirname' argument" << std::endl;
         return SHOW_USAGE;
     }
 
@@ -2183,13 +2510,12 @@ int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out
             ++ElemsNum;
         }
     }
-
-    //stFileHeader FileHeader;
+    
     stFileHeader64 FileHeader;
 
     //Предварительные расчеты длины заголовка таблицы содержимого TOC файла
     FileHeader.next_page_addr = V8_FF64_SIGNATURE;
-    FileHeader.page_size      = V8_DEFAULT_PAGE_SIZE;
+    FileHeader.page_size      = V8_DEFAULT64_PAGE_SIZE;
     FileHeader.storage_ver    = 0;
     FileHeader.reserved       = 0;
     
@@ -2197,19 +2523,17 @@ int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out
     
     // скорее всего сюда надо сместить на 1359
     DWORD cur_block_addr = stFileHeader64::Size() + stBlockHeader64::Size();
-
-    //stElemAddr* pTOC;
-    stElemAddr64* pTOC;
     
-    //pTOC = new stElemAddr[ElemsNum];
-    pTOC = new stElemAddr64[ElemsNum];
-
-    //cur_block_addr += MAX(stElemAddr::Size() * ElemsNum, V8_DEFAULT_PAGE_SIZE);
-    cur_block_addr += MAX(stElemAddr64::Size() * ElemsNum, V8_DEFAULT_PAGE_SIZE);
-
     cur_block_addr += Offset_816;
 
-    boost::filesystem::ofstream file_out(out_filename, std::ios_base::binary);
+    
+    stElemAddr64* pTOC;
+    
+    pTOC = new stElemAddr64[ElemsNum];
+    
+    cur_block_addr += MAX(stElemAddr64::Size() * ElemsNum, V8_DEFAULT64_PAGE_SIZE);
+
+    //boost::filesystem::ofstream file_out(out_filename, std::ios_base::binary );
     
     //Открываем выходной файл контейнер на запись
     if (!file_out) {
@@ -2218,10 +2542,7 @@ int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out
         return -1;
     }
 
-    //Резервируем место в начале файла под заголовок и TOC
-    for (unsigned i = 0; i < cur_block_addr; i++) {
-        file_out << '\0';
-    }
+    file_out.seekp(cur_block_addr, std::ios_base::beg);
 
     UINT one_percent = ElemsNum / 50;
     if (one_percent) {
@@ -2335,15 +2656,15 @@ int CV8File::BuildCfFile64(const std::string& in_dirname, const std::string& out
     }
 
     //Записывем заголовок файла
-    file_out.seekp(0, std::ios_base::beg);
+    file_out.seekp(Offset_816, std::ios_base::beg);
     file_out.write(reinterpret_cast<const char*>(&FileHeader), sizeof(FileHeader));
 
     //Записываем блок TOC
-    SaveBlockData64(file_out, (const char*)pTOC, stElemAddr::Size() * ElemsNum);
+    SaveBlockData64(file_out, (const char*)pTOC, stElemAddr64::Size() * ElemsNum);
 
     delete[] pTOC;
 
-    std::cout << std::endl << "Build `" << out_filename << "` OK!" << std::endl << std::flush;
+    //std::cout << std::endl << "Build `" << out_filename << "` OK!" << std::endl << std::flush;
 
     return 0;
 }
@@ -2364,7 +2685,8 @@ int CV8Elem::Pack(bool deflate)
 				return ret;
 			}
 
-			delete[] pData;
+			//delete[] pData;
+            pData = nullptr;
 			pData = new char[DeflateSize];
 			DataSize = DeflateSize;
 			memcpy(pData, DeflateBuffer, DeflateSize);
@@ -2614,13 +2936,13 @@ CV8File::stBlockHeader64 CV8File::stBlockHeader64::create(ULONGLONG block_data_s
 	stBlockHeader64 BlockHeader;
 	char buf[17];
 
-	sprintf(buf, "%08x", block_data_size);
+	sprintf(buf, "%016llx", block_data_size);
 	strncpy(BlockHeader.data_size_hex, buf, 16);
 
-	sprintf(buf, "%08x", page_size);
+	sprintf(buf, "%016llx", page_size);
 	strncpy(BlockHeader.page_size_hex, buf, 16);
 
-	sprintf(buf, "%08x", next_page_addr);
+	sprintf(buf, "%016llx", next_page_addr);
 	strncpy(BlockHeader.next_page_addr_hex, buf, 16);
 
 	return BlockHeader;

@@ -51,8 +51,15 @@ const size_t V8_DEFAULT_PAGE_SIZE = 512;
 const uint32_t V8_FF_SIGNATURE = 0x7fffffff;
 
 // Для конфигурации старше 8.3.15, без режима совместимости 
+const size_t V8_DEFAULT64_PAGE_SIZE = 0x10000;
 const uint64_t V8_FF64_SIGNATURE = 0xffffffffffffffff;
+
 const size_t Offset_816 = 0x1359;  // волшебное смещение, откуда такая цифра неизвестно...
+
+constexpr const char* GUID_ROOT = "30ffe4cc-eef2-4371-8b26-046597e37e22"; // предположительно гуид корневой конфигурации
+constexpr const char* GUID_LANG = "ae3cd3da-a1c0-4b8e-8edf-4d25e853a54e"; // предположительно гуид языков конфигурации
+constexpr const char* NAME_CONFIG = "BB71D8BD57664101889B95C34FEA2351";
+constexpr const char* SNAME_CONFIG = "B b71 d8 b d57664101889 b95 c34 FEA2351";
 
 
 #define CHUNK 16384
@@ -87,12 +94,13 @@ class CV8File
 {
 public:
 
+	// Заголовок контейнера
 	struct stFileHeader
 	{
-		DWORD next_page_addr;
-		DWORD page_size;
-		DWORD storage_ver;
-		DWORD reserved; // всегда 0x00000000 ?
+		DWORD next_page_addr;     // адрес первого свободного блока
+		DWORD page_size;          // размер блока по умолчанию
+		DWORD storage_ver;        // поле неизвестного назначения, часто совпадает с количеством файлов в контейнере 
+		DWORD reserved;           // всегда 0x00000000 ?
 
 		static const UINT Size()
 		{
@@ -100,12 +108,13 @@ public:
 		}
 	};
 
+	// Заголовок контейнера 8.3.16
 	struct stFileHeader64
 	{
-		ULONGLONG next_page_addr;  // 64 бита стало
-		DWORD page_size;
-		DWORD storage_ver;
-		DWORD reserved; // всегда 0x00000000 ?
+		ULONGLONG next_page_addr;  // адрес первого свободного блока - 64 бита стало 
+		DWORD page_size;           // размер блока по умолчанию    
+		DWORD storage_ver;         // поле неизвестного назначения, часто совпадает с количеством файлов в контейнере 
+		DWORD reserved;            // всегда 0x00000000 ?
 
 		static const UINT Size()
 		{
@@ -113,11 +122,12 @@ public:
 		}
 	};
 
+	// запись документа оглавления TOC - Table Of Content
 	struct stElemAddr
 	{
-		DWORD elem_header_addr;
-		DWORD elem_data_addr;
-		DWORD fffffff; //всегда 0x7fffffff ?
+		DWORD elem_header_addr;      // адрес документа атрибутов файла
+		DWORD elem_data_addr;        // адрес документа содержимого файлов
+		DWORD fffffff;               // всегда 0x7fffffff ?
 
 		static const UINT Size()
 		{
@@ -126,12 +136,14 @@ public:
 
 	};
 
+	// запись документа оглавления TOC - Table Of Content
+	// 8.3.16
 	struct stElemAddr64
 	{
 		// каждый элемент стал 64 бита
-		ULONGLONG elem_header_addr;
-		ULONGLONG elem_data_addr;
-		ULONGLONG fffffff; //всегда 0xffffffffffffffff ?
+		ULONGLONG elem_header_addr;    // адрес документа атрибутов файла
+ 		ULONGLONG elem_data_addr;      // адрес документа содержимого файлов
+		ULONGLONG fffffff;             // всегда 0xffffffffffffffff ?
 
 		static const UINT Size()
 		{
@@ -140,6 +152,7 @@ public:
 
 	};
 
+	// Заголовок блока
 	struct stBlockHeader
 	{
 		char EOL_0D;
@@ -178,16 +191,26 @@ public:
 		}
 	};
 
+	// Заголовок блока 8.3.16
 	struct stBlockHeader64
 	{
 		char EOL_0D;
 		char EOL_0A;
-		//char data_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
-		char data_size_hex[16];
+		
+		// Размер всего документа - общая длина документа в байтах. Записана в виде строкового представления hex-числа. 
+		char data_size_hex[16]; // 64 бита теперь
 		char space1;
-		char page_size_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+
+		// Размер текущего блока – длина тела блока в байтах. Записана также в виде строкового представления числа INT64 в hex-формате. 
+		// Если документ состоит из единственного блока, то размер всего документа либо меньше, 
+		// либо совпадает с размером текущего блока (что логично)
+		char page_size_hex[16]; // 64 бита теперь
 		char space2;
-		char next_page_addr_hex[16] = { ' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' }; // 64 бита теперь
+
+		// Адрес следующего блока – адрес по которому расположен очередной блок документа. 
+		// Если адрес следующего блока равен INT64_MAX, то это значит, что следующего блока нет. 
+		// Адрес следующего блока также записан в виде строкового представления числа.
+		char next_page_addr_hex[16]; // 64 бита теперь
 		char space3;
 		char EOL2_0D;
 		char EOL2_0A;
@@ -236,11 +259,14 @@ public:
 
 	static int PackFromFolder(const std::string &dirname, const std::string &filename);
 	static int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate = false);
-	static int BuildCfFile64(const std::string& dirname, const std::string& filename, bool dont_deflate = false);
+	static int BuildCfFile64(const std::string& dirname, boost::filesystem::ofstream& file_out, bool dont_deflate = false);
+
+	static int BuildCf_old(const std::string& dirname, const std::string& filename, bool dont_deflate = false);
+
 	static int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, UINT BlockDataSize, UINT PageSize = 512);
-	static int SaveBlockData64(std::basic_ostream<char>& file_out, const char* pBlockData, UINT BlockDataSize, UINT PageSize = 512);
+	static int SaveBlockData64(std::basic_ostream<char>& file_out, const char* pBlockData, UINT BlockDataSize, UINT PageSize = 0x10000);
 	static int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, UINT BlockDataSize, UINT PageSize = 512);
-	static int SaveBlockData64(std::basic_ostream<char>& file_out, std::basic_istream<char>& file_in, UINT BlockDataSize, UINT PageSize = 512);
+	static int SaveBlockData64(std::basic_ostream<char>& file_out, std::basic_istream<char>& file_in, UINT BlockDataSize, UINT PageSize = 0x10000);
 	static int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
 	
 	static int UnpackToDirectoryNoLoad(
@@ -287,8 +313,8 @@ public:
 private:
 	stFileHeader                FileHeader;
 	stFileHeader64              FileHeader64;
-	std::vector<stElemAddr>     ElemsAddrs;
-	std::vector<stElemAddr64>   ElemsAddrs64;
+	std::vector<stElemAddr>     ElemsAddrs;       // TOC - оглавление собственно
+	std::vector<stElemAddr64>   ElemsAddrs64;     // TOC - оглавление собственно для 8.3.16   
 
 	std::vector<CV8Elem>        Elems;
 	
@@ -343,3 +369,6 @@ int Inflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
 
 DWORD _httoi(const char *value);
 ULONGLONG _httoi64(const char *value);
+
+int CreateV8File();
+

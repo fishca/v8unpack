@@ -43,8 +43,8 @@ enum _state {
 
 tree::tree(const string& _value, const node_type _type, tree* _parent)
 {
-	value = _value;
-	type = _type;
+	value  = _value;
+	type   = _type;
 	parent = _parent;
 
 	num_subnode = 0;
@@ -58,25 +58,38 @@ tree::tree(const string& _value, const node_type _type, tree* _parent)
 			prev->next = this;
 			index = prev->index + 1;
 		}
-		else parent->first = this;
+		else 
+			parent->first = this;
+		
 		parent->last = this;
 	}
-	else prev = NULL;
-	next = NULL;
+	else 
+		prev = NULL;
+	
+	next  = NULL;
 	first = NULL;
-	last = NULL;
+	last  = NULL;
 }
 
 //---------------------------------------------------------------------------
 tree::~tree()
 {
-	while(last) delete last;
-	if(prev) prev->next = next;
-	if(next) next->prev = prev;
+	while(last) 
+		delete last;
+
+	if(prev) 
+		prev->next = next;
+	
+	if(next) 
+		next->prev = prev;
 	if(parent)
 	{
-		if(parent->first == this) parent->first = next;
-		if(parent->last == this) parent->last = prev;
+		if(parent->first == this) 
+			parent->first = next;
+		
+		if(parent->last == this) 
+			parent->last = prev;
+		
 		parent->num_subnode--;
 	}
 }
@@ -115,7 +128,7 @@ node_type tree::get_type()
 void tree::set_value(const string& v, const node_type t)
 {
 	value = v;
-	type = t;
+	type  = t;
 }
 
 //---------------------------------------------------------------------------
@@ -203,6 +216,71 @@ void replaceAll(std::string& str, const std::string& from, const std::string& to
 	}
 }
 
+tree* tree::find_value(const string& val)
+{
+	node_type lt = node_type::nd_unknown;
+	if (num_subnode)
+	{
+		//if (text.length())
+		//	text += "\r\n";
+
+		//text += '{';
+
+		tree* t = first;
+		while (t)
+		{
+			if (t->value == val) {
+				//break;
+				return t;
+			}
+
+			t = t->find_value(val);
+			if (!t)
+				continue;
+			lt = t->type;
+			t = t->next;
+				
+			//if (t)
+			//	text += ',';
+		}
+		//if (lt == nd_list)
+		//	text += "\r\n";
+
+		//text += '}';
+	}
+	else
+	{
+		switch (type)
+		{
+		case nd_string:
+			//text += '\"';
+			//replaceAll(value, "\"", "\"\"");
+			//text += value;
+			//text += '\"';
+			if (value == val)
+				return this;
+			break;
+		case nd_number:
+		case nd_number_exp:
+		case nd_guid:
+		case nd_list:
+		case nd_binary:
+		case nd_binary2:
+		case nd_link:
+		case nd_binary_d:
+			//text += value;
+			if (value == val)
+				return this;
+
+			break;
+		default:
+			break;
+		}
+	}
+
+
+}
+
 //---------------------------------------------------------------------------
 void tree::outtext(string& text)
 {
@@ -262,7 +340,7 @@ string tree::path()
 	string p = "";
 	tree* t;
 
-	char buf[80];
+	char buf[1024];
 
 	if(!this) 
 		return ":??"; //-V704
@@ -333,8 +411,11 @@ tree* parse_1Ctext(const string& text, const string& path)
 						t = new tree("", nd_list, t);
 						break;
 					case '}':
-						if(t->get_first()) t->add_child("", nd_empty);
+						if(t->get_first()) 
+							t->add_child("", nd_empty);
+						
 						t = t->get_parent();
+						
 						if(!t)
 						{
 							/*

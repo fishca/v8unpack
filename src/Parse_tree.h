@@ -31,22 +31,36 @@ private:
 	unsigned int index;
 
 public:
+	
 	tree(const string& _value, const node_type _type, tree* _parent);
 	~tree();
+
 	tree* add_child(const string& _value, const node_type _type);
 	tree* add_child();
+
 	tree* add_node();
+
 	string& get_value();
+	
 	node_type get_type();
+	
 	int get_num_subnode();
+	
 	tree* get_subnode(int _index);
 	tree* get_subnode(const string& node_name);
+	
 	tree* get_next();
 	tree* get_parent();
 	tree* get_first();
+
 	tree& operator [](int _index);
+	
 	void set_value(const string& v, const node_type t);
+	
 	void outtext(string& text);
+	
+	tree* find_value(const string& val);
+
 	string path();
 };
 

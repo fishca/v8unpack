@@ -24,6 +24,7 @@ at http://mozilla.org/MPL/2.0/.
 #include "V8File.h"
 #include "V8MetaGuid.h"
 #include "Parse_tree.h"
+#include "guids.h"
 #include "version.h"
 //#include "utf8.h"
 #include "conv.h"
@@ -361,7 +362,8 @@ int ddecompile(vector<string>& argv)
 			bfs::path cfg = argv[1];
 			
 			// времянка
-			guidConfig = "f7a4a6dc-a20e-4f92-a5c5-3b22948f0cbd";
+			//guidConfig = "f7a4a6dc-a20e-4f92-a5c5-3b22948f0cbd"; // это дома
+			guidConfig = "b6e2e4e6-7e72-41de-a3ec-f2a4276a4688";
 
 			cfg /= guidConfig;
 
@@ -398,6 +400,17 @@ int ddecompile(vector<string>& argv)
 			string testCFG = "";
 
 			testCFG = outtext(res);
+
+
+			//tree* vTemp = res->get_subnode(3);
+			//tree* f = res->get_first();
+			//tree* tCatalogs = f->find_value(Guid_Catalogs);
+
+
+			//if (tCatalogs)
+			//	delete tCatalogs;
+			//if (f)
+			//	delete f;
 
 			delete res;
 		}
@@ -502,7 +515,13 @@ int example(vector<string> &argv)
 int build(vector<string> &argv)
 {
 	const bool dont_pack = false;
-	int ret = CV8File::BuildCfFile(argv[0], argv[1], dont_pack);
+	//int ret = CV8File::BuildCfFile(argv[0], argv[1], dont_pack);
+	// времянка для проверки сборки под 64 бита
+	
+	int ret = CV8File::BuildCf_old(argv[0], argv[1], dont_pack);
+	
+	//ret = CV8File::BuildCfFile64(argv[0], argv[1], dont_pack);
+	
 	return ret;
 }
 
