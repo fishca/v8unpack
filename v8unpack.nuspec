@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>v8unpack</id>
+    <version>3.0.42</version>
+    <packageSourceUrl>https://github.com/e8tools/v8unpack</packageSourceUrl>
+    <title>v8unpack</title>
+    <authors>Denis Demidov, Sergey Batanov, Sergey Rudakov</authors>
+    <projectUrl>https://github.com/e8tools/v8unpack</projectUrl>
+    <licenseUrl>http://mozilla.org/MPL/2.0/</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/e8tools/v8unpack</projectSourceUrl>
+    <docsUrl>https://github.com/e8tools/v8unpack/wiki</docsUrl>
+    <bugTrackerUrl>https://github.com/e8tools/v8unpack/issues</bugTrackerUrl>
+    <tags>v8unpack cf epf</tags>
+    <summary>CF-files management tool</summary>
+    <description>Pack/unpack CF-files</description>
+</metadata>
+  <files>
+    <!-- this section controls what actually gets packaged into the Chocolatey package -->
+    <file src="choco\tools\**" target="tools" />
+    <file src="README.md" target="." />
+    <file src="LICENSE*" target="." />
+  </files>
+</package>

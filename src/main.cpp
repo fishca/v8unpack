@@ -15,6 +15,7 @@ at http://mozilla.org/MPL/2.0/.
 
 /**
     2014-2017       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
+    2019-2020       fishca      fishcaroot(at)gmail(dot)com
  */
 
 // main.cpp : Defines the entry point for the console application.
@@ -44,7 +45,7 @@ int usage(vector<string> &argv)
 	cout << "Unpack, pack, deflate and inflate 1C v8 file (*.cf)" << endl;
 	cout << endl;
 	cout << "V8UNPACK" << endl;
-	cout << "  -U[NPACK]            in_filename.cf     out_dirname" << endl;
+	cout << "  -U[NPACK]            in_filename.cf     out_dirname [block_name]" << endl;
 	cout << "  -U[NPACK]  -L[IST]   listfile" << endl;
 	cout << "  -PA[CK]              in_dirname         out_filename.cf" << endl;
 	cout << "  -PA[CK]    -L[IST]   listfile" << endl;
@@ -52,7 +53,7 @@ int usage(vector<string> &argv)
 	cout << "  -I[NFLATE] -L[IST]   listfile" << endl;
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
-	cout << "  -P[ARSE]             in_filename        out_dirname" << endl;
+	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
@@ -100,13 +101,24 @@ int pack(vector<string> &argv)
 
 int parse(vector<string> &argv)
 {
+	int ret;
 	vector<string> filter;
 	for (size_t i = 2; i < argv.size(); i++) {
 		if (!argv[i].empty()) {
 			filter.push_back(argv[i]);
 		}
 	}
-	int ret = CV8File::Parse(argv[0], argv[1], filter);
+
+	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
+
+	if (CV8File::IsV8File16(src)) {
+		src.close();
+		ret = CV8File::Parse16(argv[0], argv[1], filter);
+	}
+	else {
+		ret = CV8File::Parse(argv[0], argv[1], filter);
+	}
+
 	return ret;
 }
 
