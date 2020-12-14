@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>v8unpack</id>
-    <version>3.0.41</version>
+    <version>3.0.42</version>
     <packageSourceUrl>https://github.com/dmpas/v8unpack</packageSourceUrl>
     <!--<owners>__REPLACE_YOUR_NAME__</owners>-->
     <!-- ============================== -->
