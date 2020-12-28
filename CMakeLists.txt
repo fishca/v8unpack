@@ -13,8 +13,8 @@ else()
 	set(RC_FILE "")
 endif()
 
-set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/NodeTypes.cpp)
-set (V8UNPACK_HEADERS src/V8File.h src/version.h src/NodeTypes.h src/zconf.h src/zlib.h)
+set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/NodeTypes.cpp src/APIcfBase.cpp)
+set (V8UNPACK_HEADERS src/V8File.h src/version.h src/NodeTypes.h src/APIcfBase.h src/zconf.h src/zlib.h)
 
 if(MSVC)
 
