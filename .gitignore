@@ -17,3 +17,5 @@ Makefile
 gmon.out
 /build
 
+cmake-build-*/*
+.idea/*

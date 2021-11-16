@@ -14,7 +14,7 @@ at http://mozilla.org/MPL/2.0/.
 /////////////////////////////////////////////////////////////////////////////
 
 /**
-    2014-2017       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
+    2014-2021       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
     2019-2020       fishca      fishcaroot(at)gmail(dot)com
  */
 
