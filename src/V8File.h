@@ -302,7 +302,8 @@ public:
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
-	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
+
+	static int ReadBlockData64(std::basic_istream<char> &file, const stBlockHeader64 &firstBlockHeader, std::basic_ostream<char> &out);
 
 private:
 	stFileHeader                FileHeader;

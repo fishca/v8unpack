@@ -49,52 +49,38 @@ void full_copy(basic_istream<T> &in_file, basic_ostream<T> &out_file)
 	);
 }
 
-
-DWORD _httoi(const char *value)
+template<typename T>
+void hex_to_int(const char *hextext, int length, T &value)
 {
+	for (auto s = hextext;
+		length && *s != '\0' && *s != ' ';
+		length--, s++) {
 
-	DWORD result = 0;
-
-	const char *s = value;
-	unsigned char lower_s;
-	while (*s != '\0' && *s != ' ') {
-		lower_s = tolower(*s);
+		auto lower_s = tolower(*s);
 		if (lower_s >= '0' && lower_s <= '9') {
-			result <<= 4;
-			result += lower_s - '0';
+			value <<= 4;
+			value += lower_s - '0';
 		}
 		else if (lower_s >= 'a' && lower_s <= 'f') {
-			result <<= 4;
-			result += lower_s - 'a' + 10;
+			value <<= 4;
+			value += lower_s - 'a' + 10;
 		}
 		else
 			break;
-		s++;
 	}
+}
+
+DWORD _httoi(const char *value)
+{
+	DWORD result = 0;
+	hex_to_int(value, 8, result);
 	return result;
 }
 
 ULONGLONG _httoi64(const char *value)
 {
-
 	ULONGLONG result = 0;
-
-	const char *s = value;
-	unsigned char lower_s;
-	while (*s != '\0' && *s != ' ') {
-		lower_s = tolower(*s);
-		if (lower_s >= '0' && lower_s <= '9') {
-			result <<= 4;
-			result += lower_s - '0';
-		}
-		else if (lower_s >= 'a' && lower_s <= 'f') {
-			result <<= 4;
-			result += lower_s - 'a' + 10;
-		}
-		else
-			break;
-		s++;
-	}
+	hex_to_int(value, 16, result);
 	return result;
 }
 
@@ -173,7 +159,7 @@ int Inflate(const std::string &in_filename, const std::string &out_filename)
 
 	if (out_filename == "-") {
 
-		// Выводим в стандартый вывод
+		// Выводим в стандартный вывод
 		output.reset(&std::cout, [](...){});
 
 	} else {
@@ -742,8 +728,7 @@ int SmartUnpack64(std::basic_istream<char> &file, bool NeedUnpack, boost::filesy
 			boost::filesystem::ofstream out;
 
 			out.open(tmp_path, std::ios_base::binary);
-			UINT BlockDataSize = 0;
-			CV8File::ReadBlockData64(file, &header, out, &BlockDataSize);
+			CV8File::ReadBlockData64(file, header, out);
 			out.close();
 
 			out.open(inf_path, std::ios_base::binary);
@@ -768,8 +753,7 @@ int SmartUnpack64(std::basic_istream<char> &file, bool NeedUnpack, boost::filesy
 			/* Конечный файл */
 			boost::filesystem::ofstream out;
 			out.open(tmp_path, std::ios_base::binary);
-			UINT BlockDataSize = 0;
-			CV8File::ReadBlockData64(file, &header, out, &BlockDataSize);
+			CV8File::ReadBlockData64(file, header, out);
 			out.close();
 
 			src_path = tmp_path;
@@ -777,13 +761,18 @@ int SmartUnpack64(std::basic_istream<char> &file, bool NeedUnpack, boost::filesy
 
 		src.open(src_path, std::ios_base::binary);
 
-		if (CV8File::IsV8File16(src)) {
+		bool unpacked_as_V8 = false;
+
+		if (CV8File::IsV8File(src)) {
 			vector<string> empty_filter;
-			CV8File::UnpackToDirectoryNoLoad16(elem_path.string(), src, empty_filter, false, false);
-			src.close();
-			boost::filesystem::remove(src_path);
+			auto unpack_result = CV8File::UnpackToDirectoryNoLoad(elem_path.string(), src, empty_filter, false, false);
+			if (unpack_result == 0) {
+				src.close();
+				boost::filesystem::remove(src_path);
+				unpacked_as_V8 = true;
+			}
 		}
-		else {
+		if (!unpacked_as_V8) {
 			src.close();
 			boost::system::error_code error;
 			boost::filesystem::rename(src_path, elem_path, error);
@@ -997,11 +986,6 @@ int CV8File::UnpackToDirectoryNoLoad16(const string& directory, basic_istream<ch
 			file.seekg(pElemsAddrs[i].elem_data_addr + V8_OFFSET_8316, std::ios_base::beg);
 			SmartUnpack64(file, boolInflate /* && IsDataPacked*/, elem_path);
 		}
-		else {
-			// TODO: Зачем это нужно??
-			//ReadBlockData(file, nullptr, o_tmp, &elem.DataSize);
-		}
-
 
 		delete[] elem.pHeader;
 
@@ -1397,19 +1381,13 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
     return 0;
 }
 
-int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize)
+int CV8File::ReadBlockData64(std::basic_istream<char> &file, const stBlockHeader64 &firstBlockHeader, std::basic_ostream<char> &out)
 {
-	DWORD data_size;
 	UINT read_in_bytes;
 
-	stBlockHeader64 Header;
-	if (pBlockHeader != nullptr) {
-		data_size = pBlockHeader->data_size();
-		Header = *pBlockHeader;
-		pBlockHeader = &Header;
-	}
-	else
-		data_size = 0;
+	auto data_size = firstBlockHeader.data_size();
+	auto Header = firstBlockHeader;
+	auto pBlockHeader = &Header;
 
 	read_in_bytes = 0;
 	while (read_in_bytes < data_size) {
@@ -1442,9 +1420,6 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 			break;
 	}
 
-	if (BlockDataSize)
-		*BlockDataSize = data_size;
-
 	return 0;
 }
 
@@ -1473,12 +1448,14 @@ bool CV8File::IsV8File16(std::basic_istream<char>& file)
 
 	memset(&BlockHeader, 0, sizeof(BlockHeader));
 
-	std::ifstream::pos_type offset = V8_OFFSET_8316;
+	std::ifstream::pos_type offset = file.tellg();
+	std::ifstream::pos_type base_offset = V8_OFFSET_8316;
 
-	file.seekg(offset);
+	file.seekg(base_offset);
 	file.read((char*)& FileHeader, FileHeader.Size());
 	file.read((char*)& BlockHeader, BlockHeader.Size());
 
+	file.seekg(offset);
 	file.clear();
 
 	return BlockHeader.IsCorrect();
