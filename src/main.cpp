@@ -30,6 +30,7 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/filesystem/fstream.hpp>
 
 using namespace std;
+using namespace v8unpack;
 
 typedef int (*handler_t)(vector<string> &argv);
 void read_param_file(const char *filename, vector< vector<string> > &list);

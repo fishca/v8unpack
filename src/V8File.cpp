@@ -36,7 +36,7 @@ at http://mozilla.org/MPL/2.0/.
 #endif
 
 using namespace std;
-
+namespace v8unpack {
 
 
 template<typename T>
@@ -945,7 +945,7 @@ int CV8File::UnpackToDirectoryNoLoad16(const string& directory, basic_istream<ch
 
 	stFileHeader64 FileHeader;
 
-	std::ifstream::pos_type offset = Offset_816;
+	std::ifstream::pos_type offset = V8_OFFSET_8316;
 	file.seekg(offset);
 
 	file.read((char*)& FileHeader, FileHeader.Size());
@@ -968,7 +968,7 @@ int CV8File::UnpackToDirectoryNoLoad16(const string& directory, basic_istream<ch
 			break;
 		}
 
-		file.seekg(pElemsAddrs[i].elem_header_addr + Offset_816, std::ios_base::beg);
+		file.seekg(pElemsAddrs[i].elem_header_addr + V8_OFFSET_8316, std::ios_base::beg);
 		file.read((char*)& BlockHeader, sizeof(BlockHeader));
 
 		if (!pBlockHeader->IsCorrect()) {
@@ -991,7 +991,7 @@ int CV8File::UnpackToDirectoryNoLoad16(const string& directory, basic_istream<ch
 
 		//080228 Блока данных может не быть, тогда адрес блока данных равен 0xffffffffffffffff
 		if (pElemsAddrs[i].elem_data_addr != V8_FF64_SIGNATURE) {
-			file.seekg(pElemsAddrs[i].elem_data_addr + Offset_816, std::ios_base::beg);
+			file.seekg(pElemsAddrs[i].elem_data_addr + V8_OFFSET_8316, std::ios_base::beg);
 			SmartUnpack64(file, boolInflate /* && IsDataPacked*/, elem_path);
 		}
 		else {
@@ -1245,7 +1245,7 @@ int CV8File::ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, cha
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF_SIGNATURE) // есть следующая страница
-			pBlockHeader = (stBlockHeader64*)&pFileData[next_page_addr + Offset_816];
+			pBlockHeader = (stBlockHeader64*)&pFileData[next_page_addr + V8_OFFSET_8316];
 		else
 			break;
 	}
@@ -1334,7 +1334,7 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF64_SIGNATURE) { // есть следующая страница
-			file.seekg(next_page_addr + Offset_816, std::ios_base::beg);
+			file.seekg(next_page_addr + V8_OFFSET_8316, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
 		else
@@ -1437,7 +1437,7 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 
 		if (next_page_addr != V8_FF_SIGNATURE) { // есть следующая страница
 			//pBlockHeader = (stBlockHeader*) &pFileData[next_page_addr];
-			file.seekg(next_page_addr + Offset_816, std::ios_base::beg);
+			file.seekg(next_page_addr + V8_OFFSET_8316, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
 		else
@@ -1475,15 +1475,15 @@ bool CV8File::IsV8File16(std::basic_istream<char>& file)
 
 	memset(&BlockHeader, 0, sizeof(BlockHeader));
 
-	//std::ifstream::pos_type offset = file.tellg() + Offset_816;
-	std::ifstream::pos_type offset = Offset_816;
+	//std::ifstream::pos_type offset = file.tellg() + V8_OFFSET_8316;
+	std::ifstream::pos_type offset = V8_OFFSET_8316;
 
 	file.seekg(offset);
 	file.read((char*)& FileHeader, FileHeader.Size());
 	//file.seekg(offset+= FileHeader.Size());
 	file.read((char*)& BlockHeader, BlockHeader.Size());
 
-	
+
 	file.clear();
 
 	return BlockHeader.IsCorrect();
@@ -2326,3 +2326,4 @@ CV8File::stBlockHeader64 CV8File::stBlockHeader64::create(ULONGLONG block_data_s
 	return BlockHeader;
 }
 
+}
