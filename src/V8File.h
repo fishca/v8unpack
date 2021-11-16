@@ -84,6 +84,10 @@ const size_t V8_OFFSET_8316 = 0x1359;  // волшебное смещение, �
 
 #define SHOW_USAGE (-22)
 
+
+DWORD _httoi(const char *value);
+ULONGLONG _httoi64(const char *value);
+
 class CV8Elem;
 
 class CV8File
@@ -179,6 +183,18 @@ public:
 				&& EOL2_0D == 0x0d
 				&& EOL2_0A == 0x0a;
 		}
+
+		uint32_t data_size() const {
+			return _httoi(data_size_hex);
+		}
+
+		uint32_t page_size() const {
+			return _httoi(page_size_hex);
+		}
+
+		uint32_t next_page_addr() const {
+			return _httoi(next_page_addr_hex);
+		}
 	};
 
 	struct stBlockHeader64
@@ -218,6 +234,18 @@ public:
 				&& space3 == 0x20
 				&& EOL2_0D == 0x0d
 				&& EOL2_0A == 0x0a;
+		}
+
+		uint64_t data_size() const {
+			return _httoi64(data_size_hex);
+		}
+
+		uint64_t page_size() const {
+			return _httoi64(page_size_hex);
+		}
+
+		uint64_t next_page_addr() const {
+			return _httoi64(next_page_addr_hex);
 		}
 	};
 
@@ -261,12 +289,6 @@ public:
 		const std::string                &filename,
 		const std::string                &dirname,
 		const std::vector< std::string > &filter
-	);
-
-	static int Parse16(
-		const std::string& filename,
-		const std::string& dirname,
-		const std::vector< std::string >& filter
 	);
 
 	static int ListFiles(const std::string &filename);
@@ -335,8 +357,4 @@ int Inflate(const std::string &in_filename, const std::string &out_filename);
 
 int Deflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
 int Inflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
-
-DWORD _httoi(const char *value);
-ULONGLONG _httoi64(const char *value);
-
 } // namespace v8unpack

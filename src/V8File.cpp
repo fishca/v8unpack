@@ -607,7 +607,7 @@ int SmartUnpack(std::basic_istream<char> &file, bool NeedUnpack, boost::filesyst
 
     int ret = 0;
 
-    size_t data_size = _httoi(header.data_size_hex);
+    size_t data_size = header.data_size();
     if (!NeedUnpack || data_size > SmartLimit) {
         /* 1) Имѣем дѣло с условно большими данными - работаем через промежуточный файл */
         /* 2) Не нужна распаковка - пишем прямо в файл-приёмник */
@@ -725,8 +725,7 @@ int SmartUnpack64(std::basic_istream<char> &file, bool NeedUnpack, boost::filesy
 
 	int ret = 0;
 
-	//size_t data_size = _httoi(header.data_size_hex);
-	ULONGLONG data_size = _httoi64(header.data_size_hex);
+	auto data_size = header.data_size();
 	if (!NeedUnpack || data_size > SmartLimit) {
 		/* 1) Имѣем дѣло с условно большими данными - работаем через промежуточный файл */
 		/* 2) Не нужна распаковка - пишем прямо в файл-приёмник */
@@ -857,6 +856,10 @@ int CV8File::UnpackToDirectoryNoLoad(const string &directory, basic_istream<char
     if (!IsV8File(file)) {
         return V8UNPACK_NOT_V8_FILE;
     }
+
+	if (IsV8File16(file)) {
+		return UnpackToDirectoryNoLoad16(directory, file, filter, boolInflate, UnpackWhenNeed);
+	}
 
     boost::filesystem::path p_dir(directory);
 
@@ -1179,11 +1182,11 @@ int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &d
 
 int CV8File::ReadBlockData(char *pFileData, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize)
 {
-    DWORD data_size, page_size, next_page_addr;
-    UINT read_in_bytes, bytes_to_read;
+    DWORD data_size;
+    UINT read_in_bytes;
 
     if (pBlockHeader != nullptr) {
-        data_size = _httoi(pBlockHeader->data_size_hex);
+        data_size = pBlockHeader->data_size();
         pBlockData = new char[data_size];
         if (!pBlockData) {
             std::cerr << "ReadBlockData. BlockData == nullptr." << std::endl;
@@ -1195,10 +1198,10 @@ int CV8File::ReadBlockData(char *pFileData, stBlockHeader *pBlockHeader, char *&
     read_in_bytes = 0;
     while (read_in_bytes < data_size) {
 
-        page_size = _httoi(pBlockHeader->page_size_hex);
-        next_page_addr = _httoi(pBlockHeader->next_page_addr_hex);
+        auto page_size = pBlockHeader->page_size();
+        auto next_page_addr = pBlockHeader->next_page_addr();
 
-        bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+        auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
         memcpy(&pBlockData[read_in_bytes], (char*)(&pBlockHeader[1]), bytes_to_read);
 
@@ -1218,11 +1221,11 @@ int CV8File::ReadBlockData(char *pFileData, stBlockHeader *pBlockHeader, char *&
 
 int CV8File::ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize)
 {
-	DWORD data_size, page_size, next_page_addr;
-	UINT read_in_bytes, bytes_to_read;
+	DWORD data_size;
+	UINT read_in_bytes;
 
 	if (pBlockHeader != nullptr) {
-		data_size = _httoi(pBlockHeader->data_size_hex);
+		data_size = pBlockHeader->data_size();
 		pBlockData = new char[data_size];
 		if (!pBlockData) {
 			std::cerr << "ReadBlockData. BlockData == nullptr." << std::endl;
@@ -1235,10 +1238,10 @@ int CV8File::ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, cha
 	read_in_bytes = 0;
 	while (read_in_bytes < data_size) {
 
-		page_size = _httoi(pBlockHeader->page_size_hex);
-		next_page_addr = _httoi(pBlockHeader->next_page_addr_hex);
+		auto page_size = pBlockHeader->page_size();
+		auto next_page_addr = pBlockHeader->next_page_addr();
 
-		bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+		auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
 		memcpy(&pBlockData[read_in_bytes], (char*)(&pBlockHeader[1]), bytes_to_read);
 
@@ -1258,12 +1261,12 @@ int CV8File::ReadBlockData64(char *pFileData, stBlockHeader64 *pBlockHeader, cha
 
 int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize)
 {
-    DWORD data_size, page_size, next_page_addr;
-    UINT read_in_bytes, bytes_to_read;
+    DWORD data_size;
+    UINT read_in_bytes;
 
     stBlockHeader Header;
     if (pBlockHeader != nullptr) {
-        data_size = _httoi(pBlockHeader->data_size_hex);
+        data_size = pBlockHeader->data_size();
         pBlockData = new char[data_size];
         if (!pBlockData) {
             std::cerr << "ReadBlockData. BlockData == nullptr." << std::endl;
@@ -1277,17 +1280,16 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
     read_in_bytes = 0;
     while (read_in_bytes < data_size) {
 
-        page_size = _httoi(pBlockHeader->page_size_hex);
-        next_page_addr = _httoi(pBlockHeader->next_page_addr_hex);
+        auto page_size = pBlockHeader->page_size();
+        auto next_page_addr = pBlockHeader->next_page_addr();
 
-        bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+        auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
         file.read(&pBlockData[read_in_bytes], bytes_to_read);
 
         read_in_bytes += bytes_to_read;
 
         if (next_page_addr != V8_FF_SIGNATURE) { // есть следующая страница
-            //pBlockHeader = (stBlockHeader*) &pFileData[next_page_addr];
             file.seekg(next_page_addr, std::ios_base::beg);
             file.read((char*)&Header, sizeof(Header));
         } else
@@ -1303,13 +1305,11 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
 int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize)
 {
 	ULONGLONG data_size;
-	ULONGLONG page_size;
-	ULONGLONG next_page_addr;
-	UINT read_in_bytes, bytes_to_read;
+	UINT read_in_bytes;
 
 	stBlockHeader64 Header;
 	if (pBlockHeader != nullptr) {
-		data_size = _httoi64(pBlockHeader->data_size_hex);
+		data_size = pBlockHeader->data_size();
 		pBlockData = new char[data_size];
 		if (!pBlockData) {
 			std::cerr << "ReadBlockData. BlockData == nullptr." << std::endl;
@@ -1324,10 +1324,10 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 	read_in_bytes = 0;
 	while (read_in_bytes < data_size) {
 
-		page_size = _httoi64(pBlockHeader->page_size_hex);
-		next_page_addr = _httoi64(pBlockHeader->next_page_addr_hex);
+		auto page_size = pBlockHeader->page_size();
+		auto next_page_addr = pBlockHeader->next_page_addr();
 
-		bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+		auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
 		file.read(&pBlockData[read_in_bytes], bytes_to_read);
 
@@ -1350,12 +1350,12 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 
 int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize)
 {
-    DWORD data_size, page_size, next_page_addr;
-    UINT read_in_bytes, bytes_to_read;
+    DWORD data_size;
+    UINT read_in_bytes;
 
     stBlockHeader Header;
     if (pBlockHeader != nullptr) {
-        data_size = _httoi(pBlockHeader->data_size_hex);
+        data_size = pBlockHeader->data_size();
         Header = *pBlockHeader;
         pBlockHeader = &Header;
     } else
@@ -1364,10 +1364,10 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
     read_in_bytes = 0;
     while (read_in_bytes < data_size) {
 
-        page_size = _httoi(pBlockHeader->page_size_hex);
-        next_page_addr = _httoi(pBlockHeader->next_page_addr_hex);
+        auto page_size = pBlockHeader->page_size();
+        auto next_page_addr = pBlockHeader->next_page_addr();
 
-        bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+        auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
         const int buf_size = 1024; // TODO: Настраиваемый размер буфера
         char *pBlockData = new char [buf_size];
@@ -1385,7 +1385,6 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
         read_in_bytes += bytes_to_read;
 
         if (next_page_addr != V8_FF_SIGNATURE) { // есть следующая страница
-            //pBlockHeader = (stBlockHeader*) &pFileData[next_page_addr];
             file.seekg(next_page_addr, std::ios_base::beg);
             file.read((char*)&Header, sizeof(Header));
         } else
@@ -1400,12 +1399,12 @@ int CV8File::ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlock
 
 int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize)
 {
-	DWORD data_size, page_size, next_page_addr;
-	UINT read_in_bytes, bytes_to_read;
+	DWORD data_size;
+	UINT read_in_bytes;
 
 	stBlockHeader64 Header;
 	if (pBlockHeader != nullptr) {
-		data_size = _httoi(pBlockHeader->data_size_hex);
+		data_size = pBlockHeader->data_size();
 		Header = *pBlockHeader;
 		pBlockHeader = &Header;
 	}
@@ -1415,10 +1414,10 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 	read_in_bytes = 0;
 	while (read_in_bytes < data_size) {
 
-		page_size = _httoi(pBlockHeader->page_size_hex);
-		next_page_addr = _httoi(pBlockHeader->next_page_addr_hex);
+		auto page_size = pBlockHeader->page_size();
+		auto next_page_addr = pBlockHeader->next_page_addr();
 
-		bytes_to_read = MIN(page_size, data_size - read_in_bytes);
+		auto bytes_to_read = MIN(page_size, data_size - read_in_bytes);
 
 		const int buf_size = 1024; // TODO: Настраиваемый размер буфера
 		char *pBlockData = new char[buf_size];
@@ -1436,7 +1435,6 @@ int CV8File::ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pB
 		read_in_bytes += bytes_to_read;
 
 		if (next_page_addr != V8_FF_SIGNATURE) { // есть следующая страница
-			//pBlockHeader = (stBlockHeader*) &pFileData[next_page_addr];
 			file.seekg(next_page_addr + V8_OFFSET_8316, std::ios_base::beg);
 			file.read((char*)&Header, sizeof(Header));
 		}
@@ -1475,14 +1473,11 @@ bool CV8File::IsV8File16(std::basic_istream<char>& file)
 
 	memset(&BlockHeader, 0, sizeof(BlockHeader));
 
-	//std::ifstream::pos_type offset = file.tellg() + V8_OFFSET_8316;
 	std::ifstream::pos_type offset = V8_OFFSET_8316;
 
 	file.seekg(offset);
 	file.read((char*)& FileHeader, FileHeader.Size());
-	//file.seekg(offset+= FileHeader.Size());
 	file.read((char*)& BlockHeader, BlockHeader.Size());
-
 
 	file.clear();
 
@@ -1491,7 +1486,6 @@ bool CV8File::IsV8File16(std::basic_istream<char>& file)
 
 bool CV8File::IsV8File(const char *pFileData, ULONG FileDataSize)
 {
-
     if (!pFileData) {
         return false;
     }
@@ -1678,32 +1672,6 @@ int CV8File::Parse(const std::string &filename_in, const std::string &dirname, c
 
     return ret;
 }
-
-
-int CV8File::Parse16(const std::string& filename_in, const std::string& dirname, const std::vector< std::string >& filter)
-{
-	int ret = 0;
-
-	boost::filesystem::ifstream file_in(filename_in, std::ios_base::binary);
-
-	if (!file_in) {
-		std::cerr << "Parse. `" << filename_in << "` not found!" << std::endl;
-		return -1;
-	}
-
-	ret = UnpackToDirectoryNoLoad16(dirname, file_in, filter);
-
-	if (ret == V8UNPACK_NOT_V8_FILE) {
-		std::cerr << "Parse. `" << filename_in << "` is not V8 file!" << std::endl;
-		return ret;
-	}
-
-	std::cout << "Parse `" << filename_in << "`: ok" << std::endl << std::flush;
-
-	return ret;
-}
-
-
 
 int CV8File::SaveFileToFolder(const boost::filesystem::path &directiory) const
 {
