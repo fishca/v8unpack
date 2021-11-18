@@ -269,6 +269,12 @@ public:
 	static int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, UINT BlockDataSize, UINT PageSize = 512);
 	static int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
 
+	static int UnpackToFolder16(
+			const std::string &filename,
+			const std::string &dirname,
+			const std::string &block_name,
+			      bool         print_progress = false);
+
 	static int UnpackToDirectoryNoLoad(
 		const std::string                &directory,
 		      std::basic_istream<char>   &file,
@@ -302,7 +308,6 @@ public:
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
-
 	static int ReadBlockData64(std::basic_istream<char> &file, const stBlockHeader64 &firstBlockHeader, std::basic_ostream<char> &out);
 
 private:

@@ -1050,6 +1050,113 @@ int CV8File::ListFiles(const std::string &filename)
 	return 0;
 }
 
+int CV8File::UnpackToFolder16(const std::string &filename_in, const std::string &dirname, const std::string &UnpackElemWithName, bool print_progress)
+{
+	int ret = 0;
+
+	boost::filesystem::ifstream file(filename_in, std::ios_base::binary);
+
+	boost::filesystem::path p_dir(dirname);
+
+	if (!boost::filesystem::exists(p_dir)) {
+		if (!boost::filesystem::create_directory(dirname)) {
+			std::cerr << "UnpackToDirectoryNoLoad. Error in creating directory!" << std::endl;
+			return ret;
+		}
+	}
+
+	stFileHeader64 FileHeader;
+
+	std::ifstream::pos_type offset = V8_OFFSET_8316;
+	file.seekg(offset);
+	file.read((char*)&FileHeader, FileHeader.Size());
+
+	if (UnpackElemWithName.empty()) {
+		boost::filesystem::path filename_out(dirname);
+		filename_out /= "FileHeader";
+		boost::filesystem::ofstream file_out(filename_out, std::ios_base::binary);
+		file_out.write((char*)&FileHeader, sizeof(FileHeader));
+		file_out.close();
+	}
+
+	stBlockHeader64 BlockHeader;
+	stBlockHeader64 *pBlockHeader = &BlockHeader;
+
+	file.read((char*)&BlockHeader, BlockHeader.Size());
+
+	UINT ElemsAddrsSize;
+	stElemAddr64 *pElemsAddrs = nullptr;
+	ReadBlockData64(file, pBlockHeader, (char*&)pElemsAddrs, &ElemsAddrsSize);
+
+	unsigned int ElemsNum = ElemsAddrsSize / stElemAddr64::Size();
+
+	for (UINT i = 0; i < ElemsNum; i++) {
+
+		if (pElemsAddrs[i].fffffff != V8_FF64_SIGNATURE) {
+			ElemsNum = i;
+			break;
+		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + offset, std::ios_base::beg);
+		file.read((char*)&BlockHeader, BlockHeader.Size());
+
+		if (!pBlockHeader->IsCorrect()) {
+			ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+			break;
+		}
+
+		CV8Elem elem;
+		ReadBlockData64(file, pBlockHeader, elem.pHeader, &elem.HeaderSize);
+
+		string ElemName = elem.GetName();
+
+		// если передано имя блока для распаковки, пропускаем все остальные
+		if (!UnpackElemWithName.empty() && UnpackElemWithName != ElemName) {
+			continue;
+		}
+
+		boost::filesystem::path filename_out;
+		boost::filesystem::ofstream file_out;
+
+		filename_out = dirname;
+		filename_out += "/";
+		filename_out += ElemName;
+		filename_out += ".header";
+
+		file_out.open(filename_out, std::ios_base::binary);
+		if (!file_out) {
+			std::cerr << "UnpackToFolder. Error in creating file!" << std::endl;
+			return -1;
+		}
+		file_out.write(reinterpret_cast<char*>(elem.pHeader), elem.HeaderSize);
+		file_out.close();
+
+		filename_out = dirname;
+		filename_out += "/";
+		filename_out += ElemName;
+		filename_out += ".data";
+
+		file_out.open(filename_out, std::ios_base::binary);
+		if (!file_out) {
+			std::cerr << "UnpackToFolder. Error in creating file!" << std::endl;
+			return -1;
+		}
+		if (pElemsAddrs[i].elem_data_addr != V8_FF64_SIGNATURE) {
+
+			file.seekg(pElemsAddrs[i].elem_data_addr + offset, std::ios_base::beg);
+
+			stBlockHeader64 Header;
+			file.read((char*)&Header, Header.Size());
+
+			ReadBlockData64(file, Header, file_out);
+		}
+		file_out.close();
+
+	}
+
+	return 0;
+}
+
 int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &dirname, const std::string &UnpackElemWithName, bool print_progress)
 {
 	int ret = 0;
@@ -1063,6 +1170,11 @@ int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &d
 
 	if (!IsV8File(file)) {
 		return V8UNPACK_NOT_V8_FILE;
+	}
+
+	if (IsV8File16(file)) {
+		file.close();
+		return UnpackToFolder16(filename_in, dirname, UnpackElemWithName, print_progress);
 	}
 
 	boost::filesystem::path p_dir(dirname);
