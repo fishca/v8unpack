@@ -14,7 +14,7 @@ at http://mozilla.org/MPL/2.0/.
 /////////////////////////////////////////////////////////////////////////////
 
 /**
-    2014-2017       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
+    2014-2021       dmpas       sergey(dot)batanov(at)dmpas(dot)ru
     2019-2020       fishca      fishcaroot(at)gmail(dot)com
  */
 
@@ -30,6 +30,7 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/filesystem/fstream.hpp>
 
 using namespace std;
+using namespace v8unpack;
 
 typedef int (*handler_t)(vector<string> &argv);
 void read_param_file(const char *filename, vector< vector<string> > &list);
@@ -101,7 +102,11 @@ int pack(vector<string> &argv)
 
 int parse(vector<string> &argv)
 {
-	int ret;
+
+	if (argv.size() < 2) {
+		return SHOW_USAGE;
+	}
+
 	vector<string> filter;
 	for (size_t i = 2; i < argv.size(); i++) {
 		if (!argv[i].empty()) {
@@ -109,17 +114,7 @@ int parse(vector<string> &argv)
 		}
 	}
 
-	boost::filesystem::ifstream src(argv[0], std::ios_base::binary);
-
-	if (CV8File::IsV8File16(src)) {
-		src.close();
-		ret = CV8File::Parse16(argv[0], argv[1], filter);
-	}
-	else {
-		ret = CV8File::Parse(argv[0], argv[1], filter);
-	}
-
-	return ret;
+	return CV8File::Parse(argv[0], argv[1], filter);
 }
 
 int list_files(vector<string> &argv)

@@ -14,7 +14,7 @@ at http://mozilla.org/MPL/2.0/.
 /////////////////////////////////////////////////////////////////////////////
 
 /**
-    2014-2017       dmpas           sergey(dot)batanov(at)dmpas(dot)ru
+    2014-2021       dmpas           sergey(dot)batanov(at)dmpas(dot)ru
     2019-2020       fishca          fishcaroot(at)gmail(dot)com
  */
 
@@ -29,6 +29,7 @@ at http://mozilla.org/MPL/2.0/.
 #pragma once
 #endif // _MSC_VER > 1000*/
 
+#define _CRT_SECURE_NO_WARNINGS
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
@@ -42,6 +43,8 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/shared_array.hpp>
 #include <boost/filesystem.hpp>
 
+namespace v8unpack {
+
 typedef uint32_t UINT;
 typedef uint32_t DWORD;
 typedef uint32_t ULONG;
@@ -50,9 +53,9 @@ typedef uint64_t ULONGLONG;
 const size_t V8_DEFAULT_PAGE_SIZE = 512;
 const uint32_t V8_FF_SIGNATURE = 0x7fffffff;
 
-// Для конфигурации старше 8.3.15, без режима совместимости 
+// Для конфигурации старше 8.3.16, без режима совместимости
 const uint64_t V8_FF64_SIGNATURE = 0xffffffffffffffff;
-const size_t Offset_816 = 0x1359;  // волшебное смещение, откуда такая цифра неизвестно...
+const size_t V8_OFFSET_8316 = 0x1359;  // волшебное смещение, откуда такая цифра неизвестно...
 
 
 #define CHUNK 16384
@@ -65,7 +68,7 @@ const size_t Offset_816 = 0x1359;  // волшебное смещение, от�
 #endif
 
 
-#define V8UNPACK_ERROR -50
+#define V8UNPACK_ERROR (-50)
 #define V8UNPACK_NOT_V8_FILE (V8UNPACK_ERROR-1)
 #define V8UNPACK_HEADER_ELEM_NOT_CORRECT (V8UNPACK_ERROR-2)
 
@@ -79,7 +82,11 @@ const size_t Offset_816 = 0x1359;  // волшебное смещение, от�
 #define V8UNPACK_DEFLATE_IN_FILE_NOT_FOUND (V8UNPACK_ERROR-1)
 #define V8UNPACK_DEFLATE_OUT_FILE_NOT_CREATED (V8UNPACK_ERROR-2)
 
-#define SHOW_USAGE -22
+#define SHOW_USAGE (-22)
+
+
+DWORD _httoi(const char *value);
+ULONGLONG _httoi64(const char *value);
 
 class CV8Elem;
 
@@ -94,7 +101,7 @@ public:
 		DWORD storage_ver;
 		DWORD reserved; // всегда 0x00000000 ?
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 4 + 4 + 4 + 4;
 		}
@@ -107,7 +114,7 @@ public:
 		DWORD storage_ver;
 		DWORD reserved; // всегда 0x00000000 ?
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 8 + 4 + 4 + 4;
 		}
@@ -119,7 +126,7 @@ public:
 		DWORD elem_data_addr;
 		DWORD fffffff; //всегда 0x7fffffff ?
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 4 + 4 + 4;
 		}
@@ -133,7 +140,7 @@ public:
 		ULONGLONG elem_data_addr;
 		ULONGLONG fffffff; //всегда 0xffffffffffffffff ?
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 8 + 8 + 8;
 		}
@@ -144,11 +151,11 @@ public:
 	{
 		char EOL_0D;
 		char EOL_0A;
-		char data_size_hex[8];
+		char data_size_hex[8] = {'0', '0', '0', '0', '0', '0', '0', '0'};
 		char space1;
-		char page_size_hex[8];
+		char page_size_hex[8] = {'0', '0', '0', '0', '0', '0', '0', '0'};
 		char space2;
-		char next_page_addr_hex[8];
+		char next_page_addr_hex[8] = {'7', 'f', 'f', 'f', 'f', 'f', 'f', 'f'};
 		char space3;
 		char EOL2_0D;
 		char EOL2_0A;
@@ -161,7 +168,7 @@ public:
 
 		static stBlockHeader create(uint32_t block_data_size, uint32_t page_size, uint32_t next_page_addr);
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 1 + 1 + 8 + 1 + 8 + 1 + 8 + 1 + 1 + 1;
 		};
@@ -175,6 +182,18 @@ public:
 				&& space3 == 0x20
 				&& EOL2_0D == 0x0d
 				&& EOL2_0A == 0x0a;
+		}
+
+		uint32_t data_size() const {
+			return _httoi(data_size_hex);
+		}
+
+		uint32_t page_size() const {
+			return _httoi(page_size_hex);
+		}
+
+		uint32_t next_page_addr() const {
+			return _httoi(next_page_addr_hex);
 		}
 	};
 
@@ -196,12 +215,12 @@ public:
 			space1(' '), space2(' '), space3(' '),
 			EOL2_0D(0xd), EOL2_0A(0xa)
 		{
-			
+
 		}
 
 		static stBlockHeader64 create(ULONGLONG block_data_size, ULONGLONG page_size, ULONGLONG next_page_addr);
 
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 1 + 1 + 16 + 1 + 16 + 1 + 16 + 1 + 1 + 1; // 55 теперь
 		};
@@ -216,6 +235,18 @@ public:
 				&& EOL2_0D == 0x0d
 				&& EOL2_0A == 0x0a;
 		}
+
+		uint64_t data_size() const {
+			return _httoi64(data_size_hex);
+		}
+
+		uint64_t page_size() const {
+			return _httoi64(page_size_hex);
+		}
+
+		uint64_t next_page_addr() const {
+			return _httoi64(next_page_addr_hex);
+		}
 	};
 
 	int GetData(char **DataBufer, ULONG *DataBuferSize);
@@ -225,7 +256,7 @@ public:
 	int SaveFileToFolder(const boost::filesystem::path &directiory) const;
 
 	CV8File();
-	CV8File(char *pFileData, bool boolUndeflate = true);
+	explicit CV8File(char *pFileData, bool boolUndeflate = true);
 	virtual ~CV8File();
 
 	CV8File(const CV8File &src);
@@ -237,7 +268,13 @@ public:
 	static int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, UINT BlockDataSize, UINT PageSize = 512);
 	static int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, UINT BlockDataSize, UINT PageSize = 512);
 	static int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
-	
+
+	static int UnpackToFolder16(
+			const std::string &filename,
+			const std::string &dirname,
+			const std::string &block_name,
+			      bool         print_progress = false);
+
 	static int UnpackToDirectoryNoLoad(
 		const std::string                &directory,
 		      std::basic_istream<char>   &file,
@@ -253,17 +290,11 @@ public:
 		      bool                        boolInflate = true,
 		      bool                        UnpackWhenNeed = false
 	);
-	
+
 	static int Parse(
 		const std::string                &filename,
 		const std::string                &dirname,
 		const std::vector< std::string > &filter
-	);
-
-	static int Parse16(
-		const std::string& filename,
-		const std::string& dirname,
-		const std::vector< std::string >& filter
 	);
 
 	static int ListFiles(const std::string &filename);
@@ -277,7 +308,7 @@ public:
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, char *&pBlockData, UINT *BlockDataSize = NULL);
 	static int ReadBlockData(std::basic_istream<char> &file, stBlockHeader *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
-	static int ReadBlockData64(std::basic_istream<char> &file, stBlockHeader64 *pBlockHeader, std::basic_ostream<char> &out, UINT *BlockDataSize = NULL);
+	static int ReadBlockData64(std::basic_istream<char> &file, const stBlockHeader64 &firstBlockHeader, std::basic_ostream<char> &out);
 
 private:
 	stFileHeader                FileHeader;
@@ -298,7 +329,7 @@ public:
 		DWORD res; // всегда 0x000000?
 		//изменяемая длина имени блока
 		//после имени DWORD res; // всегда 0x000000?
-		static const UINT Size()
+		static UINT Size()
 		{
 			return 8 + 8 + 4;
 		};
@@ -332,6 +363,4 @@ int Inflate(const std::string &in_filename, const std::string &out_filename);
 
 int Deflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
 int Inflate(const char* in_buf, char** out_buf, ULONG in_len, ULONG* out_len);
-
-DWORD _httoi(const char *value);
-ULONGLONG _httoi64(const char *value);
+} // namespace v8unpack
