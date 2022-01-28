@@ -10,14 +10,16 @@ else()
 	set(RC_FILE "")
 endif()
 
-set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/utils.cpp)
 set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h)
 
 if(MSVC)
 
 	foreach(flag_var
-		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-		CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+			CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+			CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
 		if(${flag_var} MATCHES "/MD")
 			string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
@@ -39,7 +41,7 @@ set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_RUNTIME ON)
 
-find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
+find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
 
 include_directories (${Boost_INCLUDE_DIRS})
 target_link_libraries (v8unpack ${Boost_LIBRARIES})
