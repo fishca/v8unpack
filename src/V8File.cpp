@@ -927,6 +927,13 @@ int CV8File::LoadFileFromFolder(const string &dirname)
 	return V8UNPACK_OK;
 }
 
+static bool
+is_dot_file(const boost::filesystem::path &path)
+{
+	return path.filename().string() == "."
+		|| path.filename().string() == "..";
+}
+
 template<typename format>
 static int
 recursive_pack(const string &in_dirname, const string &out_filename, bool dont_deflate)
@@ -937,8 +944,7 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 		boost::filesystem::directory_iterator dit(in_dirname);
 
 		for (; dit != d_end; ++dit) {
-			if (!dit->path().filename_is_dot()
-				&& !dit->path().filename_is_dot_dot()) {
+			if (!is_dot_file(dit->path())) {
 				++ElemsNum;
 			}
 		}
@@ -978,8 +984,7 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 	boost::filesystem::directory_iterator dit(in_dirname);
 	for (; dit != d_end; ++dit) {
 
-		if (dit->path().filename_is_dot_dot()
-			|| dit->path().filename_is_dot()) {
+		if (is_dot_file(dit->path())) {
 			continue;
 		}
 
