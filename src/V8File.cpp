@@ -16,6 +16,7 @@ at http://mozilla.org/MPL/2.0/.
 #pragma ide diagnostic ignored "misc-no-recursion"
 
 #include "V8File.h"
+#include "VersionFile.h"
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -1058,7 +1059,19 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 	return V8UNPACK_OK;
 }
 
-int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_deflate, bool forceV16)
+static int
+directory_container_compatibility(const string &in_dirname)
+{
+	auto version_file_path = boost::filesystem::path(in_dirname) / "version";
+	if (boost::filesystem::exists(version_file_path)) {
+		boost::filesystem::ifstream version_in(version_file_path);
+		auto v = VersionFile::parse(version_in);
+		return v.compatibility();
+	}
+	return VersionFile::COMPATIBILITY_DEFAULT;
+}
+
+int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_deflate)
 {
 	//filename can't be empty
 	if (in_dirname.empty()) {
@@ -1076,7 +1089,9 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 		return V8UNPACK_SOURCE_DOES_NOT_EXIST;
 	}
 
-	if (forceV16) {
+	int compatibility = directory_container_compatibility(in_dirname);
+
+	if (compatibility >= VersionFile::V80316) {
 		return recursive_pack<Format16>(in_dirname, out_filename, dont_deflate);
 	}
 

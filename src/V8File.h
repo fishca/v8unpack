@@ -326,9 +326,7 @@ private:
 
 
 int PackFromFolder(const std::string &dirname, const std::string &filename);
-int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate, bool forceV16);
-//int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize = 512);
-//int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, uint32_t BlockDataSize, uint32_t PageSize = 512);
+int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate);
 int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
 
 int Parse(
