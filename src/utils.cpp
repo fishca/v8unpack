@@ -59,18 +59,18 @@ void int_to_hex(T value, char *buf)
 {
 	for (int i = 2*N; i; i--) {
 		buf[i - 1] = hex[value & 0xf];
-		value <<= 4;
+		value >>= 4;
 	}
 }
 
 void _itoht(uint32_t value, char *ht)
 {
-	int_to_hex<uint32_t, 8>(value, ht);
+	int_to_hex<uint32_t, 4>(value, ht);
 }
 
 void _itoht64(uint64_t value, char *ht)
 {
-	int_to_hex<uint64_t, 16>(value, ht);
+	int_to_hex<uint64_t, 8>(value, ht);
 }
 
 
