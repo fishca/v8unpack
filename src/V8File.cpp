@@ -354,6 +354,31 @@ int SaveBlockData(basic_ostream<char> &file_out, const char *pBlockData, size_t 
 	return V8UNPACK_OK;
 }
 
+static int
+directory_container_compatibility(const string &in_dirname)
+{
+	{ // распакованный файл version (после Parse)
+		auto version_file_path = boost::filesystem::path(in_dirname) / "version";
+		if (boost::filesystem::exists(version_file_path)) {
+			boost::filesystem::ifstream version_in(version_file_path);
+			auto v = VersionFile::parse(version_in);
+			return v.compatibility();
+		}
+	}
+	{ // нераспакованный файл version (после Unpack)
+		auto version_file_path = boost::filesystem::path(in_dirname) / "version.data";
+		if (boost::filesystem::exists(version_file_path)) {
+			boost::filesystem::ifstream version_in(version_file_path);
+			std::stringstream contentStream;
+			Inflate(version_in, contentStream);
+			contentStream.seekg(0);
+			auto v = VersionFile::parse(contentStream);
+			return v.compatibility();
+		}
+	}
+	return VersionFile::COMPATIBILITY_DEFAULT;
+}
+
 void CV8File::Dispose()
 {
 	vector<CV8Elem>::iterator elem;
@@ -758,19 +783,11 @@ struct PackElementEntry {
 	size_t                   data_size;
 };
 
-int PackFromFolder(const string &dirname, const string &filename_out)
+template<typename format>
+static int
+pack_from_folder(const boost::filesystem::path &p_curdir, boost::filesystem::ofstream &file_out)
 {
-	boost::filesystem::path p_curdir(dirname);
-
-	boost::filesystem::ofstream file_out(filename_out, ios_base::binary);
-	if (!file_out) {
-		cerr << "SaveFile. Error in creating file: " << filename_out << endl;
-		return -1;
-	}
-
-	typedef Format15 format;
-
-	// записываем заголовок
+	file_out << format::placeholder;
 	{
 		boost::filesystem::ifstream file_in(p_curdir / "FileHeader", ios_base::binary);
 		full_copy(file_in, file_out);
@@ -799,7 +816,7 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	} // for it
 
 	auto ElemsNum = Elems.size();
-	vector<format::elem_addr_t> ElemsAddrs;
+	vector<typename format::elem_addr_t> ElemsAddrs;
 	ElemsAddrs.reserve(ElemsNum);
 
 	// cur_block_addr - смещение текущего блока
@@ -819,7 +836,7 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	cur_block_addr += addr_block_size; // +[2]
 
 	for (const auto &elem : Elems) {
-		format::elem_addr_t addr;
+		typename format::elem_addr_t addr;
 
 		addr.elem_header_addr = cur_block_addr;
 		cur_block_addr += format::block_header_t::Size() + elem.header_size; // +[3]+[4]
@@ -847,6 +864,23 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	file_out.close();
 
 	return V8UNPACK_OK;
+}
+
+int PackFromFolder(const string &dirname, const string &filename_out)
+{
+	boost::filesystem::path p_curdir(dirname);
+	boost::filesystem::ofstream file_out(filename_out, ios_base::binary);
+	if (!file_out) {
+		cerr << "SaveFile. Error in creating file: " << filename_out << endl;
+		return -1;
+	}
+
+	int compatibility = directory_container_compatibility(dirname);
+	if (compatibility >= VersionFile::V80316) {
+		return pack_from_folder<Format16>(p_curdir, file_out);
+	}
+
+	return pack_from_folder<Format15>(p_curdir, file_out);
 }
 
 int RecursiveUnpack(const string &directory, basic_istream<char> &file, const vector<string> &filter, bool boolInflate, bool UnpackWhenNeed)
@@ -1057,18 +1091,6 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 	cout << endl << "Build `" << out_filename << "` OK!" << endl << flush;
 
 	return V8UNPACK_OK;
-}
-
-static int
-directory_container_compatibility(const string &in_dirname)
-{
-	auto version_file_path = boost::filesystem::path(in_dirname) / "version";
-	if (boost::filesystem::exists(version_file_path)) {
-		boost::filesystem::ifstream version_in(version_file_path);
-		auto v = VersionFile::parse(version_in);
-		return v.compatibility();
-	}
-	return VersionFile::COMPATIBILITY_DEFAULT;
 }
 
 int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_deflate)
