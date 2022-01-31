@@ -189,15 +189,19 @@ int example(vector<string> &argv)
 
 int build(vector<string> &argv)
 {
-	const bool dont_pack = false;
-	int ret = BuildCfFile(argv[0], argv[1], dont_pack);
+	int ret = BuildCfFile(argv[0], argv[1], false, false);
+	return ret;
+}
+
+int build_v16(vector<string> &argv)
+{
+	int ret = BuildCfFile(argv[0], argv[1], false, true);
 	return ret;
 }
 
 int build_nopack(vector<string> &argv)
 {
-	const bool dont_pack = true;
-	int ret = BuildCfFile(argv[0], argv[1], dont_pack);
+	int ret = BuildCfFile(argv[0], argv[1], true, false);
 	return ret;
 }
 
@@ -241,16 +245,22 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 	if (cur_mode == "-build" || cur_mode == "-b") {
 
 		bool dont_pack = false;
+		bool buildv16 = false;
 
-		if ((int)args.size() > arg_base) {
+		while ((int)args.size() > arg_base) {
 			string arg2(args[arg_base]);
 			transform(arg2.begin(), arg2.end(), arg2.begin(), ::tolower);
 			if (arg2 == "-n" || arg2 == "-nopack") {
 				arg_base++;
 				dont_pack = true;
+			} else if (arg2 == "-v16") {
+				arg_base++;
+				buildv16 = true;
+			} else {
+				break;
 			}
 		}
-		return dont_pack ? build_nopack : build;
+		return dont_pack ? build_nopack : (buildv16 ? build_v16 : build);
 	}
 
 	allow_listfile = false;

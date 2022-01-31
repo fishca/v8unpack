@@ -12,7 +12,7 @@ endif()
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/utils.cpp)
+set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/utils.cpp src/placeholder216.cpp)
 set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h)
 
 if(MSVC)

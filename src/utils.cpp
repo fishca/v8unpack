@@ -170,6 +170,12 @@ int Deflate(const std::string &in_filename, const std::string &out_filename)
 	return 0;
 }
 
+int Deflate(std::istream &source, const std::string &out_filename)
+{
+	std::ofstream dest(out_filename, std::ios_base::binary);
+	return Deflate(source, dest);
+}
+
 int Deflate(std::istream &source, std::ostream &dest)
 {
 

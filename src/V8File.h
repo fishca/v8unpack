@@ -242,6 +242,12 @@ struct Format15
 	static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
 	static const std::streamoff BASE_OFFSET = 0;
 	static const uint32_t DEFAULT_PAGE_SIZE = 512;
+
+	template <class _Elem, class _Traits>
+	static std::basic_ostream<_Elem, _Traits>& __CLRCALL_OR_CDECL
+	placeholder(std::basic_ostream<_Elem, _Traits>& _Ostr) {
+		return _Ostr;
+	}
 };
 
 struct Format16
@@ -253,6 +259,9 @@ struct Format16
 	static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
 	static const std::streamoff BASE_OFFSET = 0x1359;
 	static const uint64_t DEFAULT_PAGE_SIZE = 512;
+
+	static std::basic_ostream<char>& __CLRCALL_OR_CDECL
+	placeholder(std::basic_ostream<char>& _Ostr);
 };
 
 
@@ -317,9 +326,9 @@ private:
 
 
 int PackFromFolder(const std::string &dirname, const std::string &filename);
-int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate = false);
-int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize = 512);
-int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, uint32_t BlockDataSize, uint32_t PageSize = 512);
+int BuildCfFile(const std::string &dirname, const std::string &filename, bool dont_deflate, bool forceV16);
+//int SaveBlockData(std::basic_ostream<char> &file_out, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize = 512);
+//int SaveBlockData(std::basic_ostream<char> &file_out, std::basic_istream<char> &file_in, uint32_t BlockDataSize, uint32_t PageSize = 512);
 int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
 
 int Parse(
@@ -332,6 +341,7 @@ int ListFiles(const std::string &filename);
 bool IsV8File(std::basic_istream<char> &file);
 bool IsV8File16(std::basic_istream<char>& file);
 
+int Deflate(std::istream &source, const std::string &out_filename);
 int Deflate(std::istream &source, std::ostream &dest);
 int Inflate(std::istream &source, std::ostream &dest);
 
