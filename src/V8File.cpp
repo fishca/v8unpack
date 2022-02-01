@@ -13,7 +13,10 @@ at http://mozilla.org/MPL/2.0/.
     2019-2020       fishca      fishcaroot(at)gmail(dot)com
  */
 
+#pragma ide diagnostic ignored "misc-no-recursion"
+
 #include "V8File.h"
+#include "VersionFile.h"
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -262,7 +265,7 @@ SafeReadBlockData(in_stream_t &file, out_stream_t &out)
 
 template<typename format>
 static
-int SaveBlockDataToBuffer(char *&cur_pos, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize = 0)
+int SaveBlockDataToBuffer(char *&cur_pos, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize = format::DEFAULT_PAGE_SIZE)
 {
 	if (PageSize < BlockDataSize)
 		PageSize = BlockDataSize;
@@ -282,23 +285,98 @@ int SaveBlockDataToBuffer(char *&cur_pos, const char *pBlockData, uint32_t Block
 	return 0;
 }
 
-int SaveBlockData(basic_ostream<char> &file_out, const vector<char> &data, uint32_t PageSize = 0)
+template<typename format>
+int SaveBlockData(basic_ostream<char> &file_out, const vector<char> &data, size_t PageSize = format::DEFAULT_PAGE_SIZE)
 {
 	auto BlockDataSize = data.size();
 	if (PageSize < BlockDataSize)
 		PageSize = BlockDataSize;
 
-	typedef Format15 format;
-
-	format::block_header_t CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
+	auto CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
 	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
 	file_out.write(data.data(), BlockDataSize);
 
-	for(uint32_t i = 0; i < PageSize - BlockDataSize; i++) {
-		file_out << (char)0;
+	if (PageSize > BlockDataSize) {
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
+		}
 	}
 
-	return 0;
+	return V8UNPACK_OK;
+}
+
+template<typename format>
+int SaveBlockData(basic_ostream<char> &file_out, basic_istream<char> &file_in, size_t BlockDataSize, size_t PageSize = format::DEFAULT_PAGE_SIZE)
+{
+	if (PageSize < BlockDataSize)
+		PageSize = BlockDataSize;
+
+	auto CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
+	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
+	full_copy(file_in, file_out);
+
+	if (PageSize > BlockDataSize) {
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
+		}
+	}
+
+	return V8UNPACK_OK;
+}
+
+template<typename format>
+int SaveBlockData(basic_ostream<char> &file_out, boost::filesystem::path &in_file_path)
+{
+	auto BlockDataSize = boost::filesystem::file_size(in_file_path);
+	auto PageSize = BlockDataSize;
+
+	boost::filesystem::ifstream file_in(in_file_path, std::ios_base::binary);
+
+	return SaveBlockData<format>(file_out, file_in, BlockDataSize, PageSize);
+}
+
+template<typename format>
+int SaveBlockData(basic_ostream<char> &file_out, const char *pBlockData, size_t BlockDataSize, size_t PageSize = format::DEFAULT_PAGE_SIZE)
+{
+	if (PageSize < BlockDataSize)
+		PageSize = BlockDataSize;
+
+	auto CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
+	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
+	file_out.write(reinterpret_cast<const char *>(pBlockData), BlockDataSize);
+
+	if (PageSize > BlockDataSize) {
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
+		}
+	}
+
+	return V8UNPACK_OK;
+}
+
+static int
+directory_container_compatibility(const string &in_dirname)
+{
+	{ // распакованный файл version (после Parse)
+		auto version_file_path = boost::filesystem::path(in_dirname) / "version";
+		if (boost::filesystem::exists(version_file_path)) {
+			boost::filesystem::ifstream version_in(version_file_path);
+			auto v = VersionFile::parse(version_in);
+			return v.compatibility();
+		}
+	}
+	{ // нераспакованный файл version (после Unpack)
+		auto version_file_path = boost::filesystem::path(in_dirname) / "version.data";
+		if (boost::filesystem::exists(version_file_path)) {
+			boost::filesystem::ifstream version_in(version_file_path);
+			std::stringstream contentStream;
+			Inflate(version_in, contentStream);
+			contentStream.seekg(0);
+			auto v = VersionFile::parse(contentStream);
+			return v.compatibility();
+		}
+	}
+	return VersionFile::COMPATIBILITY_DEFAULT;
 }
 
 void CV8File::Dispose()
@@ -490,8 +568,6 @@ static int recursive_unpack(const string& directory, basic_istream<char>& file, 
 
 	return ret;
 }
-#pragma clang diagnostic pop
-
 
 template<typename format>
 static int list_files(boost::filesystem::ifstream &file)
@@ -707,19 +783,11 @@ struct PackElementEntry {
 	size_t                   data_size;
 };
 
-int PackFromFolder(const string &dirname, const string &filename_out)
+template<typename format>
+static int
+pack_from_folder(const boost::filesystem::path &p_curdir, boost::filesystem::ofstream &file_out)
 {
-	boost::filesystem::path p_curdir(dirname);
-
-	boost::filesystem::ofstream file_out(filename_out, ios_base::binary);
-	if (!file_out) {
-		cerr << "SaveFile. Error in creating file: " << filename_out << endl;
-		return -1;
-	}
-
-	typedef Format15 format;
-
-	// записываем заголовок
+	file_out << format::placeholder;
 	{
 		boost::filesystem::ifstream file_in(p_curdir / "FileHeader", ios_base::binary);
 		full_copy(file_in, file_out);
@@ -748,7 +816,7 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	} // for it
 
 	auto ElemsNum = Elems.size();
-	vector<format::elem_addr_t> ElemsAddrs;
+	vector<typename format::elem_addr_t> ElemsAddrs;
 	ElemsAddrs.reserve(ElemsNum);
 
 	// cur_block_addr - смещение текущего блока
@@ -768,7 +836,7 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	cur_block_addr += addr_block_size; // +[2]
 
 	for (const auto &elem : Elems) {
-		format::elem_addr_t addr;
+		typename format::elem_addr_t addr;
 
 		addr.elem_header_addr = cur_block_addr;
 		cur_block_addr += format::block_header_t::Size() + elem.header_size; // +[3]+[4]
@@ -782,15 +850,15 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 		ElemsAddrs.push_back(addr);
 	}
 
-	SaveBlockData(file_out, (char*) ElemsAddrs.data(), format::elem_addr_t::Size() * ElemsNum);
+	SaveBlockData<format>(file_out, (char*) ElemsAddrs.data(), format::elem_addr_t::Size() * ElemsNum);
 
 	for (const auto &elem : Elems) {
 
 		boost::filesystem::ifstream header_in(elem.header_file, ios_base::binary);
-		SaveBlockData(file_out, header_in, elem.header_size, elem.header_size);
+		SaveBlockData<format>(file_out, header_in, elem.header_size, elem.header_size);
 
 		boost::filesystem::ifstream data_in(elem.data_file, ios_base::binary);
-		SaveBlockData(file_out, data_in, elem.data_size, V8_DEFAULT_PAGE_SIZE);
+		SaveBlockData<format>(file_out, data_in, elem.data_size, V8_DEFAULT_PAGE_SIZE);
 	}
 
 	file_out.close();
@@ -798,40 +866,21 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	return V8UNPACK_OK;
 }
 
-int SaveBlockData(basic_ostream<char> &file_out, basic_istream<char> &file_in, uint32_t BlockDataSize, uint32_t PageSize)
+int PackFromFolder(const string &dirname, const string &filename_out)
 {
-	if (PageSize < BlockDataSize)
-		PageSize = BlockDataSize;
-
-	typedef Format15 format;
-
-	auto CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
-	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
-	full_copy(file_in, file_out);
-
-	for(uint32_t i = 0; i < PageSize - BlockDataSize; i++) {
-		file_out << (char)0;
+	boost::filesystem::path p_curdir(dirname);
+	boost::filesystem::ofstream file_out(filename_out, ios_base::binary);
+	if (!file_out) {
+		cerr << "SaveFile. Error in creating file: " << filename_out << endl;
+		return -1;
 	}
 
-	return 0;
-}
-
-int SaveBlockData(basic_ostream<char> &file_out, const char *pBlockData, uint32_t BlockDataSize, uint32_t PageSize)
-{
-	if (PageSize < BlockDataSize)
-		PageSize = BlockDataSize;
-
-	typedef Format15 format;
-
-	format::block_header_t CurBlockHeader = format::block_header_t::create(BlockDataSize, PageSize);
-	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
-	file_out.write(reinterpret_cast<const char *>(pBlockData), BlockDataSize);
-
-	for(uint32_t i = 0; i < PageSize - BlockDataSize; i++) {
-		file_out << (char)0;
+	int compatibility = directory_container_compatibility(dirname);
+	if (compatibility >= VersionFile::V80316) {
+		return pack_from_folder<Format16>(p_curdir, file_out);
 	}
 
-	return 0;
+	return pack_from_folder<Format15>(p_curdir, file_out);
 }
 
 int RecursiveUnpack(const string &directory, basic_istream<char> &file, const vector<string> &filter, bool boolInflate, bool UnpackWhenNeed)
@@ -913,53 +962,40 @@ int CV8File::LoadFileFromFolder(const string &dirname)
 	return V8UNPACK_OK;
 }
 
-int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_deflate)
+static bool
+is_dot_file(const boost::filesystem::path &path)
 {
-	//filename can't be empty
-	if (in_dirname.empty()) {
-		cerr << "Argument error - Set of `in_dirname' argument" << endl;
-		return V8UNPACK_SHOW_USAGE;
-	}
+	return path.filename().string() == "."
+		|| path.filename().string() == "..";
+}
 
-	if (out_filename.empty()) {
-		cerr << "Argument error - Set of `out_filename' argument" << endl;
-		return V8UNPACK_SHOW_USAGE;
-	}
-
-	typedef Format15 format;
-
-	if (!boost::filesystem::exists(in_dirname)) {
-		cerr << "Source directory does not exist!" << endl;
-		return V8UNPACK_SOURCE_DOES_NOT_EXIST;
-	}
-
+template<typename format>
+static int
+recursive_pack(const string &in_dirname, const string &out_filename, bool dont_deflate)
+{
 	uint32_t ElemsNum = 0;
 	{
 		boost::filesystem::directory_iterator d_end;
 		boost::filesystem::directory_iterator dit(in_dirname);
 
 		for (; dit != d_end; ++dit) {
-
-			boost::filesystem::path current_file(dit->path());
-			string name = current_file.filename().string();
-
-			if (name.at(0) == '.')
-				continue;
-
-			++ElemsNum;
+			if (!is_dot_file(dit->path())) {
+				++ElemsNum;
+			}
 		}
 	}
 
-	format::file_header_t FileHeader;
+	typename format::file_header_t FileHeader;
 
 	//Предварительные расчеты длины заголовка таблицы содержимого TOC файла
 	FileHeader.next_page_addr = format::UNDEFINED_VALUE;
 	FileHeader.page_size = format::DEFAULT_PAGE_SIZE;
 	FileHeader.storage_ver = 0;
 	FileHeader.reserved = 0;
+
 	auto cur_block_addr = format::file_header_t::Size() + format::block_header_t::Size();
-	format::elem_addr_t *pTOC;
-	pTOC = new format::elem_addr_t[ElemsNum];
+	typename format::elem_addr_t *pTOC;
+	pTOC = new typename format::elem_addr_t[ElemsNum];
 	cur_block_addr += MAX(format::elem_addr_t::Size() * ElemsNum, format::DEFAULT_PAGE_SIZE);
 
 	boost::filesystem::ofstream file_out(out_filename, ios_base::binary);
@@ -970,14 +1006,11 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 		return V8UNPACK_ERROR_CREATING_OUTPUT_FILE;
 	}
 
+	file_out << format::placeholder;
+
 	//Резервируем место в начале файла под заголовок и TOC
 	for(unsigned i=0; i < cur_block_addr; i++) {
 		file_out << '\0';
-	}
-
-	uint32_t one_percent = ElemsNum / 50;
-	if (one_percent) {
-		cout << "Progress (50 points): " << flush;
 	}
 
 	uint32_t ElemNum = 0;
@@ -986,26 +1019,17 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 	boost::filesystem::directory_iterator dit(in_dirname);
 	for (; dit != d_end; ++dit) {
 
+		if (is_dot_file(dit->path())) {
+			continue;
+		}
+
 		boost::filesystem::path current_file(dit->path());
 		string name = current_file.filename().string();
-
-		if (name.at(0) == '.')
-			continue;
-
-		//Progress bar ->
-		{
-			if (ElemNum && one_percent && ElemNum%one_percent == 0) {
-				if (ElemNum % (one_percent*10) == 0)
-					cout << "|" << flush;
-				else
-					cout << ".";
-			}
-		}//<- Progress bar
 
 		CV8Elem pElem(name);
 
 		pTOC[ElemNum].elem_header_addr = file_out.tellp() - format::BASE_OFFSET;
-		SaveBlockData(file_out, pElem.header.data(), pElem.header.size(), pElem.header.size());
+		SaveBlockData<format>(file_out, pElem.header.data(), pElem.header.size(), pElem.header.size());
 
 		pTOC[ElemNum].elem_data_addr = file_out.tellp() - format::BASE_OFFSET;
 		pTOC[ElemNum].fffffff = format::UNDEFINED_VALUE;
@@ -1017,7 +1041,7 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 			pElem.UnpackedData.LoadFileFromFolder(current_file.string());
 			pElem.Pack(!dont_deflate);
 
-			SaveBlockData(file_out, pElem.data.data(), pElem.data.size());
+			SaveBlockData<format>(file_out, pElem.data.data(), pElem.data.size());
 
 		} else {
 
@@ -1034,30 +1058,20 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 				pElem.data.resize(DataSize);
 				file_in.read(pElem.data.data(), pElem.data.size());
 				pElem.Pack(!dont_deflate);
-				SaveBlockData(file_out, pElem.data);
+				SaveBlockData<format>(file_out, pElem.data);
 
 			} else {
 
 				if (dont_deflate) {
-					SaveBlockData(file_out, file_in, DataSize);
+					SaveBlockData<format>(file_out, file_in, DataSize);
 				} else {
 					// Упаковка через промежуточный файл
 					boost::filesystem::path tmp_file_path = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 
-					{
-						boost::filesystem::ofstream tmp_file(tmp_file_path, ios_base::binary);
-						Deflate(file_in, tmp_file);
-						tmp_file.close();
-					}
+					Deflate(file_in, tmp_file_path.string());
+					SaveBlockData<format>(file_out, tmp_file_path);
 
-					{
-						auto tmpFileSize = boost::filesystem::file_size(tmp_file_path);
-						boost::filesystem::ifstream tmp_file(tmp_file_path, ios_base::binary);
-						SaveBlockData(file_out, tmp_file, tmpFileSize);
-						tmp_file.close();
-
-						boost::filesystem::remove(tmp_file_path);
-					}
+					boost::filesystem::remove(tmp_file_path);
 				}
 			}
 		}
@@ -1066,17 +1080,44 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 	}
 
 	//Записывем заголовок файла
-	file_out.seekp(0, ios_base::beg);
+	file_out.seekp(format::BASE_OFFSET, ios_base::beg);
 	file_out.write(reinterpret_cast<const char*>(&FileHeader), format::file_header_t::Size());
 
 	//Записываем блок TOC
-	SaveBlockData(file_out, (const char*) pTOC, format::elem_addr_t::Size() * ElemsNum);
+	SaveBlockData<format>(file_out, (const char*) pTOC, format::elem_addr_t::Size() * ElemsNum);
 
 	delete [] pTOC;
 
 	cout << endl << "Build `" << out_filename << "` OK!" << endl << flush;
 
 	return V8UNPACK_OK;
+}
+
+int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_deflate)
+{
+	//filename can't be empty
+	if (in_dirname.empty()) {
+		cerr << "Argument error - Set of `in_dirname' argument" << endl;
+		return V8UNPACK_SHOW_USAGE;
+	}
+
+	if (out_filename.empty()) {
+		cerr << "Argument error - Set of `out_filename' argument" << endl;
+		return V8UNPACK_SHOW_USAGE;
+	}
+
+	if (!boost::filesystem::exists(in_dirname)) {
+		cerr << "Source directory does not exist!" << endl;
+		return V8UNPACK_SOURCE_DOES_NOT_EXIST;
+	}
+
+	int compatibility = directory_container_compatibility(in_dirname);
+
+	if (compatibility >= VersionFile::V80316) {
+		return recursive_pack<Format16>(in_dirname, out_filename, dont_deflate);
+	}
+
+	return recursive_pack<Format15>(in_dirname, out_filename, dont_deflate);
 }
 
 int CV8Elem::Pack(bool deflate)
@@ -1220,3 +1261,4 @@ stBlockHeader64 stBlockHeader64::create(uint64_t  block_data_size, uint64_t  pag
 }
 
 }
+#pragma clang diagnostic pop
