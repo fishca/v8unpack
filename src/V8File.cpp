@@ -65,9 +65,10 @@ string CV8Elem::GetName() const
 
 	auto currentChar = header.data() + CV8Elem::stElemHeaderBegin::Size();
 	for (int j = 0; j < ElemNameLen * 2; j += 2, currentChar += 2) {
-		if (*currentChar != '\0') {
-			ss << *currentChar;
+		if (*currentChar == '\0') {
+			break;
 		}
+		ss << *currentChar;
 	}
 
 	return ss.str();
