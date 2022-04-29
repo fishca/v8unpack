@@ -725,48 +725,33 @@ int UnpackToFolder(const string &filename_in, const string &dirname, const strin
 template <typename format>
 static bool checkV8File(basic_istream<char> &file)
 {
-	auto offset = file.tellg();
+	bool result = false;
 
+	auto offset = file.tellg();
 	file.seekg(0, file.end);
 	auto file_size = file.tellg();
 
-	if (file_size < format::BASE_OFFSET) {
-		return false;
-	}
-
-	file.seekg(format::BASE_OFFSET);
-
 	typename format::file_header_t FileHeader;
-	typename format::block_header_t BlockHeader;
+	if (file_size >= format::BASE_OFFSET + FileHeader.Size()) {
 
-	memset(&BlockHeader, 0, BlockHeader.Size());
+		file.seekg(format::BASE_OFFSET);
+		file.read((char *) &FileHeader, FileHeader.Size());
 
-	file.read((char*)& FileHeader, FileHeader.Size());
-	file.read((char*)& BlockHeader, BlockHeader.Size());
-
+		typename format::block_header_t BlockHeader;
+		if (file_size >= format::BASE_OFFSET + FileHeader.Size() + BlockHeader.Size()) {
+			memset(&BlockHeader, 0, BlockHeader.Size());
+			file.read((char *) &BlockHeader, BlockHeader.Size());
+			result = BlockHeader.IsCorrect();
+		} else {
+			// Если в файле нет первого блока, значит адрес страницы должен быть UNDEFINED
+			result = (FileHeader.next_page_addr == format::UNDEFINED_VALUE);
+		}
+	}
 	file.seekg(offset);
 	file.clear();
 
-	return BlockHeader.IsCorrect();
+	return result;
 }
-
-template <typename format>
-static bool checkV8File(const char *pFileData, uint32_t FileDataSize)
-{
-	if (!pFileData) {
-		return false;
-	}
-
-	// проверим чтобы длина файла не была меньше длины заголовка файла и заголовка блока адресов
-	if (FileDataSize < format::file_header_t::Size() + format::block_header_t::Size()) {
-		return false;
-	}
-
-	auto *pBlockHeader = (const typename format::block_header_t*)&pFileData[format::file_header_t::Size()];
-
-	return pBlockHeader->IsCorrect();
-}
-
 
 bool IsV8File(basic_istream<char> &file)
 {
@@ -878,7 +863,7 @@ int PackFromFolder(const string &dirname, const string &filename_out)
 	}
 
 	int compatibility = directory_container_compatibility(dirname);
-	if (compatibility >= VersionFile::V80316) {
+	if (compatibility >= VersionFile::COMPATIBILITY_V80316) {
 		return pack_from_folder<Format16>(p_curdir, file_out);
 	}
 
@@ -1115,7 +1100,7 @@ int BuildCfFile(const string &in_dirname, const string &out_filename, bool dont_
 
 	int compatibility = directory_container_compatibility(in_dirname);
 
-	if (compatibility >= VersionFile::V80316) {
+	if (compatibility >= VersionFile::COMPATIBILITY_V80316) {
 		return recursive_pack<Format16>(in_dirname, out_filename, dont_deflate);
 	}
 
