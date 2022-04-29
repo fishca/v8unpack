@@ -16,7 +16,7 @@ class VersionFile
 {
 public:
 
-	const static int V80316 = 80316;
+	const static int COMPATIBILITY_V80316 = 80316;
 	const static int COMPATIBILITY_DEFAULT = 0;
 	const static int COMPATIBILITY_UNSUPPORTED = -1;
 
