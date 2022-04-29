@@ -64,7 +64,7 @@ string CV8Elem::GetName() const
 	stringstream ss;
 
 	auto currentChar = header.data() + CV8Elem::stElemHeaderBegin::Size();
-	for (int j = 0; j < ElemNameLen * 2; j += 2, currentChar += 2) {
+	for (auto j = 0; j < ElemNameLen * 2; j += 2, currentChar += 2) {
 		if (*currentChar == '\0') {
 			break;
 		}
@@ -372,7 +372,7 @@ directory_container_compatibility(const string &in_dirname)
 		if (boost::filesystem::exists(version_file_path)) {
 			boost::filesystem::ifstream version_in(version_file_path);
 			std::stringstream contentStream;
-			Inflate(version_in, contentStream);
+			try_inflate(version_in, contentStream);
 			contentStream.seekg(0);
 			auto v = VersionFile::parse(contentStream);
 			return v.compatibility();

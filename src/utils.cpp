@@ -114,14 +114,9 @@ int Inflate(const std::string &in_filename, const std::string &out_filename)
 		}
 	}
 
-	ret = Inflate(*input, *output);
+	try_inflate(*input, *output);
 
-	if (ret == Z_DATA_ERROR)
-		return V8UNPACK_INFLATE_DATAERROR;
-	if (ret)
-		return V8UNPACK_INFLATE_ERROR;
-
-	return 0;
+	return V8UNPACK_OK;
 }
 
 int Deflate(const std::string &in_filename, const std::string &out_filename)
