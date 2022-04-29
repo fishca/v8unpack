@@ -76,9 +76,9 @@ struct stFileHeader
 struct stFileHeader64
 {
 	uint64_t next_page_addr = 0;  // 64 бита стало
-	uint64_t page_size = 0;
-	uint64_t storage_ver = 0;
-	uint64_t reserved = 0; // всегда 0x00000000 ?
+	uint32_t page_size = 0;
+	uint32_t storage_ver = 0;
+	uint32_t reserved = 0; // всегда 0x00000000 ?
 
 	static size_t Size()
 	{
