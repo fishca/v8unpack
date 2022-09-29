@@ -5,7 +5,7 @@ _v8unpack_complete()
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[COMP_CWORD]}"
 	opts="-unpack -pack -parse -build -inflate -deflate \
-		-list -example -bat -version"
+		-list -example -bat -version -listfiles"
 
 	if [[ ${COMP_CWORD} == 1 ]] ; then
 		COMPREPLY=( $(compgen -W "$opts" -- ${cur}) )
