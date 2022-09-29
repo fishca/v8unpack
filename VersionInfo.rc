@@ -10,7 +10,7 @@ BEGIN
       VALUE "FileDescription", "V8 Unpack Tool"
       VALUE "FileVersion", "3.0.43"
       VALUE "InternalName", "v8unpack"
-      VALUE "LegalCopyright", "Denis Demidov, Sergey Batanov and others"
+      VALUE "LegalCopyright", "Denis Demidov, Sergey Batanov, Sergey Rudakov and others"
       VALUE "OriginalFilename", "v8unpack.exe"
       VALUE "ProductName", "V8 Unpack Tool"
       VALUE "ProductVersion", "3.0.43"

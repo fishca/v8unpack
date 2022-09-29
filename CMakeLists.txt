@@ -15,7 +15,7 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/utils.cpp src/placeholder216.cpp src/VersionFile.cpp)
 set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h src/VersionFile.h)
 
-if(MSVC)
+if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 
 	foreach(flag_var
 			CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
