@@ -15,6 +15,7 @@ at http://mozilla.org/MPL/2.0/.
  */
 
 // main.cpp : Defines the entry point for the console application.
+// проверка работоспособности
 //
 
 #include "V8File.h"
