@@ -51,6 +51,7 @@ int usage(vector<string> &argv)
 	cout << "  -D[EFLATE]           in_filename        filename.data" << endl;
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
+	cout << "  -P[ARSE]F[OLDER]     in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
@@ -111,6 +112,24 @@ int parse(vector<string> &argv)
 
 	return Parse(argv[0], argv[1], filter);
 }
+
+int parsefolder(vector<string>& argv)
+{
+
+	if (argv.size() < 2) {
+		return V8UNPACK_SHOW_USAGE;
+	}
+
+	vector<string> filter;
+	for (size_t i = 2; i < argv.size(); i++) {
+		if (!argv[i].empty()) {
+			filter.push_back(argv[i]);
+		}
+	}
+
+	return ParseFolder(argv[0], argv[1], filter);
+}
+
 
 int list_files(vector<string> &argv)
 {
@@ -236,6 +255,10 @@ handler_t get_run_mode(const vector<string> &args, int &arg_base, bool &allow_li
 
 	if (cur_mode == "-parse" || cur_mode == "-p") {
 		return parse;
+	}
+
+	if (cur_mode == "-parsefolder" || cur_mode == "-pf") {
+		return parsefolder;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {

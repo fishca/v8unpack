@@ -5,6 +5,10 @@ was not distributed with this file, You can obtain one
 at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------*/
 
+#include <unordered_map>
+
+using namespace std;
+
 // Метаданные 1С
 
 constexpr auto md_AccountingRegisters = "Регистры бухгалтерии";
@@ -1520,9 +1524,6 @@ constexpr auto GUID_WSRefs = "D26096FB-7A5D-4DF9-AF63-47D04771FA9B"; // WS - ссы
 constexpr auto GUID_ExtDS_Comm = "E68182EA-4237-4383-967F-90C1E3370BC7"; // Внешние источники данных
 constexpr auto GUID_ExtDS = "5274D9FC-9C3A-4A71-8F5E-A0DB8AB23DE5";
 
-// 078A6AF8-D22C-4248-9C33-7E90075A3D2C
-// 77EA1B8F-DD79-4717-9DBA-5628E7F348CF
-//GUID_ExtDS_Command = "F7366104-EA91-4727-8F53-FC5A8485A47A";
 constexpr auto GUID_ExtDS_Command = "078A6AF8-D22C-4248-9C33-7E90075A3D2C";
 constexpr auto GUID_ExtDS_Tables = "E3403ACD-1C95-421B-87E4-4DFA29D38B52"; // идентификатор таблиц внешних источников данных
 constexpr auto GUID_ExtDSForm = "17816EBC-4068-496E-ADC4-8879945A832F"; // Формы внешних источников
@@ -1544,7 +1545,54 @@ constexpr auto CConvertPhaseFileName = "convertPhase"; // имя файла обозначающег
 constexpr auto CGlobalModuleMDPropTerm = "МодульПриложения";
 constexpr auto CExternalConnectionModuleMDPropTerm = "МодульВнешнегоСоединения";
 
-
+std::unordered_map<std::string, std::string> MetaData
+{
+		{md_AccountingRegisters,         GUID_AccntReg},
+		{md_AccumulationRegisters,       GUID_AccumReg},
+		{md_BusinessProcesses,           GUID_BPProcessMDClassID},
+		{md_CalculationRegisters,        GUID_CalcReg},
+		{md_Catalogs,                    GUID_RefSection},
+		{md_ChartsOfAccounts,            GUID_AccPlan},
+		{md_ChartOfCalculationTypes,     GUID_CalcPlan},
+		{md_ChartsOfCharacteristicTypes, GUID_ChKindPlans},
+		{md_CommandGroups,               GUID_CommandsGroup},
+		{md_CommonAttributes,            GUID_CommonAttr},
+		{md_CommonCommands,              GUID_CommonComands},
+		{md_CommonForms,                 GUID_GlobalForms},
+		{md_CommonModules,               GUID_CommonUnits},
+		{md_CommonPictures,              GUID_CommonPict},
+		{md_CommonTemplates,             GUID_GenTabMDClassID},
+		{md_Constants,                   GUID_ConstSection},
+		{md_DataProcessors,              GUID_CalcVar},
+		{md_DefinedTypes,                GUID_DefTypes},
+		{md_DocumentJournals,            GUID_DocJournals},
+		{md_DocumentNumerators,          GUID_Numerator},
+		{md_Documents,                   GUID_Documents},
+		{md_Enums,                       GUID_EnumSection},
+		{md_EventSubscriptions,          GUID_EventLinks},
+		{md_ExchangePlans,               GUID_ExchPlans},
+		{md_ExternalDataSources,         GUID_ExtDS},
+		{md_FilterCriteria,              GUID_Criteries},
+		{md_FunctionalOptions,           GUID_FunctOptions},
+		{md_FunctionalOptionsParameters, GUID_FuncOptParams},
+		{md_HTTPServices,                GUID_HTTPServices},
+		{md_InformationRegisters,        GUID_InfoReg},
+		{md_Interfaces,                  GUID_Interfaces},
+		{md_Languages,                   GUID_Lang},
+		{md_Reports,                     GUID_Reports},
+		{md_Roles,                       GUID_Roles},
+		{md_ScheduledJobs,               GUID_PlanedTasks},
+		{md_Sequences,                   GUID_series},
+		{md_SessionParameters,           GUID_InstanceParams},
+		{md_SettingsStorages,            GUID_SettingsStorages},
+		{md_StyleItems,                  GUID_StyleItems},
+		{md_Styles,                      GUID_Styles},
+		{md_Subsystems,                  GUID_Subsystems},
+		{md_Tasks,                       GUID_BPTaskMDClassID},
+		{md_WebServices,                 GUID_WebServices},
+		{md_WSReferences,                GUID_WSRefs},
+		{md_XDTOPackages,                GUID_XDTOPackets}
+};
 
 
 

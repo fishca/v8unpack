@@ -335,7 +335,17 @@ int Parse(
 		const std::vector< std::string > &filter
 );
 
+int ParseFolder(
+	const std::string& filename,
+	const std::string& dirname,
+	const std::vector< std::string >& filter
+);
+
+
 int ListFiles(const std::string &filename);
+
+std::string FindRoot();
+
 bool IsV8File(std::basic_istream<char> &file);
 bool IsV8File16(std::basic_istream<char>& file);
 
@@ -387,6 +397,8 @@ try_inflate(
 		const boost::filesystem::path &source,
 		const boost::filesystem::path &dest
 		);
+
+int RecursiveUnpack2(const std::string& directory, std::basic_istream<char>& file, const std::vector<std::string>& filter, bool boolInflate, bool UnpackWhenNeed);
 
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)

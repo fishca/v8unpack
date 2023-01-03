@@ -17,6 +17,8 @@ at http://mozilla.org/MPL/2.0/.
 
 #include "V8File.h"
 #include "VersionFile.h"
+#include "v8constants.h"
+#include "v8Tree.h"
 #include <iostream>
 #include <sstream>
 #include <boost/iostreams/device/array.hpp>
@@ -24,6 +26,7 @@ at http://mozilla.org/MPL/2.0/.
 #include <utility>
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
+#include <codecvt>
 
 namespace v8unpack {
 
@@ -94,6 +97,16 @@ int CV8Elem::SetName(const string &ElemName)
 void CV8Elem::Dispose()
 {
 	IsV8File = false;
+}
+
+std::wstring readFile(const char* filename)
+{
+	std::wifstream wif(filename);
+	wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	std::wstringstream wss;
+	wss << wif.rdbuf();
+
+	return wss.str();
 }
 
 template<typename format>
@@ -508,6 +521,18 @@ int SmartUnpack(basic_istream<char> &file, bool NeedUnpack, boost::filesystem::p
 	return V8UNPACK_OK;
 }
 
+template<typename format>
+int SmartUnpack2(basic_istream<char>& file, bool NeedUnpack, boost::filesystem::path& elem_path)
+{
+	auto src = prepare_smart_source<format>(file, NeedUnpack, elem_path);
+	auto unpack_result = RecursiveUnpack2(elem_path.string(), src->stream(), {}, false, false);
+	if (unpack_result != V8UNPACK_OK) {
+		src->save_as(elem_path);
+	}
+	return V8UNPACK_OK;
+}
+
+
 static bool NameInFilter(const string &name, const vector<string> &filter)
 {
 	return filter.empty()
@@ -572,6 +597,70 @@ static int recursive_unpack(const string& directory, basic_istream<char>& file, 
 }
 
 template<typename format>
+static int recursive_unpack2(const string& directory, basic_istream<char>& file, const vector<string>& filter, bool boolInflate, bool UnpackWhenNeed)
+{
+	int ret = 0;
+
+	boost::filesystem::path rootfile;
+
+	boost::filesystem::path p_dir(directory);
+
+	if (!boost::filesystem::exists(p_dir)) {
+		if (!boost::filesystem::create_directory(directory)) {
+			cerr << "RecursiveUnpack. Error in creating directory!" << endl;
+			return ret;
+		}
+	}
+
+	typename format::file_header_t FileHeader;
+
+	ifstream::pos_type offset = format::BASE_OFFSET;
+	file.seekg(offset);
+	file.read((char*)&FileHeader, FileHeader.Size());
+
+	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
+	auto ElemsNum = pElemsAddrs.size();
+
+	for (uint32_t i = 0; i < ElemsNum; i++) {
+
+		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
+			ElemsNum = i;
+			break;
+		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
+
+		CV8Elem elem;
+
+		if (!SafeReadBlockData<format>(file, elem.header)) {
+			ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+			break;
+		}
+		string ElemName = elem.GetName();
+
+		if (!NameInFilter(ElemName, filter)) {
+			continue;
+		}
+
+		boost::filesystem::path elem_path = boost::filesystem::absolute(p_dir / ElemName);
+
+		if (ElemName == "root") {
+			rootfile = elem_path;
+		}
+
+		//080228 Блока данных может не быть, тогда адрес блока данных равен 0xffffffffffffffff
+		if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
+			file.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, ios_base::beg);
+			SmartUnpack2<format>(file, boolInflate, elem_path);
+		}
+
+	} // for i = ..ElemsNum
+
+	return ret;
+}
+
+
+template<typename format>
 static int list_files(boost::filesystem::ifstream &file)
 {
 	typename format::file_header_t FileHeader;
@@ -602,6 +691,40 @@ static int list_files(boost::filesystem::ifstream &file)
 	return V8UNPACK_OK;
 }
 
+template<typename format>
+static int list_files_to_map(boost::filesystem::ifstream& file, std::unordered_map<std::string, int> *data)
+{
+	typename format::file_header_t FileHeader;
+
+	file.seekg(format::BASE_OFFSET);
+	file.read((char*)&FileHeader, FileHeader.Size());
+
+	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
+	auto ElemsNum = pElemsAddrs.size();
+
+	for (uint32_t i = 0; i < ElemsNum; i++) {
+		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
+			ElemsNum = i;
+			break;
+		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
+
+		CV8Elem elem;
+
+		if (!SafeReadBlockData<format>(file, elem.header)) {
+			continue;
+		}
+
+
+		//cout << elem.GetName() << endl;
+		(*data).insert(std::make_pair(elem.GetName(), pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET));
+	}
+
+	return V8UNPACK_OK;
+}
+
+
 int ListFiles(const string &filename)
 {
 	boost::filesystem::ifstream file(filename, ios_base::binary);
@@ -620,6 +743,12 @@ int ListFiles(const string &filename)
 	}
 
 	return list_files<Format15>(file);
+}
+
+std::string FindRoot()
+{
+
+	return std::string();
 }
 
 template<typename format>
@@ -883,6 +1012,20 @@ int RecursiveUnpack(const string &directory, basic_istream<char> &file, const ve
 	return recursive_unpack<Format15>(directory, file, filter, boolInflate, UnpackWhenNeed);
 }
 
+int RecursiveUnpack2(const string& directory, basic_istream<char>& file, const vector<string>& filter, bool boolInflate, bool UnpackWhenNeed)
+{
+	if (!IsV8File(file)) {
+		return V8UNPACK_NOT_V8_FILE;
+	}
+
+	if (IsV8File16(file)) {
+		return recursive_unpack2<Format16>(directory, file, filter, boolInflate, UnpackWhenNeed);
+	}
+
+	return recursive_unpack2<Format15>(directory, file, filter, boolInflate, UnpackWhenNeed);
+}
+
+
 int Parse(const string &filename_in, const string &dirname, const vector< string > &filter)
 {
     int ret = 0;
@@ -905,6 +1048,56 @@ int Parse(const string &filename_in, const string &dirname, const vector< string
 
     return ret;
 }
+
+int ParseFolder(const string& filename_in, const string& dirname, const vector< string >& filter)
+{
+	int ret = 0;
+
+	boost::filesystem::ifstream file_in(filename_in, ios_base::binary);
+
+	if (!file_in) {
+		cerr << "Parse. `" << filename_in << "` not found!" << endl;
+		return -1;
+	}
+
+	std::unordered_map<std::string, int> data;
+
+	if (IsV8File16(file_in)) {
+		ret = list_files_to_map<Format16>(file_in, &data);
+	}
+	else {
+		ret = list_files_to_map<Format15>(file_in, &data);
+	}
+	
+	//boost::filesystem::path entries_file_path(filename_in);
+	//boost::filesystem::path parent_path = entries_file_path.parent_path();
+
+	ret = RecursiveUnpack2(dirname, file_in, filter, true, false);
+
+	if (ret == V8UNPACK_NOT_V8_FILE) {
+		cerr << "Parse. `" << filename_in << "` is not V8 file!" << endl;
+		return ret;
+	}
+
+	boost::filesystem::path root_path(dirname + "\\" + "root");
+
+	std::wstring wData = readFile(root_path.string().c_str());
+
+	v8Tree* tt;
+
+	tt = parse_1Ctext(wData);
+
+	std::wstring root_guid = L"";
+	// находим GUID конфигурации
+	if (tt)
+		root_guid = tt->get_first()->get_first()->get_next()->get_value();
+
+	cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
+	cout << "Parse `" << filename_in << "`: ok" << endl << flush;
+
+	return ret;
+}
+
 
 int CV8File::LoadFileFromFolder(const string &dirname)
 {
