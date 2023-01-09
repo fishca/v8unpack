@@ -1431,7 +1431,7 @@ constexpr auto GUID_Lang = "9CD510CE-ABFC-11D4-9434-004095E12FC7"; //секция Язык
 
 constexpr auto GUID_ExchPlans = "857C4A91-E5F4-4FAC-86EC-787626F1C108"; //секция Планов Обмена
 constexpr auto GUID_Interfaces = "39BDDF6A-0C3C-452B-921C-D99CFA1C2F1B"; //секция Интерфейсов
-constexpr auto GUID_CommonUnits = "0FE48980-252D-11D6-A3C7-0050BAE0A776"; //секция Интерфейсов
+constexpr auto GUID_CommonUnits = "0FE48980-252D-11D6-A3C7-0050BAE0A776"; //секция Общие модули
 constexpr auto GUID_Criteries = "3E7BFCC0-067D-11D6-A3C7-0050BAE0A776"; //секция Критериев Отбора
 constexpr auto GUID_Forms = "FDF816D2-1EAD-11D5-B975-0050BAE0A95D"; //секция Формы
 constexpr auto GUID_CommonPict = "7DCD43D9-ACA5-4926-B549-1842E6A4E8CF"; //секция Общие картинки

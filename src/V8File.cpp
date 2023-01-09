@@ -27,6 +27,8 @@ at http://mozilla.org/MPL/2.0/.
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
 #include <codecvt>
+#include <io.h>                             // для функции _setmode
+#include <fcntl.h>                          // для константы _O_U16TEXT
 
 namespace v8unpack {
 
@@ -1080,6 +1082,7 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	}
 
 	boost::filesystem::path root_path(dirname + "\\" + "root");
+	
 
 	std::wstring wData = readFile(root_path.string().c_str());
 
@@ -1087,13 +1090,79 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	tt = parse_1Ctext(wData);
 
-	std::wstring root_guid = L"";
+	std::wstring wroot_guid = L"";
 	// находим GUID конфигурации
 	if (tt)
-		root_guid = tt->get_first()->get_first()->get_next()->get_value();
+		wroot_guid = tt->get_first()->get_first()->get_next()->get_value();
 
-	cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
-	cout << "Parse `" << filename_in << "`: ok" << endl << flush;
+
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	
+	std::string root_guid = converter.to_bytes(wroot_guid);
+
+	boost::filesystem::path root_file(dirname + "\\" + root_guid);
+
+	std::wstring wDataRoot = readFile(root_file.string().c_str());
+
+	delete tt;
+
+	tt = parse_1Ctext(wDataRoot);
+
+	//v8Tree* lang_tree = tt->get_subnode(L"9cd510ce-abfc-11d4-9434-004095e12fc7");
+
+	//tt->
+	//    first->first->
+	//    next->next->next->
+	//    first->next->
+	//    first->next->
+	//    first->next->
+	//    first->next->
+	//    first->next->
+	//    next->value
+	std::wstring ConfigName = tt->get_first()->get_first()->
+		get_next()->get_next()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_next()->get_value();
+
+	// tt->
+	// first->first->
+	// next->next->next->
+	// first->next->
+	// first->next->
+	// first->next->
+	// first->next->
+	// first->next->
+	// next->next->
+	// last->value
+	std::wstring ConfigNameSynonym = tt->get_first()->get_first()->
+		get_next()->get_next()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_first()->get_next()->
+		get_next()->get_next()->
+		get_last()->get_value();
+
+	std::string sConfigName = converter.to_bytes(ConfigName);
+	std::string sConfigNameSynonym = converter.to_bytes(ConfigNameSynonym);
+
+	std::wstring wfilename_in = converter.from_bytes(filename_in);
+
+	// переключение стандартного потока вывода в формат Юникода
+	_setmode(_fileno(stdout), _O_U16TEXT);
+
+	//cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
+	wcout << "Parse root guid: `" << wroot_guid << "`: ok" << endl << flush;
+	wcout << "Parse `" << ConfigName + L" ( " + ConfigNameSynonym + L" )" << "`: ok" << endl << flush;
+	//wcout << "Parse `" << ConfigNameSynonym << "`: ok" << endl << flush;
+	wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
+
+	delete tt;
 
 	return ret;
 }
