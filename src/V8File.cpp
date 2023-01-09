@@ -42,6 +42,9 @@ int RecursiveUnpack(
 		      bool                   UnpackWhenNeed
 );
 
+static bool is_dot_file(const boost::filesystem::path& path);
+void get_files(vector<string>& paths, const string& current_path);
+
 CV8File::CV8File()
 {
     IsDataPacked = true;
@@ -1051,6 +1054,19 @@ int Parse(const string &filename_in, const string &dirname, const vector< string
     return ret;
 }
 
+void get_files(vector<string>& paths, const string& current_path)
+{
+	boost::filesystem::recursive_directory_iterator d_end;
+	boost::filesystem::recursive_directory_iterator dit(current_path);
+
+	for (; dit != d_end; ++dit) {
+		if (!is_dot_file(dit->path())) {
+			paths.push_back(dit->path().string());
+		}
+
+	}
+}
+
 int ParseFolder(const string& filename_in, const string& dirname, const vector< string >& filter)
 {
 	int ret = 0;
@@ -1119,14 +1135,26 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	//    first->next->
 	//    first->next->
 	//    next->value
-	std::wstring ConfigName = tt->get_first()->get_first()->
-		get_next()->get_next()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_next()->get_value();
+
+	std::wstring ConfigName = L"";
+	try
+	{
+		ConfigName = tt->get_first()->get_first()->
+			get_next()->get_next()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_next()->get_value();
+
+	}
+	catch (const std::exception&)
+	{
+
+	}
+
+
 
 	// tt->
 	// first->first->
@@ -1138,20 +1166,75 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	// first->next->
 	// next->next->
 	// last->value
-	std::wstring ConfigNameSynonym = tt->get_first()->get_first()->
-		get_next()->get_next()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_first()->get_next()->
-		get_next()->get_next()->
-		get_last()->get_value();
+	std::wstring ConfigNameSynonym = L"";
+	v8Tree* ttsyn = nullptr;
+	try
+	{
+		ttsyn = tt->get_first()->get_first()->
+			get_next()->get_next()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_first()->get_next()->
+			get_next()->get_next()->
+			get_last();
+		if (ttsyn)
+			ConfigNameSynonym = ttsyn->get_value();
+
+	}
+	catch (const std::exception&)
+	{
+
+	}
+
+	if (ttsyn)
+		delete ttsyn;
 
 	std::string sConfigName = converter.to_bytes(ConfigName);
 	std::string sConfigNameSynonym = converter.to_bytes(ConfigNameSynonym);
 
 	std::wstring wfilename_in = converter.from_bytes(filename_in);
+
+
+	/*
+	uint32_t ElemsNum = 0;
+	{
+		boost::filesystem::directory_iterator d_end;
+		boost::filesystem::directory_iterator dit(dirname);
+
+		for (; dit != d_end; ++dit) {
+			if (!is_dot_file(dit->path())) {
+				++ElemsNum;
+				cout << "Parse `" << dit->path() << "`: ok" << endl << flush;
+			}
+		}
+	}
+	*/
+	vector<string> paths;
+
+	get_files(paths, dirname);
+
+	for  (auto file : paths)
+	{
+		cout << "Parse `" << file << "`: ok" << endl << flush;
+	}
+
+
+	boost::filesystem::path rroot_path(dirname + "\\" + "version");
+
+
+	std::wstring wVersion = readFile(rroot_path.string().c_str());
+
+	v8Tree* TreeVersion = parse_1Ctext(wVersion);
+
+	v8Tree* Config1 = tt->get_first()->get_first()->get_next()->get_next()->get_next()->get_next()->get_first();
+	//Config1->next->first->next->first->next->next->next
+	v8Tree* cfg = Config1->get_next()->get_first()->get_next()->get_first()->get_next()->get_next()->get_next();
+
+	v8Tree* cfg_subnode1 = cfg->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
+	//v8Tree* cfg_subnode1 = Config1->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
+
 
 	// переключение стандартного потока вывода в формат Юникода
 	_setmode(_fileno(stdout), _O_U16TEXT);
@@ -1162,6 +1245,11 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	//wcout << "Parse `" << ConfigNameSynonym << "`: ok" << endl << flush;
 	wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
 
+
+	delete TreeVersion;
+	delete cfg_subnode1;
+	delete cfg;
+	delete Config1;
 	delete tt;
 
 	return ret;
