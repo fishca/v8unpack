@@ -174,7 +174,7 @@ TEctoTreeNode* TEctoTreeNode::GetLastDescendant()
 
 void TEctoTreeNode::SetParent(TEctoTreeNode* NewParentNode)
 {
-	if (NewParentNode == nullptr or NewParentNode == this)
+	if ((NewParentNode == nullptr) or (NewParentNode == this))
 		return;
 
 	ParentNode->Children.erase(Children.begin() + Children.IndexOf(this));
