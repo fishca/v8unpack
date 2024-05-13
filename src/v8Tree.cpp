@@ -228,6 +228,7 @@ void v8Tree::outtext(wstring& text)
 			text += value;
 			break;
 		default:
+			//if(msreg) msreg->AddError(L"Ошибка вывода потока. Пустой или неизвестный узел.");
 			break;
 		}
 	}
@@ -240,17 +241,17 @@ wstring v8Tree::path()
 	v8Tree* t;
 
 	if (!this) 
-		return L":??"; 
+		return L":??"; //-V704
 	
 	for (t = this; t->parent; t = t->parent)
 	{
+		//result = wstring(":") + std::to_string(t->index) + result;
 		result = L":" + t->index + result;
 	}
 	return result;
 }
 
-// Основная функция разбора скобочного дерева
-//
+
 v8Tree* parse_1Ctext(const wstring& text)
 {
 	wstring __curvalue__;
@@ -269,8 +270,10 @@ v8Tree* parse_1Ctext(const wstring& text)
 	int len = text.size();
 	int i;
 	wchar_t sym;
+	//char sym;
 	node_type nt;
 
+	//__curvalue__ = new TStringBuilder;
 	__curvalue__ = L' ';
 
 	ret = new v8Tree(L"", nd_list, NULL);
@@ -294,6 +297,7 @@ v8Tree* parse_1Ctext(const wstring& text)
 			case L'\n':
 				break;
 			case L'"':
+				//__curvalue__->Clear();
 				__curvalue__.clear();
 				state = s_string;
 				break;
@@ -306,6 +310,11 @@ v8Tree* parse_1Ctext(const wstring& text)
 				t = t->get_parent();
 				if (!t)
 				{
+					/*
+					if (msreg) msreg->AddError(L"Ошибка формата потока. Лишняя закрывающая скобка }.",
+						L"Позиция", i,
+						L"Путь", path);
+					*/
 					delete ret;
 					return NULL;
 				}
@@ -315,7 +324,11 @@ v8Tree* parse_1Ctext(const wstring& text)
 				t->add_child(L"", nd_empty);
 				break;
 			default:
+				//curvalue = String(sym);
+				//__curvalue__->Clear();
 				__curvalue__.clear();
+				//__curvalue__->Append(sym);
+				//__curvalue__.append(sym);
 				__curvalue__ = __curvalue__ + sym;
 				state = s_nonstring;
 				break;
@@ -336,11 +349,23 @@ v8Tree* parse_1Ctext(const wstring& text)
 				t = t->get_parent();
 				if (!t)
 				{
+					/*
+					if (msreg) msreg->AddError(L"Ошибка формата потока. Лишняя закрывающая скобка }.",
+						L"Позиция", i,
+						L"Путь", path);
+					*/
 					delete ret;
 					return NULL;
 				}
+				//state = s_delimitier;
 				break;
 			default:
+				/*
+				if (msreg) msreg->AddError(L"Ошибка формата потока. Ошибочный символ в режиме ожидания разделителя.",
+					L"Символ", sym,
+					L"Код символа", tohex(sym),
+					L"Путь", path);
+				*/
 				delete ret;
 				return NULL;
 			}
@@ -349,17 +374,23 @@ v8Tree* parse_1Ctext(const wstring& text)
 			if (sym == L'"') {
 				state = s_quote_or_endstring;
 			}
+			//else curvalue += String(sym);
+			//else __curvalue__->Append(sym);
 			else
 				__curvalue__ = __curvalue__ + sym;
 			break;
 		case s_quote_or_endstring:
 			if (sym == L'"')
 			{
+				//curvalue += String(sym);
+				//__curvalue__->Append(sym);
 				__curvalue__ = __curvalue__ + sym;
 				state = s_string;
 			}
 			else
 			{
+				//t->add_child(curvalue, nd_string);
+				//t->add_child(__curvalue__->ToString(), nd_string);
 				t->add_child(__curvalue__, nd_string);
 				switch (sym)
 				{
@@ -376,12 +407,24 @@ v8Tree* parse_1Ctext(const wstring& text)
 					t = t->get_parent();
 					if (!t)
 					{
+						/*
+						if (msreg) msreg->AddError(L"Ошибка формата потока. Лишняя закрывающая скобка }.",
+							L"Позиция", i,
+							L"Путь", path);
+
+						*/
 						delete ret;
 						return NULL;
 					}
 					state = s_delimitier;
 					break;
 				default:
+					/*
+					if (msreg) msreg->AddError(L"Ошибка формата потока. Ошибочный символ в режиме ожидания разделителя.",
+						L"Символ", sym,
+						L"Код символа", tohex(sym),
+						L"Путь", path);
+					*/
 					delete ret;
 					return NULL;
 				}
@@ -390,33 +433,49 @@ v8Tree* parse_1Ctext(const wstring& text)
 		case s_nonstring:
 			switch (sym)
 			{
-			case L',':
+			case ',':
+				//curvalue = __curvalue__->ToString();
 				curvalue = __curvalue__;
 				nt = classification_value(curvalue);
 				if (nt == nd_unknown)
+					//if (msreg) msreg->AddError(L"Ошибка формата потока. Неизвестный тип значения.", L"Значение", curvalue, L"Путь", path);
 					;
 				t->add_child(curvalue, nt);
 				state = s_value;
 				break;
-			case L'}':
+			case '}':
+				//curvalue = __curvalue__->ToString();
 				curvalue = __curvalue__;
 				nt = classification_value(curvalue);
 				if (nt == nd_unknown)
+					//if (msreg) msreg->AddError(L"Ошибка формата потока. Неизвестный тип значения.", L"Значение", curvalue, L"Путь", path);
 					t->add_child(curvalue, nt);
 				t = t->get_parent();
 				if (!t)
 				{
+					/*
+					if (msreg) msreg->AddError(L"Ошибка формата потока. Лишняя закрывающая скобка }.",
+						L"Позиция", i,
+						L"Путь", path);
+					*/
 					delete ret;
 					return NULL;
 				}
 				state = s_delimitier;
 				break;
 			default:
+				//curvalue += String(sym);
+				//__curvalue__->Append(sym);
 				__curvalue__ = __curvalue__ + sym;
 				break;
 			}
 			break;
 		default:
+			/*
+			if (msreg) msreg->AddError(L"Ошибка формата потока. Неизвестный режим разбора.",
+				L"Режим разбора", tohex(state),
+				L"Путь", path);
+			*/
 			delete ret;
 			return NULL;
 
@@ -425,21 +484,34 @@ v8Tree* parse_1Ctext(const wstring& text)
 
 	if (state == s_nonstring)
 	{
+		//curvalue = __curvalue__->ToString();
 		curvalue = __curvalue__;
 		nt = classification_value(curvalue);
 		if (nt == nd_unknown)
+			//if (msreg) msreg->AddError(L"Ошибка формата потока. Неизвестный тип значения.", L"Значение", curvalue, L"Путь", path);
 			t->add_child(curvalue, nt);
 	}
+	//else if(state == s_quote_or_endstring) t->add_child(curvalue, nd_string);
+	//else if (state == s_quote_or_endstring) t->add_child(__curvalue__->ToString(), nd_string);
 	else if (state == s_quote_or_endstring)
 		t->add_child(__curvalue__, nd_string);
 	else if (state != s_delimitier)
 	{
+		/*
+		if (msreg) msreg->AddError(L"Ошибка формата потока. Незавершенное значение",
+			L"Режим разбора", tohex(state),
+			L"Путь", path);
+		*/
 		delete ret;
 		return NULL;
 	}
 
 	if (t != ret)
 	{
+		/*
+		if (msreg) msreg->AddError(L"Ошибка формата потока. Не хватает закрывающих скобок } в конце текста разбора.",
+			L"Путь", path);
+		*/
 		delete ret;
 		return NULL;
 	}

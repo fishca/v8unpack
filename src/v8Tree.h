@@ -1,10 +1,3 @@
-/*----------------------------------------------------------
-This Source Code Form is subject to the terms of the
-Mozilla Public License, v.2.0. If a copy of the MPL
-was not distributed with this file, You can obtain one
-at http://mozilla.org/MPL/2.0/.
-----------------------------------------------------------*/
-
 #pragma once
 
 #include <string>
@@ -12,6 +5,109 @@ at http://mozilla.org/MPL/2.0/.
 #include "NodeTypes.h"
 
 using namespace std;
+
+
+
+/*
+https://www.math.spbu.ru/user/nlebedin/2-year/theory_atree_.pdf
+                    ---
+                   | 1 |
+  				    ---
+  
+  
+    ---               ---             ---
+   | 2 |			 | 3 |			 | 4 |
+    ---			      ---			  ---
+                
+  ---    ---   ---      ---         ---   ---  
+ | 5 |	| 6 | | 7 |	   | 8 |	   | 9 | | 10 |	
+  ---	 ---   ---	    ---		    ---   ---	
+                
+	Теперь один указатель у узла указывает на его первого (самого левого) сына, 
+	он называется указатель ВНИЗ (down), а другой - на соседнего брата справа (right), и он называется указатель вправо.
+
+                
+*/
+
+template<class T>
+struct ANode // Arbitrary - поскольку число сыновей произвольно
+{
+	T data;
+	ANode<T> *down, *right;
+	ANode(T dd, ANode<T>* d = nullptr, ANode<T>* r = nullptr) : data(dd), down(d), right(r) {}
+};
+
+template<class T>
+void f_print(ANode<T> *p, int d = 0) // d - смещение
+{
+	if (p == nullptr) 
+		return;
+	
+	for (int i = 0; i < d; i++)
+		cout << ' ';
+	
+	cout << p->data << endl;
+	
+	f_print(p->down, d + 3);
+	
+	f_print(p->right, d);
+}
+
+template <class T>
+int count(ANode<T> *p)
+{
+	int c = 0;
+	
+	if (p == nullptr) 
+		return c;
+	
+	p = p->down;
+	
+	while (p != nullptr)
+	{
+		c++;
+		p = p->right;
+	}
+	
+	return c;
+}
+
+template <class T>
+void add_first(ANode<T> *p, T d) // d - данные узла
+{
+	ANode<T> *t;
+	t = new ANode<T>(d, nullptr, p->down);
+	p->down = t;
+}
+
+template<class T>
+void del_first(ANode<T> *p)
+{
+	ANode<T> *t, *t1, *t2;
+	
+	t1 = p->down;
+	t2 = t1->down;
+	t = t2;
+	while (t->right != 0)
+		t = t->right;
+	t->right = t1->right;
+	p->down = t2;
+	
+	delete t1;
+}
+
+template<class T>
+struct ATree
+{
+	ANode <T> *root; // корень дерева
+	ATree(ANode<T> *p) : root(p) {}
+	// конструктор по указателю на узел
+	void print() // метод печати
+	{
+		f_print(root); // вызывает рекурсивную функцию
+	}
+};
+
 
 class v8Tree
 {
@@ -37,7 +133,7 @@ public:
 private:
 	wstring value;
 	node_type type;
-	int num_subnode;  // количество подчиненных
+	int num_subnode; // количество подчиненных
 	v8Tree* parent;   // +1
 	v8Tree* next;     // 0
 	v8Tree* prev;     // 0
@@ -47,7 +143,6 @@ private:
 };
 
 typedef v8Tree* treeptr;
-// Основная функция разбора скобочного дерева
-//
+
 v8Tree* parse_1Ctext(const wstring& text);
 wstring outtext(v8Tree* t);

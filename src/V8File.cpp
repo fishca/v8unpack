@@ -19,6 +19,8 @@ at http://mozilla.org/MPL/2.0/.
 #include "VersionFile.h"
 #include "v8constants.h"
 #include "v8Tree.h"
+#include "tree.h"
+//#include "tree_utils.h"
 #include <iostream>
 #include <sstream>
 #include <boost/iostreams/device/array.hpp>
@@ -29,6 +31,10 @@ at http://mozilla.org/MPL/2.0/.
 #include <codecvt>
 #include <io.h>                             // для функции _setmode
 #include <fcntl.h>                          // для константы _O_U16TEXT
+
+#include <boost/foreach.hpp>
+#include <boost/property_tree/ini_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 namespace v8unpack {
 
@@ -41,6 +47,8 @@ int RecursiveUnpack(
 		      bool                   boolInflate,
 		      bool                   UnpackWhenNeed
 );
+
+namespace ptree = boost::property_tree;
 
 static bool is_dot_file(const boost::filesystem::path& path);
 void get_files(vector<string>& paths, const string& current_path);
@@ -409,15 +417,16 @@ void CV8File::Dispose()
 }
 
 // Нѣкоторый условный предѣл
-const size_t SmartLimit = 00 *1024;
-const size_t SmartUnpackedLimit = 20 *1024*1024;
+// Некоторый условный предел
+const size_t SmartLimit = 00 * 1024;
+const size_t SmartUnpackedLimit = 20 * 1024 * 1024;
 
 /*
-	Лучше всѣго сжимается текст
-	Берём степень сжатія текста в 99% (объём распакованных данных в 100 раз больше)
-	Берём примѣрный порог использованія памяти в 20МБ (в этот объём должы влезть распакованные данные)
-	Дѣлим 20МБ на 100 и получаем 200 КБ
-	Упакованные данные размѣром до 200 КБ можно спокойно обрабатывать в памяти
+	Лучше всего сжимается текст
+	Берём степень сжатия текста в 99% (объём распакованных данных в 100 раз больше)
+	Берём примерный порог использования памяти в 20МБ (в этот объём должы влезть распакованные данные)
+	Делим 20МБ на 100 и получаем 200 КБ
+	Упакованные данные размером до 200 КБ можно спокойно обрабатывать в памяти
 
 	В дальнейшем этот показатель всё же будет вынесен в параметр командной строки
 */
@@ -1124,7 +1133,10 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	tt = parse_1Ctext(wDataRoot);
 
-	//v8Tree* lang_tree = tt->get_subnode(L"9cd510ce-abfc-11d4-9434-004095e12fc7");
+	v8Tree* lang_tree = tt->get_subnode(L"37f2fa9a-b276-11d4-9435-004095e12fc7");
+	
+	if (tt)
+		delete tt;
 
 	//tt->
 	//    first->first->
@@ -1135,10 +1147,11 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	//    first->next->
 	//    first->next->
 	//    next->value
-
+	/*
 	std::wstring ConfigName = L"";
 	try
 	{
+		if (tt)
 		ConfigName = tt->get_first()->get_first()->
 			get_next()->get_next()->get_next()->
 			get_first()->get_next()->
@@ -1153,7 +1166,7 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	{
 
 	}
-
+	*/
 
 
 	// tt->
@@ -1167,7 +1180,10 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	// next->next->
 	// last->value
 	std::wstring ConfigNameSynonym = L"";
+
+
 	v8Tree* ttsyn = nullptr;
+	/*
 	try
 	{
 		ttsyn = tt->get_first()->get_first()->
@@ -1188,10 +1204,12 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	}
 
+	*/
+
 	if (ttsyn)
 		delete ttsyn;
 
-	std::string sConfigName = converter.to_bytes(ConfigName);
+	//std::string sConfigName = converter.to_bytes(ConfigName);
 	std::string sConfigNameSynonym = converter.to_bytes(ConfigNameSynonym);
 
 	std::wstring wfilename_in = converter.from_bytes(filename_in);
@@ -1226,13 +1244,88 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	std::wstring wVersion = readFile(rroot_path.string().c_str());
 
+	std::wstring wVersionNew = L"";
+
 	v8Tree* TreeVersion = parse_1Ctext(wVersion);
 
-	v8Tree* Config1 = tt->get_first()->get_first()->get_next()->get_next()->get_next()->get_next()->get_first();
-	//Config1->next->first->next->first->next->next->next
-	v8Tree* cfg = Config1->get_next()->get_first()->get_next()->get_first()->get_next()->get_next()->get_next();
+	TreeVersion->outtext(wVersionNew);
 
-	v8Tree* cfg_subnode1 = cfg->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
+	Tree<std::string> tree{ "Root" };
+	tree.GetRoot()->AppendChild("Left Child");
+	tree.GetRoot()->AppendChild("Right Child");
+	tree.GetRoot()->GetFirstChild()->AppendChild("First Grandchild of Left Child");
+	tree.GetRoot()->GetFirstChild()->AppendChild("Second Grandchild of Left Child");
+
+	ptree::ptree heroTree;
+
+	//heroTree.put("Name", "John");
+	//heroTree.put("Exp", 150);
+	//heroTree.put("Inventory.Weapon", "Blue Sword");
+	//heroTree.put("Inventory.Money", 3000);
+
+	//XML-код для парсинга
+	std::string xmlCode =
+
+		"<debug>\
+		<filename>debug.log</filename>\
+			<modules><module>Finance</module>\
+			<module>Admin</module>\
+			<module>HR</module>\
+		</modules>\
+		<level>2</level>\
+		</debug>";
+
+
+		//"<ButtonList>\
+	 //        <Button>B1</Button>\
+	 //        <Button>B2</Button>\
+	 //   </ButtonList>";
+
+	//Создаем поток
+	std::stringstream stream(xmlCode);
+
+	try
+	{
+		boost::property_tree::ptree propertyTree;
+
+		//Читаем XML
+		boost::property_tree::read_xml(stream, propertyTree);
+
+		//Читаем значения:
+		BOOST_FOREACH(auto & v, propertyTree)
+		{
+			std::cout << "Button is " << v.second.get<std::string>("") << std::endl;
+		}
+
+
+		//Добавляем пару значений
+		propertyTree.put("ButtonList.Button", "B3");
+		propertyTree.put("ButtonList.Button", "B4");
+
+		std::stringstream output_stream;
+
+		//Записываем в другой поток
+		boost::property_tree::write_xml(output_stream, propertyTree);
+
+		//Получаем XML из потока
+		//std::string outputXmlCode = output_stream;
+
+	}
+	catch (boost::property_tree::xml_parser_error)
+	{
+
+		std::cout << "XML parser error!" << std::endl;
+
+		throw;
+	}
+
+	//TreeUtilities::OutputToDotFile(tree, "D:\\work\\cpp\\v8unpack_ms\\ms_v8unpack\\Debug\\tree.txt");
+
+	//v8Tree* Config1 = tt->get_first()->get_first()->get_next()->get_next()->get_next()->get_next()->get_first();
+	//Config1->next->first->next->first->next->next->next
+	//v8Tree* cfg = Config1->get_next()->get_first()->get_next()->get_first()->get_next()->get_next()->get_next();
+
+	//v8Tree* cfg_subnode1 = cfg->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
 	//v8Tree* cfg_subnode1 = Config1->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
 
 
@@ -1240,17 +1333,17 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	_setmode(_fileno(stdout), _O_U16TEXT);
 
 	//cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
-	wcout << "Parse root guid: `" << wroot_guid << "`: ok" << endl << flush;
-	wcout << "Parse `" << ConfigName + L" ( " + ConfigNameSynonym + L" )" << "`: ok" << endl << flush;
+	//wcout << "Parse root guid: `" << wroot_guid << "`: ok" << endl << flush;
+	//wcout << "Parse `" << ConfigName + L" ( " + ConfigNameSynonym + L" )" << "`: ok" << endl << flush;
 	//wcout << "Parse `" << ConfigNameSynonym << "`: ok" << endl << flush;
 	wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
 
 
 	delete TreeVersion;
-	delete cfg_subnode1;
-	delete cfg;
-	delete Config1;
-	delete tt;
+	//delete cfg_subnode1;
+	//delete cfg;
+	//delete Config1;
+	//delete tt;
 
 	return ret;
 }
@@ -1299,16 +1392,13 @@ int CV8File::LoadFileFromFolder(const string &dirname)
 	return V8UNPACK_OK;
 }
 
-static bool
-is_dot_file(const boost::filesystem::path &path)
+static bool is_dot_file(const boost::filesystem::path &path)
 {
-	return path.filename().string() == "."
-		|| path.filename().string() == "..";
+	return path.filename().string() == "." || path.filename().string() == "..";
 }
 
 template<typename format>
-static int
-recursive_pack(const string &in_dirname, const string &out_filename, bool dont_deflate)
+static int recursive_pack(const string &in_dirname, const string &out_filename, bool dont_deflate)
 {
 	uint32_t ElemsNum = 0;
 	{

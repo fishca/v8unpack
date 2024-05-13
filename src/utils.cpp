@@ -422,8 +422,7 @@ bool try_inflate(std::vector<char> &data)
 	return false;
 }
 
-bool
-try_inflate(std::istream &source, std::ostream &dest)
+bool try_inflate(std::istream &source, std::ostream &dest)
 {
 	auto gpos = source.tellg();
 	auto ppos = dest.tellp();
@@ -443,8 +442,7 @@ try_inflate(std::istream &source, std::ostream &dest)
 	return true;
 }
 
-bool
-try_inflate(const boost::filesystem::path &source, const boost::filesystem::path &dest)
+bool try_inflate(const boost::filesystem::path &source, const boost::filesystem::path &dest)
 {
 	boost::filesystem::ifstream inf(source, std::ios_base::binary);
 	boost::filesystem::ofstream out(dest, std::ios_base::binary);

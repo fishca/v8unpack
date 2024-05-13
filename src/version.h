@@ -5,5 +5,5 @@ was not distributed with this file, You can obtain one
 at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------*/
 
-#define V8P_VERSION "3.0.43"
-#define V8P_RIGHT "\n\t2008 Denis Demidov 2008-03-30\n\t2014-2023 Sergey Batanov\n\t2019-2023 Sergey Rudakov"
+constexpr auto V8P_VERSION = "3.0.43";
+constexpr auto V8P_RIGHT = "\n\t2008 Denis Demidov 2008-03-30\n\t2014-2023 Sergey Batanov\n\t2019-2024 Sergey Rudakov";
