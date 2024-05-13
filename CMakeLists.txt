@@ -12,8 +12,43 @@ endif()
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/utils.cpp src/placeholder216.cpp src/VersionFile.cpp)
-set (V8UNPACK_HEADERS src/V8File.h src/version.h src/zconf.h src/zlib.h src/VersionFile.h)
+set (V8UNPACK_SOURCES 
+	src/main.cpp 
+	src/V8File.cpp 
+	src/utils.cpp 
+	src/placeholder216.cpp 
+	src/VersionFile.cpp 
+	src/atree.cpp 
+	src/MetaObject.cpp 
+	src/NodeTypes.cpp 
+	src/v8MetaCommand.cpp 
+	src/v8MetaDoc.cpp 
+	src/v8MetaForm.cpp
+	src/v8MetaMoxel.cpp
+	src/v8MetaObject.cpp
+	src/v8Tree.cpp 
+	src/NodeTypes.cpp
+)
+set (V8UNPACK_HEADERS 
+	src/V8File.h 
+	src/version.h 
+	src/zconf.h 
+	src/zlib.h 
+	src/VersionFile.h
+	src/atree.h 
+	src/MetaObject.h 
+	src/NodeTypes.h 
+	src/v8MetaCommand.h 
+	src/v8MetaDoc.h 
+	src/v8MetaForm.h
+	src/v8MetaMoxel.h
+	src/v8MetaObject.h
+	src/v8Tree.h 
+	src/v8constants.h
+	src/tree_utils.h
+	src/tree.h
+	src/NodeTypes.h
+)
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 
