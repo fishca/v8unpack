@@ -2,7 +2,7 @@
 
 wstring v8MetaForm::MetaName()
 {
-    return L"Форма." + Name;
+    return L"Р¤РѕСЂРјР°." + Name;
 }
 
 void v8MetaForm::FillUUID(list<wstring> UUIDList)

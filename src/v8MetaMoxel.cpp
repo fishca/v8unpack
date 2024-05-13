@@ -2,12 +2,12 @@
 
 wstring v8MetaMoxel::MetaName()
 {
-    return L"Μΰκες." + Name;
+    return L"ΠΠ°ΠΊΠµΡ‚." + Name;
 }
 
 wstring v8MetaMoxel::MetaClassName()
 {
-    return L"Μΰκες";
+    return L"ΠΠ°ΠΊΠµΡ‚";
 }
 
 void v8MetaMoxel::FillUUID(list<wstring> UUIDList)

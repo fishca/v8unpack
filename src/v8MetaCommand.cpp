@@ -2,12 +2,12 @@
 
 wstring v8MetaCommand::MetaName()
 {
-	return L"Команды." + Name;
+	return L"РљРѕРјР°РЅРґС‹." + Name;
 }
 
 wstring v8MetaCommand::MetaClassName()
 {
-	return L"Команды";
+	return L"РљРѕРјР°РЅРґС‹";
 }
 
 void v8MetaCommand::FillUUID(list<wstring> UUIDList)

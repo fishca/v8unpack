@@ -7,7 +7,7 @@ wstring v8MetaDoc::MetaName()
 
 wstring v8MetaDoc::MetaClassName()
 {
-    return L"Документы";
+    return L"Р”РѕРєСѓРјРµРЅС‚С‹";
 }
 
 v8MetaDoc::v8MetaDoc(v8Tree* t)
