@@ -234,7 +234,7 @@ TEctoTreeNode* TEctoTreeNode::GetNext()
 		{
 			Node = Node->ParentNode;
 		}
-		if (not Node->IsRoot())
+		if (!(Node->IsRoot()))
 			Result = Node->GetNextSibling();
 	}
 
