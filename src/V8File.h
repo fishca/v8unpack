@@ -345,9 +345,9 @@ int Parse(
 );
 
 int ParseFolder(
-	const std::string& filename,
-	const std::string& dirname,
-	const std::vector< std::string >& filter
+	const std::string &filename,
+	const std::string &dirname,
+	const std::vector< std::string > &filter
 );
 
 
