@@ -230,7 +230,7 @@ TEctoTreeNode* TEctoTreeNode::GetNext()
 	if (Result == nullptr && !IsRoot())
 	{
 		Node = ParentNode;
-		while (Node->GetNextSibling() == nullptr and not Node->IsRoot())
+		while ((Node->GetNextSibling() == nullptr) && !(Node->IsRoot()))
 		{
 			Node = Node->ParentNode;
 		}
