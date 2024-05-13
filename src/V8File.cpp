@@ -29,7 +29,23 @@ at http://mozilla.org/MPL/2.0/.
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
 #include <codecvt>
+#ifdef _WIN32
 #include <io.h>                             // для функции _setmode
+#elif __linux__
+#include <inttypes.h>
+#include <unistd.h>
+#define __int64 int64_t
+#define _close close
+#define _read read
+#define _lseek64 lseek64
+#define _O_RDONLY O_RDONLY
+#define _open open
+#define _lseeki64 lseek64
+#define _lseek lseek
+#define stricmp strcasecmp
+#endif // _WIN32
+
+
 #include <fcntl.h>                          // для константы _O_U16TEXT
 
 #include <boost/foreach.hpp>
