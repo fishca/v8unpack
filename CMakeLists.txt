@@ -28,6 +28,8 @@ set (V8UNPACK_SOURCES
 	src/v8MetaObject.cpp
 	src/v8Tree.cpp 
 	src/NodeTypes.cpp
+	src/v8MetaCommonModules.cpp
+	src/v8MetaInterfaces.cpp
 )
 set (V8UNPACK_HEADERS 
 	src/V8File.h 
@@ -48,6 +50,8 @@ set (V8UNPACK_HEADERS
 	src/tree_utils.h
 	src/tree.h
 	src/NodeTypes.h
+	src/v8MetaCommonModules.h
+	src/v8MetaInterfaces.h
 )
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
