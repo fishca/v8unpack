@@ -3,12 +3,12 @@
 
 wstring MetaObject::MetaName()
 {
-	return L"Îáúåêò." + Name;
+	return L"ĞĞ±ÑŠĞµĞºÑ‚." + Name;
 }
 
 wstring MetaObject::MetaClassName()
 {
-	return L"Îáúåêò";
+	return L"ĞĞ±ÑŠĞµĞºÑ‚";
 }
 
 void MetaObject::FillUUID(list<wstring> UUIDList)
@@ -28,7 +28,7 @@ wstring MetaObject::getUUID()
 MetaObject::MetaObject(v8Tree* t)
 {
 	UUID = L"00000000-0000-0000-0000-000000000000";
-	Name = L"Îáúåêò";
+	Name = L"ĞĞ±ÑŠĞµĞºÑ‚";
 }
 
 MetaObject::~MetaObject()
