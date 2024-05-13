@@ -14,27 +14,27 @@ wstring get_node_type_presentation(node_type type)
 	switch(type)
 	{
 		case nd_empty:
-			return L"Пусто";
+			return L"РџСѓСЃС‚Рѕ";
 		case nd_string:
-			return L"Строка";
+			return L"РЎС‚СЂРѕРєР°";
 		case nd_number:
-			return L"Число";
+			return L"Р§РёСЃР»Рѕ";
 		case nd_number_exp:
-			return L"Число с показателем степени";
+			return L"Р§РёСЃР»Рѕ СЃ РїРѕРєР°Р·Р°С‚РµР»РµРј СЃС‚РµРїРµРЅРё";
 		case nd_guid:
-			return L"Уникальный идентификатор";
+			return L"РЈРЅРёРєР°Р»СЊРЅС‹Р№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ";
 		case nd_list:
-			return L"Список";
+			return L"РЎРїРёСЃРѕРє";
 		case nd_binary:
-			return L"Двоичные данные";
+			return L"Р”РІРѕРёС‡РЅС‹Рµ РґР°РЅРЅС‹Рµ";
 		case nd_binary2:
-			return L"Двоичные данные 8.2";
+			return L"Р”РІРѕРёС‡РЅС‹Рµ РґР°РЅРЅС‹Рµ 8.2";
 		case nd_binary_d:
-			return L"Двоичные данные data";
+			return L"Р”РІРѕРёС‡РЅС‹Рµ РґР°РЅРЅС‹Рµ data";
 		case nd_link:
-			return L"Ссылка";
+			return L"РЎСЃС‹Р»РєР°";
 		case nd_unknown:
-			return L"<Неизвестный тип>";
+			return L"<РќРµРёР·РІРµСЃС‚РЅС‹Р№ С‚РёРї>";
 	}
-	return L"<Неизвестный тип>";
+	return L"<РќРµРёР·РІРµСЃС‚РЅС‹Р№ С‚РёРї>";
 }
