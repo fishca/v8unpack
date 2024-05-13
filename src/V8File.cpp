@@ -131,7 +131,8 @@ void CV8Elem::Dispose()
 std::wstring readFile(const char* filename)
 {
 	std::wifstream wif(filename);
-	wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	//wif.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t>));
+	wif.imbue(std::locale(std::locale(), new std::codecvt_utf8<wchar_t>));
 	std::wstringstream wss;
 	wss << wif.rdbuf();
 
@@ -1280,16 +1281,16 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	//heroTree.put("Inventory.Money", 3000);
 
 	//XML-код для парсинга
-	std::string xmlCode =
+	//std::string xmlCode =
 
-		"<debug>\
-		<filename>debug.log</filename>\
-			<modules><module>Finance</module>\
-			<module>Admin</module>\
-			<module>HR</module>\
-		</modules>\
-		<level>2</level>\
-		</debug>";
+	//	"<debug>\
+	//	<filename>debug.log</filename>\
+	//		<modules><module>Finance</module>\
+	//		<module>Admin</module>\
+	//		<module>HR</module>\
+	//	</modules>\
+	//	<level>2</level>\
+	//	</debug>";
 
 
 		//"<ButtonList>\
@@ -1297,43 +1298,43 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	 //        <Button>B2</Button>\
 	 //   </ButtonList>";
 
-	//Создаем поток
-	std::stringstream stream(xmlCode);
+	////Создаем поток
+	//std::stringstream stream(xmlCode);
 
-	try
-	{
-		boost::property_tree::ptree propertyTree;
+	//try
+	//{
+	//	boost::property_tree::ptree propertyTree;
 
-		//Читаем XML
-		boost::property_tree::read_xml(stream, propertyTree);
+	//	//Читаем XML
+	//	boost::property_tree::read_xml(stream, propertyTree);
 
-		//Читаем значения:
-		BOOST_FOREACH(auto & v, propertyTree)
-		{
-			std::cout << "Button is " << v.second.get<std::string>("") << std::endl;
-		}
+	//	//Читаем значения:
+	//	BOOST_FOREACH(auto & v, propertyTree)
+	//	{
+	//		std::cout << "Button is " << v.second.get<std::string>("") << std::endl;
+	//	}
 
 
-		//Добавляем пару значений
-		propertyTree.put("ButtonList.Button", "B3");
-		propertyTree.put("ButtonList.Button", "B4");
+	//	//Добавляем пару значений
+	//	propertyTree.put("ButtonList.Button", "B3");
+	//	propertyTree.put("ButtonList.Button", "B4");
 
-		std::stringstream output_stream;
+	//	std::stringstream output_stream;
 
-		//Записываем в другой поток
-		boost::property_tree::write_xml(output_stream, propertyTree);
+	//	//Записываем в другой поток
+	//	boost::property_tree::write_xml(output_stream, propertyTree);
 
-		//Получаем XML из потока
-		//std::string outputXmlCode = output_stream;
+	//	//Получаем XML из потока
+	//	//std::string outputXmlCode = output_stream;
 
-	}
-	catch (boost::property_tree::xml_parser_error)
-	{
+	//}
+	//catch (boost::property_tree::xml_parser_error)
+	//{
 
-		std::cout << "XML parser error!" << std::endl;
+	//	std::cout << "XML parser error!" << std::endl;
 
-		throw;
-	}
+	//	throw;
+	//}
 
 	//TreeUtilities::OutputToDotFile(tree, "D:\\work\\cpp\\v8unpack_ms\\ms_v8unpack\\Debug\\tree.txt");
 
@@ -1346,13 +1347,13 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 
 	// переключение стандартного потока вывода в формат Юникода
-	_setmode(_fileno(stdout), _O_U16TEXT);
+	//_setmode(_fileno(stdout), _O_U16TEXT);
 
 	//cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
 	//wcout << "Parse root guid: `" << wroot_guid << "`: ok" << endl << flush;
 	//wcout << "Parse `" << ConfigName + L" ( " + ConfigNameSynonym + L" )" << "`: ok" << endl << flush;
 	//wcout << "Parse `" << ConfigNameSynonym << "`: ok" << endl << flush;
-	wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
+	//wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
 
 
 	delete TreeVersion;
