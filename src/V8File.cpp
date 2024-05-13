@@ -1130,233 +1130,35 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	v8Tree* tt;
 
-	tt = parse_1Ctext(wData);
+	//tt = parse_1Ctext(wData);
 
-	std::wstring wroot_guid = L"";
-	// находим GUID конфигурации
-	if (tt)
-		wroot_guid = tt->get_first()->get_first()->get_next()->get_value();
+	//std::wstring wroot_guid = L"";
+	//// находим GUID конфигурации
+	//if (tt)
+	//	wroot_guid = tt->get_first()->get_first()->get_next()->get_value();
 
 
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+	//
+	//std::string root_guid = converter.to_bytes(wroot_guid);
+
+	//boost::filesystem::path root_file(dirname + "\\" + root_guid);
+
+	//std::wstring wDataRoot = readFile(root_file.string().c_str());
+
+	//delete tt;
+
+	//tt = parse_1Ctext(wDataRoot);
+
+	//v8Tree* lang_tree = tt->get_subnode(L"37f2fa9a-b276-11d4-9435-004095e12fc7");
 	
-	std::string root_guid = converter.to_bytes(wroot_guid);
 
-	boost::filesystem::path root_file(dirname + "\\" + root_guid);
-
-	std::wstring wDataRoot = readFile(root_file.string().c_str());
-
-	delete tt;
-
-	tt = parse_1Ctext(wDataRoot);
-
-	v8Tree* lang_tree = tt->get_subnode(L"37f2fa9a-b276-11d4-9435-004095e12fc7");
-	
-	if (tt)
-		delete tt;
-
-	//tt->
-	//    first->first->
-	//    next->next->next->
-	//    first->next->
-	//    first->next->
-	//    first->next->
-	//    first->next->
-	//    first->next->
-	//    next->value
-	/*
-	std::wstring ConfigName = L"";
-	try
-	{
-		if (tt)
-		ConfigName = tt->get_first()->get_first()->
-			get_next()->get_next()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_next()->get_value();
-
-	}
-	catch (const std::exception&)
-	{
-
-	}
-	*/
-
-
-	// tt->
-	// first->first->
-	// next->next->next->
-	// first->next->
-	// first->next->
-	// first->next->
-	// first->next->
-	// first->next->
-	// next->next->
-	// last->value
-	std::wstring ConfigNameSynonym = L"";
-
-
-	v8Tree* ttsyn = nullptr;
-	/*
-	try
-	{
-		ttsyn = tt->get_first()->get_first()->
-			get_next()->get_next()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_first()->get_next()->
-			get_next()->get_next()->
-			get_last();
-		if (ttsyn)
-			ConfigNameSynonym = ttsyn->get_value();
-
-	}
-	catch (const std::exception&)
-	{
-
-	}
-
-	*/
-
-	if (ttsyn)
-		delete ttsyn;
-
-	//std::string sConfigName = converter.to_bytes(ConfigName);
-	std::string sConfigNameSynonym = converter.to_bytes(ConfigNameSynonym);
-
-	std::wstring wfilename_in = converter.from_bytes(filename_in);
-
-
-	/*
-	uint32_t ElemsNum = 0;
-	{
-		boost::filesystem::directory_iterator d_end;
-		boost::filesystem::directory_iterator dit(dirname);
-
-		for (; dit != d_end; ++dit) {
-			if (!is_dot_file(dit->path())) {
-				++ElemsNum;
-				cout << "Parse `" << dit->path() << "`: ok" << endl << flush;
-			}
-		}
-	}
-	*/
-	vector<string> paths;
-
-	get_files(paths, dirname);
-
-	for  (auto file : paths)
-	{
-		cout << "Parse `" << file << "`: ok" << endl << flush;
-	}
-
-
-	boost::filesystem::path rroot_path(dirname + "\\" + "version");
-
-
-	std::wstring wVersion = readFile(rroot_path.string().c_str());
-
-	std::wstring wVersionNew = L"";
-
-	v8Tree* TreeVersion = parse_1Ctext(wVersion);
-
-	TreeVersion->outtext(wVersionNew);
-
-	Tree<std::string> tree{ "Root" };
-	tree.GetRoot()->AppendChild("Left Child");
-	tree.GetRoot()->AppendChild("Right Child");
-	tree.GetRoot()->GetFirstChild()->AppendChild("First Grandchild of Left Child");
-	tree.GetRoot()->GetFirstChild()->AppendChild("Second Grandchild of Left Child");
-
-	ptree::ptree heroTree;
-
-	//heroTree.put("Name", "John");
-	//heroTree.put("Exp", 150);
-	//heroTree.put("Inventory.Weapon", "Blue Sword");
-	//heroTree.put("Inventory.Money", 3000);
-
-	//XML-код для парсинга
-	//std::string xmlCode =
-
-	//	"<debug>\
-	//	<filename>debug.log</filename>\
-	//		<modules><module>Finance</module>\
-	//		<module>Admin</module>\
-	//		<module>HR</module>\
-	//	</modules>\
-	//	<level>2</level>\
-	//	</debug>";
-
-
-		//"<ButtonList>\
-	 //        <Button>B1</Button>\
-	 //        <Button>B2</Button>\
-	 //   </ButtonList>";
-
-	////Создаем поток
-	//std::stringstream stream(xmlCode);
-
-	//try
-	//{
-	//	boost::property_tree::ptree propertyTree;
-
-	//	//Читаем XML
-	//	boost::property_tree::read_xml(stream, propertyTree);
-
-	//	//Читаем значения:
-	//	BOOST_FOREACH(auto & v, propertyTree)
-	//	{
-	//		std::cout << "Button is " << v.second.get<std::string>("") << std::endl;
-	//	}
-
-
-	//	//Добавляем пару значений
-	//	propertyTree.put("ButtonList.Button", "B3");
-	//	propertyTree.put("ButtonList.Button", "B4");
-
-	//	std::stringstream output_stream;
-
-	//	//Записываем в другой поток
-	//	boost::property_tree::write_xml(output_stream, propertyTree);
-
-	//	//Получаем XML из потока
-	//	//std::string outputXmlCode = output_stream;
-
-	//}
-	//catch (boost::property_tree::xml_parser_error)
-	//{
-
-	//	std::cout << "XML parser error!" << std::endl;
-
-	//	throw;
-	//}
-
-	//TreeUtilities::OutputToDotFile(tree, "D:\\work\\cpp\\v8unpack_ms\\ms_v8unpack\\Debug\\tree.txt");
-
-	//v8Tree* Config1 = tt->get_first()->get_first()->get_next()->get_next()->get_next()->get_next()->get_first();
-	//Config1->next->first->next->first->next->next->next
-	//v8Tree* cfg = Config1->get_next()->get_first()->get_next()->get_first()->get_next()->get_next()->get_next();
-
-	//v8Tree* cfg_subnode1 = cfg->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
-	//v8Tree* cfg_subnode1 = Config1->get_subnode(L"061d872a-5787-460e-95ac-ed74ea3a3e84");
 
 
 	// переключение стандартного потока вывода в формат Юникода
 	//_setmode(_fileno(stdout), _O_U16TEXT);
 
-	//cout << "Parse `" << root_guid.c_str() << "`: ok" << endl << flush;
-	//wcout << "Parse root guid: `" << wroot_guid << "`: ok" << endl << flush;
-	//wcout << "Parse `" << ConfigName + L" ( " + ConfigNameSynonym + L" )" << "`: ok" << endl << flush;
-	//wcout << "Parse `" << ConfigNameSynonym << "`: ok" << endl << flush;
-	//wcout << "Parse `" << wfilename_in << "`: ok" << endl << flush;
-
-
-	delete TreeVersion;
+	
 	//delete cfg_subnode1;
 	//delete cfg;
 	//delete Config1;
