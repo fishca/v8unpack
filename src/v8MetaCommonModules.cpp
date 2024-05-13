@@ -7,7 +7,7 @@ wstring v8MetaCommonModules::MetaName()
 
 wstring v8MetaCommonModules::MetaClassName()
 {
-	return L"Общие модули";
+	return L"РћР±С‰РёРµ РјРѕРґСѓР»Рё";
 }
 
 v8MetaCommonModules::v8MetaCommonModules(v8Tree* t)
