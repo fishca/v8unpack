@@ -1128,7 +1128,7 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 
 	std::wstring wData = readFile(root_path.string().c_str());
 
-	v8Tree* tt;
+	v8Tree* tt = parse_1Ctext(wData);
 
 	//tt = parse_1Ctext(wData);
 
@@ -1162,7 +1162,7 @@ int ParseFolder(const string& filename_in, const string& dirname, const vector< 
 	//delete cfg_subnode1;
 	//delete cfg;
 	//delete Config1;
-	//delete tt;
+	delete tt;
 
 	return ret;
 }
