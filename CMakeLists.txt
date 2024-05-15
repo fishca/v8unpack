@@ -31,6 +31,7 @@ set (V8UNPACK_SOURCES
 	src/v8MetaCommonModules.cpp
 	src/v8MetaInterfaces.cpp
 	src/v8MetaNumerator.cpp
+	src/FileTypes.cpp
 )
 set (V8UNPACK_HEADERS 
 	src/V8File.h 
@@ -54,6 +55,7 @@ set (V8UNPACK_HEADERS
 	src/v8MetaCommonModules.h
 	src/v8MetaInterfaces.h
 	src/v8MetaNumerator.h
+	src/FileTypes.h
 )
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
