@@ -1,56 +1,101 @@
-version: 3.0.42.{build}
-image: Visual Studio 2015
+version: 3.0.43.{build}
+image:
+  - Visual Studio 2022
 pull_requests:
   do_not_increment_build_number: true
+
 clone_depth: 1
-environment:
-  VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\
-  BOOST_ROOT: C:\Libraries\boost_1_60_0
-  BOOST_LIBRARYDIR: C:\Libraries\boost_1_60_0\lib32-msvc-14.0
-  BOOST_INCLUDEDIR: C:\Libraries\boost_1_60_0
-install:
-- cmd: >-
-    appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
 
-    7z x zlib-1.2.8.zip > NUL
+for:
+-
+  matrix:
+    except:
+      - image: Visual Studio 2022
+  environment:
+    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system zlib
+    DEPLOY_PLATFORM_ID: ubuntu
+  init:
+  - export CXX=g++-9 CC=gcc-9
+  - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
+  - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
+  - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
+  install:
+  #- sudo apt update -q -y
+  - sudo apt install -y debhelper build-essential devscripts fakeroot
+  - ../vcpkg/vcpkg install ${VCPKG_LIBS}
+  build_script:
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
+  - cmake --build . --config Release
+  - cd ..
+  cache:
+  - ../vcpkg/installed
+  after_build:
+  - cd build && ../package/deb/builddeb.sh && mv *.deb .. && cd ..
+  artifacts:
+  - path: v8unpack*.deb
 
-    cd zlib-1.2.8
 
-    md build
+-
+  matrix:
+    only:
+      - image: Visual Studio 2015
+  environment:
+    VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\
+    BOOST_ROOT: C:\Libraries\boost_1_60_0
+    BOOST_LIBRARYDIR: C:\Libraries\boost_1_60_0\lib32-msvc-14.0
+    BOOST_INCLUDEDIR: C:\Libraries\boost_1_60_0
+    DEPLOY_PLATFORM_ID: win
+  install:
+  - cmd: >-
+      appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
 
-    cd build
+      7z x zlib-1.2.8.zip > NUL
 
-    cmake -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+      cd zlib-1.2.8
 
-    cmake --build . --config Release --target zlibstatic
+      md build
 
-    copy zconf.h ..
+      cd build
 
-    cd ..
+      cmake -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
 
-    cd ..
-build_script:
-- cmd: >-
-    "%VCDIR%"\vcvarsall.bat
+      cmake --build . --config Release --target zlibstatic
 
-    cmake -G "Visual Studio 14" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlibstatic.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 .
+      copy zconf.h ..
 
-    cmake --build . --config Release
+      cd ..
 
-after_build:
-- cmd: >-
-    SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
+      cd ..
+  build_script:
+  - cmd: >-
+      "%VCDIR%"\vcvarsall.bat
 
-    candle v8unpack.wxs
+      cmake -G "Visual Studio 14" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlibstatic.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 .
 
-    light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
+  - cmake --build . --config Release
+  after_build:
+  - cmd: >-
+      SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
 
-    choco pack
+      copy Release\v8unpack.exe package
 
-artifacts:
-- path: Release\*.exe
-  name: v8unpack
-- path: v8unpack*.nupkg
-- path: v8unpack-*.msi
-  name: installer
+      copy LICENSE package
+
+      copy README.md package
+
+      cd package
+
+      candle v8unpack.wxs
+
+      light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
+
+      choco pack
+
+  artifacts:
+  - path: Release\*.exe
+    name: v8unpack.exe
+  - path: package\v8unpack*.nupkg
+    name: v8unpack.nupkg
+  - path: package\v8unpack-*.msi
+    name: v8unpack.msi
 deploy: off

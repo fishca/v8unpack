@@ -17,4 +17,5 @@ Makefile
 gmon.out
 /build
 
-.vscode/*
+cmake-build-*/*
+.idea/*

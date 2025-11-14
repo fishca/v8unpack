@@ -13,14 +13,69 @@ else()
 	set(RC_FILE "")
 endif()
 
-set (V8UNPACK_SOURCES src/main.cpp src/V8File.cpp src/NodeTypes.cpp src/APIcfBase.cpp)
-set (V8UNPACK_HEADERS src/V8File.h src/version.h src/NodeTypes.h src/APIcfBase.h src/guids.h src/zconf.h src/zlib.h)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-if(MSVC)
+set (V8UNPACK_SOURCES 
+	src/main.cpp
+	src/binarydecimalnumber.cpp
+	src/common.cpp
+	src/EctoSoftTree.cpp
+	src/ExactStructureBuilder.cpp
+	src/logger.cpp
+	src/mdCommand.cpp
+	src/mdForm.cpp
+	src/mdLang.cpp
+	src/mdMoxel.cpp
+	src/mdObject.cpp
+	src/messageregistration.cpp
+	src/onesdata.cpp
+	src/parse_tree.cpp
+	src/placeholder216.cpp
+	src/StringUtils.cpp
+	src/THashedStringList.cpp
+	src/TMSTree.cpp
+	src/tree.cpp
+	src/treeparser.cpp
+	src/TStringList.cpp
+	src/utils.cpp
+	src/V8File.cpp
+	src/VersionFile.cpp
+	)
+set (V8UNPACK_HEADERS 
+	src/binarydecimalnumber.h
+	src/common.h
+	src/EctoSoftTree.h
+	src/guids.h
+	src/logger.h
+	src/mdCommand.h
+	src/mdForm.h
+	src/mdLang.h
+	src/mdMoxel.h
+	src/mdObject.h
+	src/messageregistration.h
+	src/nodetypes.h
+	src/parse_tree.h
+	src/StringUtils.h
+	src/THashedStringList.h
+	src/TMSTree.h
+	src/tree.h
+	src/TStringList.h
+	src/utils.cpp
+	src/V8File.h
+	src/version.h
+	src/VersionFile.h
+	src/zconf.h 
+	src/zlib.h 
+	src/onesdata.hpp
+	src/ExactStructureBuilder.hpp
+	src/treeparser.hpp
+	)
+
+if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 
 	foreach(flag_var
-		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-		CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
+			CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+			CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
 
 		if(${flag_var} MATCHES "/MD")
 			string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
@@ -34,7 +89,7 @@ if(MSVC)
 
 endif()
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
@@ -47,8 +102,7 @@ set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED OFF)
 set (Boost_USE_STATIC_RUNTIME ON)
 
-#find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system)
-find_package(Boost 1.53 REQUIRED COMPONENTS system filesystem)
+find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
 
 include_directories (${Boost_INCLUDE_DIRS})
 
