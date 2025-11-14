@@ -26,6 +26,8 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/shared_array.hpp>
 #include <boost/filesystem.hpp>
 #include <algorithm>
+#include "SystemClasses/String.hpp"
+using namespace std;
 
 namespace v8unpack {
 
@@ -334,6 +336,18 @@ int Parse(
 		const std::string                &dirname,
 		const std::vector< std::string > &filter
 );
+
+int Parse_Test(
+	const std::string& filename,
+	const std::string& dirname,
+	const std::vector< std::string >& filter
+);
+
+String getDataFromFile1C(const std::string& filename_in, const std::string& FileName);
+std::wstring wgetDataFromFile1C(const std::string& filename_in, const std::string& FileName, const std::string& DataFileName);
+
+std::string wstring_to_string(const std::wstring& wstr, bool utf8);
+std::string wstring_to_utf8(const std::wstring& str);
 
 int ListFiles(const std::string &filename);
 bool IsV8File(std::basic_istream<char> &file);
