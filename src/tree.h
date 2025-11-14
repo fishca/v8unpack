@@ -1,1323 +1,562 @@
-/**
- * The MIT License (MIT)
- *
- * Copyright (c) 2017 Tim Severeijns
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
+#ifndef TREE_H
+#define TREE_H
 
-#pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <iterator>
+#include <iostream>
+#include <stack>
+#include <vector>
+#include <string>
+#include <sstream>
 
-/**
- * @brief Класс Tree объявляет базовое дерево, построенное на основе шаблонизированных узлов Node.
- * Каждое дерево состоит из простого корневого узла и ничего больше.
- */
-template <typename DataType> class Tree
-{
-  public:
-    class Node;
+// Узел дерева
+struct sTreeNode {
+    enum class Type {
+        OBJECT,    // Объект { ... }
+        STRING,    // Строка (GUID, текст, кириллица)
+        NUMBER     // Число
+    };
 
-    class Iterator;
-    class PreOrderIterator;
-    class PostOrderIterator;
-    class LeafIterator;
-    class SiblingIterator;
+    Type type;
+    std::vector<std::unique_ptr<sTreeNode>> children;
+    //std::string value;
+    std::wstring value;
 
-    // Typedefs needed for STL compliance:
-    // Определения типов, необходимые для соответствия STL:
-    using value_type = Node;
-    using reference = Node&;
-    using const_reference = const Node&;
+    sTreeNode(Type t = Type::OBJECT, const std::wstring& val = L"") : type(t), value(val) 
+    {}
 
-    /**
-     * @brief Конструктор по умолчанию.
-     * 
-     */
-    Tree() : m_root{ new Node{} }
-    {
+    // Добавление дочернего узла
+    sTreeNode* addChild(std::unique_ptr<sTreeNode> child) {
+        children.push_back(std::move(child));
+        return children.back().get();
     }
 
-    /**
-     * @brief Конструктор создает новое дерево с предоставленными данными, инкапсулированными в новый узел.
-     * 
-     */
-    Tree(DataType data) : m_root{ new Node{ std::move(data) } }
-    {
+    // Добавление строкового узла
+    sTreeNode* addString(const std::wstring& str) {
+        auto node = std::make_unique<sTreeNode>(Type::STRING, str);
+        return addChild(std::move(node));
     }
 
-    /**
-     * @brief Copy constructor (Конструктор копирования).
-     * 
-     */
-    Tree(const Tree<DataType>& other) : m_root{ new Node{ *other.m_root } }
-    {
+    // Добавление числового узла
+    sTreeNode* addNumber(const std::wstring& num) {
+        auto node = std::make_unique<sTreeNode>(Type::NUMBER, num);
+        return addChild(std::move(node));
     }
 
-    /**
-     * @brief Assignment operator (Оператор присваивания).
-     * 
-     */
-    Tree<DataType>& operator=(Tree<DataType> other)
-    {
-        swap(*this, other);
-        return *this;
-    }
-
-    /**
-     * @brief Swaps all member variables of the left-hand side with that of the right-hand side.
-     *  (Меняет местами все переменные-члены левой части на переменные правой части)
-     */
-    friend void swap(Tree<DataType>& lhs, Tree<DataType>& rhs) noexcept(noexcept(swap(lhs.m_root, rhs.m_root)))
-    {
-        // Enable Argument Dependent Lookup (ADL):
-        // Включить поиск, зависящий от аргумента (ADL):
-        using std::swap;
-
-        swap(lhs.m_root, rhs.m_root);
-    }
-
-    /**
-     * @brief Deletes the root Node, which, in turn, will trigger a deletion of every
-     * Node in the Tree. (Удаляет корневой узел, что, в свою очередь, приводит к удалению всех узлов в дереве).
-     */
-    ~Tree()
-    {
-        delete m_root;
-    }
-
-    /**
-     * @returns A pointer to the root Node (Указатель на корневой узел Node)
-     * 
-     */
-    inline Node* GetRoot() const noexcept
-    {
-        return m_root;
-    }
-
-    /**
-     * @brief Computes the number of nodes in the Tree.
-     * Вычисляет количество узлов в дереве
-     *
-     * @complexity Linear in the size of the Tree.
-     * Линейная сложность в зависимости от размера дерева
-     *
-     * @returns The total number of nodes in the Tree. This includes leaf and non-leaf nodes,
-     * in addition to the root node.
-     * 
-     * Общее количество узлов в дереве. Сюда входят как листовые, так и нелистовые узлы, а также корневой узел.
-     * 
-     */
-    inline auto Size() const noexcept
-    {
-        return std::count_if(
-            std::begin(*this), std::end(*this), [](const auto&) noexcept { return true; });
-    }
-
-    /**
-     * @returns The zero-indexed depth of the Node in its Tree.
-     * Глубина узла с нулевым индексом в его дереве.
-     */
-    static unsigned int Depth(const Node& node) noexcept
-    {
-        unsigned int depth = 0;
-
-        const Node* nodePtr = &node;
-        while (nodePtr->GetParent()) {
-            ++depth;
-            nodePtr = nodePtr->GetParent();
-        }
-
-        return depth;
-    }
-
-    /**
-     * @returns A pre-order iterator that will iterate over all Nodes in the tree.
-     * Итератор предварительного заказа, который будет перебирать все узлы в дереве.
-     */
-    inline typename Tree::PreOrderIterator beginPreOrder() const noexcept
-    {
-        const auto iterator = Tree<DataType>::PreOrderIterator{ m_root };
-        return iterator;
-    }
-
-    /**
-     * @returns A pre-order iterator pointing "past" the end of the tree.
-     * Итератор предварительного заказа, указывающий «за» конец дерева.
-     */
-    inline typename Tree::PreOrderIterator endPreOrder() const noexcept
-    {
-        const auto iterator = Tree<DataType>::PreOrderIterator{ nullptr };
-        return iterator;
-    }
-
-    /**
-     * @returns A post-order iterator that will iterator over all nodes in the tree, starting
-     * with the root of the Tree.
-     * 
-     * Итератор пост-заказа, который будет обходить все узлы дерева, начиная с корня дерева.
-     */
-    inline typename Tree::PostOrderIterator begin() const noexcept
-    {
-        const auto iterator = Tree<DataType>::PostOrderIterator{ m_root };
-        return iterator;
-    }
-
-    /**
-     * @returns A post-order iterator that points past the end of the Tree.
-     * Итератор пост-заказа, указывающий за конец дерева.
-     */
-    inline typename Tree::PostOrderIterator end() const noexcept
-    {
-        const auto iterator = Tree<DataType>::PostOrderIterator{ nullptr };
-        return iterator;
-    }
-
-    /**
-     * @returns An iterator that will iterator over all leaf nodes in the Tree, starting with the
-     * left-most leaf in the Tree.
-     * 
-     * Итератор, который будет перебирать все листовые узлы дерева, начиная с самого левого листа дерева.
-     * 
-     */
-    inline typename Tree::LeafIterator beginLeaf() const noexcept
-    {
-        const auto iterator = Tree<DataType>::LeafIterator{ m_root };
-        return iterator;
-    }
-
-    /**
-     * @return A LeafIterator that points past the last leaf Node in the Tree.
-     * Листовой итератор, указывающий за последний листовой узел в дереве.
-     */
-    inline typename Tree::LeafIterator endLeaf() const noexcept
-    {
-        const auto iterator = Tree<DataType>::LeafIterator{ nullptr };
-        return iterator;
-    }
-
-  private:
-    Node* m_root{ nullptr };
-};
-
-/**
- * Представляет узлы, составляющие дерево.
- *
- * Каждый узел имеет указатель на своего родителя, первого и последнего дочернего узла, 
- *    предыдущего и следующего узла и, конечно же, на данные, которые он инкапсулирует.
- * 
- */
-template <typename DataType> class Tree<DataType>::Node
-{
-  public:
-    // Typedefs needed for STL compliance:
-    using value_type = DataType;
-    using reference = DataType&;
-    using const_reference = const DataType&;
-
-    /**
-     * @brief Node default constructs a new Node. All outgoing links from this new node will
-     * initialized to a nullptr.
-     * 
-     * Node default constructs a new Node. All outgoing links from this new node will initialized to a nullptr.
-     */
-    Node() noexcept = default;
-
-    /**
-     * @brief Node constructs a new Node encapsulating the specified data. All outgoing links
-     * from the node will be initialized to nullptr.
-     * 
-     * Node создает новый Node, инкапсулирующий указанные данные. Все исходящие ссылки с узла будут инициализированы как nullptr.
-     * 
-     */
-    Node(DataType data) : m_data{ std::move(data) }
-    {
-    }
-
-    /**
-     * @brief Node performs a copy-construction of the specified Node.
-     * Node выполняет копирование указанного Node.
-     *
-     * The nodes in the Node are deep-copied, while the data contained in the tree is
-     * shallow-copied.
-     * 
-     * The nodes in the Node are deep-copied, while the data contained in the tree is shallow-copied.
-     * 
-     */
-    Node(const Node& other) : m_data{ other.m_data }
-    {
-        Copy(other, *this);
-    }
-
-    /**
-     * @brief Destroys the Node and all Nodes under it.
-     * 
-     * Уничтожает узел и все узлы под ним.
-     * 
-     */
-    ~Node()
-    {
-        DetachFromTree();
-
-        if (m_childCount == 0) {
-            m_parent = nullptr;
-            m_firstChild = nullptr;
-            m_lastChild = nullptr;
-            m_previousSibling = nullptr;
-            m_nextSibling = nullptr;
-
-            return;
-        }
-
-        assert(m_firstChild && m_lastChild);
-
-        Node* childNode = m_firstChild;
-        Node* nextNode = nullptr;
-
-        while (childNode != nullptr) {
-            nextNode = childNode->m_nextSibling;
-            delete childNode;
-            childNode = nextNode;
-        }
-
-        m_parent = nullptr;
-        m_firstChild = nullptr;
-        m_lastChild = nullptr;
-        m_previousSibling = nullptr;
-        m_nextSibling = nullptr;
-    }
-
-    /**
-     * @brief Assignment operator.
-     * 
-     * Оператор присваивания
-     * 
-     */
-    Node& operator=(Node other)
-    {
-        swap(*this, other);
-        return *this;
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is less than
-     * the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator<(const Node& lhs, const Node& rhs)
-    {
-        return lhs.GetData() < rhs.GetData();
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is less than
-     * or equal to the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator<=(const Node& lhs, const Node& rhs)
-    {
-        return !(lhs > rhs);
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is greater than
-     * the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator>(const Node& lhs, const Node& rhs)
-    {
-        return rhs < lhs;
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is greater than
-     * or equal to the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator>=(const Node& lhs, const Node& rhs)
-    {
-        return !(lhs < rhs);
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is equal to
-     * the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator==(const Node& lhs, const Node& rhs)
-    {
-        return lhs.GetData() == rhs.GetData();
-    }
-
-    /**
-     * @returns True if the data encapsulated in the left-hand side Node is not equal
-     * to the data encapsulated in the right-hand side Node.
-     */
-    friend auto operator!=(const Node& lhs, const Node& rhs)
-    {
-        return !(lhs == rhs);
-    }
-
-    /**
-     * @brief Swaps all member variables of the left-hand side with that of the right-hand side.
-     */
-    friend void swap(Node& lhs, Node& rhs) noexcept(noexcept(swap(lhs.m_data, rhs.m_data)))
-    {
-        // Enable Argument Dependent Lookup (ADL):
-        using std::swap;
-
-        swap(lhs.m_parent, rhs.m_parent);
-        swap(lhs.m_firstChild, rhs.m_firstChild);
-        swap(lhs.m_lastChild, rhs.m_lastChild);
-        swap(lhs.m_previousSibling, rhs.m_previousSibling);
-        swap(lhs.m_nextSibling, rhs.m_nextSibling);
-        swap(lhs.m_data, rhs.m_data);
-        swap(lhs.m_childCount, rhs.m_childCount);
-        swap(lhs.m_visited, rhs.m_visited);
-    }
-
-    /**
-     * @brief Detaches and then deletes the Node from the Tree it's part of.
-     */
-    inline void DeleteFromTree() noexcept
-    {
-        delete this;
-    }
-
-    /**
-     * @returns The encapsulated data.
-     */
-    inline DataType* operator->() noexcept
-    {
-        return &m_data;
-    }
-
-    /**
-     * @overload
-     */
-    inline const DataType* operator->() const noexcept
-    {
-        return &m_data;
-    }
-
-    /**
-     * @brief Sets node visitation status.
-     *
-     * @param[in] visited             Whether the node should be marked as having been visited.
-     */
-    inline void MarkVisited(const bool visited = true) noexcept
-    {
-        m_visited = visited;
-    }
-
-    /**
-     * @returns True if the node has been marked as visited.
-     */
-    inline bool HasBeenVisited() const noexcept
-    {
-        return m_visited;
-    }
-
-    /**
-     * @brief PrependChild will prepend the specified Node as the first child of the Node.
-     *
-     * @param[in] child               The new Node to set as the first child of the Node.
-     *
-     * @returns A pointer to the newly appended child.
-     */
-    inline Node* PrependChild(Node& child) noexcept
-    {
-        child.m_parent = this;
-
-        if (!m_firstChild) {
-            return AddFirstChild(child);
-        }
-
-        assert(m_firstChild);
-
-        m_firstChild->m_previousSibling = &child;
-        m_firstChild->m_previousSibling->m_nextSibling = m_firstChild;
-        m_firstChild = m_firstChild->m_previousSibling;
-
-        m_childCount++;
-
-        return m_firstChild;
-    }
-
-    /**
-     * @brief Constructs and prepends a new Node as the first child of the
-     * Node.
-     *
-     * @param[in] data                The underlying data to be stored in the new Node.
-     *
-     * @returns The newly prepended Node.
-     */
-    inline Node* PrependChild(const DataType& data)
-    {
-        const auto* newNode = new Node{ data };
-        return PrependChild(*newNode);
-    }
-
-    /**
-     * @overload
-     */
-    inline Node* PrependChild(DataType&& data)
-    {
-        auto* const newNode = new Node{ std::move(data) };
-        return PrependChild(*newNode);
-    }
-
-    /**
-     * @brief Appends the specified Node as a child of the Node.
-     *
-     * @param[in] child               The new Node to set as the last child of the Node.
-     *
-     * @returns A pointer to the newly appended child.
-     */
-    inline Node* AppendChild(Node& child) noexcept
-    {
-        child.m_parent = this;
-
-        if (!m_lastChild) {
-            return AddFirstChild(child);
-        }
-
-        assert(m_lastChild);
-
-        m_lastChild->m_nextSibling = &child;
-        m_lastChild->m_nextSibling->m_previousSibling = m_lastChild;
-        m_lastChild = m_lastChild->m_nextSibling;
-
-        m_childCount++;
-
-        return m_lastChild;
-    }
-
-    /**
-     * @brief Constructs and appends a new Node as the last child of the Node.
-     *
-     * @param[in] data                The underlying data to be stored in the new Node.
-     *
-     * @returns The newly appended Node.
-     */
-    inline Node* AppendChild(const DataType& data)
-    {
-        auto* const newNode = new Node{ data };
-        return AppendChild(*newNode);
-    }
-
-    /**
-     * @overload
-     */
-    inline Node* AppendChild(DataType&& data)
-    {
-        auto* const newNode = new Node{ std::move(data) };
-        return AppendChild(*newNode);
-    }
-
-    /**
-     * @returns The underlying data stored in the Node.
-     */
-    inline DataType& GetData() noexcept
-    {
-        return m_data;
-    }
-
-    /**
-     * @overload
-     */
-    inline const DataType& GetData() const noexcept
-    {
-        return m_data;
-    }
-
-    /**
-     * @returns A pointer to the Node's parent, if it exists; nullptr otherwise.
-     */
-    inline Node* GetParent() const
-    {
-        return m_parent;
-    }
-
-    /**
-     * @returns A pointer to the Node's first child.
-     */
-    inline Node* GetFirstChild() const
-    {
-        return m_firstChild;
-    }
-
-    /**
-     * @returns A pointer to the Node's last child.
-     */
-    inline Node* GetLastChild() const
-    {
-        return m_lastChild;
-    }
-
-    /**
-     * @returns A pointer to the Node's next sibling.
-     */
-    inline Node* GetNextSibling() const
-    {
-        return m_nextSibling;
-    }
-
-    /**
-     * @returns A pointer to the Node's previous sibling.
-     */
-    inline Node* GetPreviousSibling() const
-    {
-        return m_previousSibling;
-    }
-
-    /**
-     * @returns True if this node has direct descendants.
-     */
-    inline bool HasChildren() const noexcept
-    {
-        return m_childCount > 0;
-    }
-
-    /**
-     * @returns The number of direct descendants that this node has.
-     *
-     * @note This does not include grandchildren.
-     */
-    inline unsigned int GetChildCount() const noexcept
-    {
-        return m_childCount;
-    }
-
-    /**
-     * @returns The total number of descendant nodes belonging to the node.
-     */
-    inline auto CountAllDescendants() noexcept
-    {
-        const auto nodeCount = std::count_if(
-            Tree<DataType>::PostOrderIterator(this), Tree<DataType>::PostOrderIterator(),
-            [](const auto&) noexcept { return true; });
-
-        return nodeCount - 1;
-    }
-
-    /**
-     * @brief Performs a merge sort of the direct descendants nodes.
-     *
-     * @param[in] comparator          A callable type to be used as the basis for the sorting
-     *                                comparison. This type should be equivalent to:
-     *                                   bool comparator(const Node& lhs, const Node& rhs);
-     */
-    template <typename ComparatorType>
-    void SortChildren(const ComparatorType& comparator) noexcept(noexcept(comparator))
-    {
-        if (!m_firstChild) {
-            return;
-        }
-
-        Node* head = MergeSort(m_firstChild, comparator);
-
-        if (head->m_parent) {
-            head->m_parent->m_firstChild = head;
-
-            Node* temp = head;
-            while (temp->m_nextSibling) {
-                temp = temp->m_nextSibling;
+    // Рекурсивный вывод дерева
+    void print(int depth = 0) const {
+        std::wstring indent(depth * 2, ' ');
+
+        switch (type) {
+        case Type::OBJECT:
+            std::wcout << indent << "Object (" << children.size() << " children):" << std::endl;
+            for (const auto& child : children) {
+                child->print(depth + 1);
             }
-
-            head->m_parent->m_lastChild = temp;
+            break;
+        case Type::STRING:
+            std::wcout << indent << "String: \"" << value << "\"" << std::endl;
+            break;
+        case Type::NUMBER:
+            std::wcout << indent << "Number: " << value << std::endl;
+            break;
         }
     }
 
-  private:
-    /**
-     * @brief Splits the linked-list of sibling nodes in two.
-     * 
-     * Разделяет связанный список одноуровневых узлов на две части 
-     *
-     * @returns The head of the second list.
-     * 
-     * Возвращается голова (указатель) на второй список
-     * 
-     */
-    Node* Split(Node* head)
-    {
-        Node* hare = head;
-        Node* tortoise = head;
-
-        while (hare->m_nextSibling && hare->m_nextSibling->m_nextSibling) {
-            hare = hare->m_nextSibling->m_nextSibling;
-            tortoise = tortoise->m_nextSibling;
-        }
-
-        Node* secondHead = tortoise->m_nextSibling;
-        tortoise->m_nextSibling = nullptr;
-
-        return secondHead;
-    }
-
-    /**
-     * @brief Main entry point into the merge sort implementation.
-     *
-     * Основная точка входа в реализацию сортировки слиянием.
-     * 
-     * @todo A recursive solution may run out of stack space!
-     * 
-     * Рекурсивному решению может не хватить места в стеке!
-     *
-     * @param[in] list                The first Node in the list to be sorted. (Первый узел в списке для сортировки.)
-     * @param[in] comparator          The comparator function to be called to figure out which node
-     *                                is the lesser of the two.
-     * 
-     * Функция сравнения, вызываемая для определения того, какой узел является меньшим из двух.
-     * 
-     * 
-     */
-    template <typename ComparatorType>
-    Node* MergeSort(Node*& head, const ComparatorType& comparator) noexcept(noexcept(comparator))
-    {
-        if (!head || !head->m_nextSibling) {
-            return head;
-        }
-
-        Node* second = Split(head);
-
-        head = MergeSort(head, comparator);
-        second = MergeSort(second, comparator);
-
-        return MergeSortedHalves(head, second, comparator);
-    }
-
-    /**
-     * @brief Helper function that will merge the sorted halves.
-     *
-     * Вспомогательная функция, которая объединит отсортированные половинки.
-     * 
-     * @param[in] lhs                 The first node of the sorted left half.  (Первый узел отсортированной левой половины.)
-     * @param[in] rhs                 The first node of the sorted right half. (Первый узел отсортированной правой половины.)
-     *
-     * @returns The first node of the merged Node list. (Первый узел объединенного списка узлов.)
-     */
-    template <typename ComparatorType>
-    Node* MergeSortedHalves(Node* lhs, Node* rhs, const ComparatorType& comparator) noexcept(
-        noexcept(comparator))
-    {
-        Node* head = nullptr;
-        if (comparator(*lhs, *rhs)) {
-            head = lhs;
-            lhs = lhs->m_nextSibling;
-        } else {
-            head = rhs;
-            rhs = rhs->m_nextSibling;
-        }
-
-        head->m_previousSibling = nullptr;
-
-        Node* tail = head;
-        Node* previous = nullptr;
-
-        while (lhs && rhs) {
-            previous = tail;
-
-            if (comparator(*lhs, *rhs)) {
-                tail->m_nextSibling = lhs;
-                lhs = lhs->m_nextSibling;
-            } else {
-                tail->m_nextSibling = rhs;
-                rhs = rhs->m_nextSibling;
-            }
-
-            tail = tail->m_nextSibling;
-            tail->m_previousSibling = previous;
-        }
-
-        previous = tail;
-        tail->m_nextSibling = lhs ? lhs : rhs;
-        tail = tail->m_nextSibling;
-        tail->m_previousSibling = previous;
-
-        return head;
-    }
-
-    /**
-     * @brief Helper function to make it easier to add the first descendant.
-     * 
-     * Вспомогательная функция, упрощающая добавление первого потомка.
-     *
-     * @param[in] child               The Node to be added as a child. ( Узел, который будет добавлен как дочерний. )
-     *
-     * @returns The newly added node. (Недавно добавленный узел.)
-     */
-    inline Node* AddFirstChild(Node& child) noexcept
-    {
-        assert(m_childCount == 0);
-
-        m_firstChild = &child;
-        m_lastChild = m_firstChild;
-
-        m_childCount++;
-
-        return m_firstChild;
-    }
-
-    /**
-     * @brief Helper function to recursively copy the specified |source| Node and all its
-     * descendants.
-     *
-     * Вспомогательная функция для рекурсивного копирования указанного |источника| Node и все его потомки.
-     * 
-     * @param[in] source              The Node to copy information from. (Узел, с которого копируется информация.)
-     * @param[out] sink               The Node to place a copy of the information into. (Узел, в который нужно поместить копию информации.)
-     */
-    void Copy(const Node& source, Node& sink)
-    {
-        if (!source.HasChildren()) {
-            return;
-        }
-
-        std::for_each(
-            Tree<DataType>::SiblingIterator(source.GetFirstChild()),
-            Tree<DataType>::SiblingIterator(),
-            [&](Tree<DataType>::const_reference node) { sink.AppendChild(node.GetData()); });
-
-        auto sourceItr = Tree<DataType>::SiblingIterator{ source.GetFirstChild() };
-        auto sinkItr = Tree<DataType>::SiblingIterator{ sink.GetFirstChild() };
-
-        const auto end = Tree<DataType>::SiblingIterator{};
-        while (sourceItr != end) {
-            Copy(*sourceItr++, *sinkItr++);
+    // Получение типа как строки
+    std::string getTypeString() const {
+        switch (type) {
+        case Type::OBJECT: return "object";
+        case Type::STRING: return "string";
+        case Type::NUMBER: return "number";
+        default: return "unknown";
         }
     }
 
-    /**
-     * @brief Removes the Node from the tree structure, updating all surrounding links
-     * as appropriate.
-     *
-     * Удаляет узел из древовидной структуры, обновляя все окружающие ссылки соответствующим образом.
-     * 
-     * @note This function does not actually delete the node. (Эта функция фактически не удаляет узел.)
-     *
-     * @returns A pointer to the detached Node. This returned Node can safely be deleted
-     * once detached.
-     * 
-     * Указатель на отсоединенный Node. Этот возвращенный узел можно безопасно удалить после отсоединения.
-     * 
-     */
-    Node* DetachFromTree() noexcept
-    {
-        if (m_previousSibling && m_nextSibling) {
-            m_previousSibling->m_nextSibling = m_nextSibling;
-            m_nextSibling->m_previousSibling = m_previousSibling;
-        } else if (m_previousSibling) {
-            m_previousSibling->m_nextSibling = nullptr;
-        } else if (m_nextSibling) {
-            m_nextSibling->m_previousSibling = nullptr;
-        }
+    // Получение дерева в виде строки (JSON-like формат)
+    std::wstring toString(int depth = 0) const {
+        std::wstringstream ss;
+        std::wstring indent(depth * 2, ' ');
 
-        if (!m_parent) {
-            return this;
-        }
-
-        if (m_parent->m_firstChild == m_parent->m_lastChild) {
-            m_parent->m_firstChild = nullptr;
-            m_parent->m_lastChild = nullptr;
-        } else if (m_parent->m_firstChild == this) {
-            assert(m_parent->m_firstChild->m_nextSibling);
-            m_parent->m_firstChild = m_parent->m_firstChild->m_nextSibling;
-        } else if (m_parent->m_lastChild == this) {
-            assert(m_parent->m_lastChild->m_previousSibling);
-            m_parent->m_lastChild = m_parent->m_lastChild->m_previousSibling;
-        }
-
-        m_parent->m_childCount--;
-
-        return this;
-    }
-
-    Node* m_parent{ nullptr };
-    Node* m_firstChild{ nullptr };
-    Node* m_lastChild{ nullptr };
-    Node* m_previousSibling{ nullptr };
-    Node* m_nextSibling{ nullptr };
-
-    DataType m_data{};
-
-    unsigned int m_childCount{ 0 };
-
-    bool m_visited{ false };
-};
-
-/**
- * @brief The base iterator.
- * 
- * Базовый итератор
- *
- * This is the base iterator class that all other iterators (sibling, leaf, post-, pre-, and
- * in-order) will derive from. This class can only instantiated by derived types.
- * 
- * Это базовый класс итератора, от которого будут наследоваться все остальные итераторы 
- * (родственные, листовые, пост-, предварительные и порядковые). 
- *  Этот класс может создаваться только производными типами.
- * 
- * 
- * 
- */
-template <typename DataType> class Tree<DataType>::Iterator
-{
-  public:
-    // Typedefs needed for STL compliance:
-    using value_type = DataType;
-    using pointer = DataType*;
-    using reference = DataType&;
-    using const_reference = const DataType&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
-    using iterator_category = std::forward_iterator_tag;
-
-    /**
-     * @returns True if the Tree::Iterator points to a valid Node; false otherwise.
-     */
-    explicit operator bool() const noexcept
-    {
-        return m_currentNode != nullptr;
-    }
-
-    /**
-     * @returns The Node pointed to by the Tree::Iterator.
-     */
-    inline Node& operator*() noexcept
-    {
-        return *m_currentNode;
-    }
-
-    /**
-     * @overload
-     */
-    inline const Node& operator*() const noexcept
-    {
-        return *m_currentNode;
-    }
-
-    /**
-     * @returns A pointer to the Node.
-     */
-    inline Node* operator&() noexcept
-    {
-        return m_currentNode;
-    }
-
-    /**
-     * @overload
-     */
-    inline const Node* operator&() const noexcept
-    {
-        return m_currentNode;
-    }
-
-    /**
-     * @returns A pointer to the Node pointed to by the Tree::Iterator.
-     */
-    inline Node* operator->() noexcept
-    {
-        return m_currentNode;
-    }
-
-    /**
-     * @overload
-     */
-    inline const Node* operator->() const noexcept
-    {
-        return m_currentNode;
-    }
-
-    /**
-     * @returns True if the iterator points to the same node as the other iterator,
-     * and false otherwise.
-     */
-    inline bool operator==(const Iterator& other) const
-    {
-        return m_currentNode == other.m_currentNode;
-    }
-
-    /**
-     * @returns True if the iterator points to the same node as the other iterator,
-     * and false otherwise.
-     */
-    bool operator!=(const Iterator& other) const noexcept
-    {
-        return m_currentNode != other.m_currentNode;
-    }
-
-  protected:
-    /**
-     * Default constructor.
-     */
-    Iterator() noexcept = default;
-
-    /**
-     * Copy constructor.
-     */
-    explicit Iterator(const Iterator& other) = default;
-
-    /**
-     * Constructs a iterator starting at the specified node.
-     */
-    explicit Iterator(const Node* node) noexcept
-        : m_currentNode{ const_cast<Node*>(node) }, m_startingNode{ const_cast<Node*>(node) }
-    {
-    }
-
-    Node* m_currentNode{ nullptr };
-
-    const Node* m_startingNode{ nullptr };
-    const Node* m_endingNode{ nullptr };
-};
-
-/**
- * @brief A pre-order tree iterator.
- */
-template <typename DataType>
-class Tree<DataType>::PreOrderIterator final : public Tree<DataType>::Iterator
-{
-  public:
-    /**
-     * Default constructor.
-     */
-    PreOrderIterator() noexcept = default;
-
-    /**
-     * Constructs an iterator that starts and ends at the specified node.
-     */
-    explicit PreOrderIterator(const Node* node) noexcept : Iterator{ node }
-    {
-        if (!node) {
-            return;
-        }
-
-        if (node->GetNextSibling()) {
-            this->m_endingNode = node->GetNextSibling();
-        } else {
-            this->m_endingNode = node;
-            while (this->m_endingNode->GetParent() &&
-                   !this->m_endingNode->GetParent()->GetNextSibling()) {
-                this->m_endingNode = this->m_endingNode->GetParent();
-            }
-
-            if (this->m_endingNode->GetParent()) {
-                this->m_endingNode = this->m_endingNode->GetParent()->GetNextSibling();
-            } else {
-                this->m_endingNode = nullptr;
-            }
-        }
-    }
-
-    /**
-     * Pre-fix increment operator.
-     */
-    typename Tree::PreOrderIterator& operator++() noexcept
-    {
-        assert(this->m_currentNode);
-        auto* traversingNode = this->m_currentNode;
-
-        if (traversingNode->HasChildren()) {
-            traversingNode = traversingNode->GetFirstChild();
-        } else if (traversingNode->GetNextSibling()) {
-            traversingNode = traversingNode->GetNextSibling();
-        } else {
-            while (traversingNode->GetParent() && !traversingNode->GetParent()->GetNextSibling()) {
-                traversingNode = traversingNode->GetParent();
-            }
-
-            if (traversingNode->GetParent()) {
-                traversingNode = traversingNode->GetParent()->GetNextSibling();
-            } else {
-                traversingNode = nullptr;
-            }
-        }
-
-        this->m_currentNode = (traversingNode != this->m_endingNode) ? traversingNode : nullptr;
-        return *this;
-    }
-
-    /**
-     * Post-fix increment operator.
-     */
-    typename Tree::PreOrderIterator operator++(int) noexcept
-    {
-        const auto result = *this;
-        ++(*this);
-
-        return result;
-    }
-};
-
-/**
- * @brief A post-order tree iterator.
- */
-template <typename DataType>
-class Tree<DataType>::PostOrderIterator final : public Tree<DataType>::Iterator
-{
-  public:
-    /**
-     * Default constructor.
-     */
-    PostOrderIterator() noexcept = default;
-
-    /**
-     * Constructs an iterator that starts and ends at the specified node.
-     */
-    explicit PostOrderIterator(const Node* node) noexcept : Iterator{ node }
-    {
-        if (!node) {
-            return;
-        }
-
-        // Compute and set the starting node:
-
-        auto* traversingNode = node;
-        while (traversingNode->GetFirstChild()) {
-            traversingNode = traversingNode->GetFirstChild();
-        }
-
-        assert(traversingNode);
-        this->m_currentNode = const_cast<Node*>(traversingNode);
-
-        // Commpute and set the ending node:
-
-        if (node->GetNextSibling()) {
-            traversingNode = node->GetNextSibling();
-            while (traversingNode->HasChildren()) {
-                traversingNode = traversingNode->GetFirstChild();
-            }
-
-            this->m_endingNode = traversingNode;
-        } else {
-            this->m_endingNode = node->GetParent();
-        }
-    }
-
-    /**
-     * Pre-fix increment operator.
-     */
-    typename Tree::PostOrderIterator& operator++() noexcept
-    {
-        assert(this->m_currentNode);
-        auto* traversingNode = this->m_currentNode;
-
-        if (traversingNode->HasChildren() && !m_traversingUpTheTree) {
-            while (traversingNode->GetFirstChild()) {
-                traversingNode = traversingNode->GetFirstChild();
-            }
-        } else if (traversingNode->GetNextSibling()) {
-            m_traversingUpTheTree = false;
-
-            traversingNode = traversingNode->GetNextSibling();
-            while (traversingNode->HasChildren()) {
-                traversingNode = traversingNode->GetFirstChild();
-            }
-        } else {
-            m_traversingUpTheTree = true;
-
-            traversingNode = traversingNode->GetParent();
-        }
-
-        this->m_currentNode = (traversingNode != this->m_endingNode) ? traversingNode : nullptr;
-        return *this;
-    }
-
-    /**
-     * Post-fix increment operator.
-     */
-    typename Tree::PostOrderIterator operator++(int) noexcept
-    {
-        const auto result = *this;
-        ++(*this);
-
-        return result;
-    }
-
-  private:
-    bool m_traversingUpTheTree{ false };
-};
-
-/**
- * @brief A leaf-order tree iterator.
- */
-template <typename DataType>
-class Tree<DataType>::LeafIterator final : public Tree<DataType>::Iterator
-{
-  public:
-    /**
-     * Default constructor.
-     */
-    LeafIterator() noexcept = default;
-
-    /**
-     * Constructs an iterator that starts at the specified node and iterates to the end.
-     */
-    explicit LeafIterator(const Node* node) noexcept : Iterator{ node }
-    {
-        if (!node) {
-            return;
-        }
-
-        // Compute and set the starting node:
-
-        if (node->HasChildren()) {
-            auto* firstNode = node;
-            while (firstNode->GetFirstChild()) {
-                firstNode = firstNode->GetFirstChild();
-            }
-
-            this->m_currentNode = const_cast<Node*>(firstNode);
-        }
-
-        // Compute and set the ending node:
-
-        if (node->GetNextSibling()) {
-            auto* lastNode = node->GetNextSibling();
-            while (lastNode->HasChildren()) {
-                lastNode = lastNode->GetFirstChild();
-            }
-
-            this->m_endingNode = lastNode;
-        } else {
-            this->m_endingNode = node;
-            while (this->m_endingNode->GetParent() &&
-                   !this->m_endingNode->GetParent()->GetNextSibling()) {
-                this->m_endingNode = this->m_endingNode->GetParent();
-            }
-
-            if (this->m_endingNode->GetParent()) {
-                this->m_endingNode = this->m_endingNode->GetParent()->GetNextSibling();
-                while (this->m_endingNode->HasChildren()) {
-                    this->m_endingNode = this->m_endingNode->GetFirstChild();
+        switch (type) {
+        case Type::OBJECT:
+            ss << indent << "{\n";
+            for (size_t i = 0; i < children.size(); ++i) {
+                ss << children[i]->toString(depth + 1);
+                if (i < children.size() - 1) {
+                    ss << ",\n";
                 }
-            } else {
-                this->m_endingNode = nullptr;
             }
+            ss << "\n" << indent << "}";
+            break;
+        case Type::STRING:
+            ss << indent << "\"" << value << "\"";
+            break;
+        case Type::NUMBER:
+            ss << indent << value;
+            break;
         }
+        return ss.str();
+    }
+};
+
+class BracketParser {
+private:
+    
+    std::stack<char> bracketStack;
+    std::stack<sTreeNode*> nodeStack;
+    std::unique_ptr<sTreeNode> root;
+    std::wstring currentToken;
+    
+    bool inString;
+    bool isGuidMode;
+    bool inQuotedString;
+    char quoteChar;
+
+    // Проверка валидности символа (расширена для Unicode)
+    bool isValidChar(unsigned char c) const {
+        // Разрешаем все печатные символы ASCII и UTF-8 байты
+        return (c >= 32 && c <= 126) || c == '\n' || c == '\r' || c == '\t' || (c >= 0xC0 && c <= 0xFF);
     }
 
-    /**
-     * Pre-fix increment operator.
-     */
-    typename Tree::LeafIterator& operator++() noexcept
-    {
-        assert(this->m_currentNode);
-        auto* traversingNode = this->m_currentNode;
+    // Проверка, является ли байт началом UTF-8 последовательности
+    bool isUtf8StartByte(unsigned char c) const {
+        return (c >= 0xC0 && c <= 0xDF) || (c >= 0xE0 && c <= 0xEF) || (c >= 0xF0 && c <= 0xF7);
+    }
 
-        if (traversingNode->HasChildren()) {
-            while (traversingNode->GetFirstChild()) {
-                traversingNode = traversingNode->GetFirstChild();
+    // Проверка, является ли байт продолжением UTF-8 последовательности
+    bool isUtf8ContinuationByte(unsigned char c) const {
+        return (c >= 0x80 && c <= 0xBF);
+    }
+
+    // Проверка GUID формата
+    bool isGuid(const std::string& str) const {
+        // Формат: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12)
+        if (str.length() != 36) return false;
+
+        for (size_t i = 0; i < str.length(); ++i) {
+            char c = str[i];
+            if (i == 8 || i == 13 || i == 18 || i == 23) {
+                if (c != '-') return false;
             }
-        } else if (traversingNode->GetNextSibling()) {
-            traversingNode = traversingNode->GetNextSibling();
-
-            while (traversingNode->GetFirstChild()) {
-                traversingNode = traversingNode->GetFirstChild();
+            else {
+                if (!std::isxdigit(c)) return false;
             }
-        } else if (traversingNode->GetParent()) {
-            while (traversingNode->GetParent() && !traversingNode->GetParent()->GetNextSibling()) {
-                traversingNode = traversingNode->GetParent();
+        }
+        return true;
+    }
+
+    // Проверка GUID формата
+    bool isGuid(const std::wstring& str) const {
+        // Формат: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (8-4-4-4-12)
+        if (str.length() != 36) return false;
+
+        for (size_t i = 0; i < str.length(); ++i) {
+            char c = str[i];
+            if (i == 8 || i == 13 || i == 18 || i == 23) {
+                if (c != '-') return false;
             }
+            else {
+                if (!std::isxdigit(c)) return false;
+            }
+        }
+        return true;
+    }
 
-            if (traversingNode->GetParent()) {
-                traversingNode = traversingNode->GetParent()->GetNextSibling();
 
-                while (traversingNode && traversingNode->HasChildren()) {
-                    traversingNode = traversingNode->GetFirstChild();
+    // Проверка числа
+    bool isNumber(const std::string& str) const {
+        if (str.empty()) 
+            return false;
+        
+        for (char c : str) {
+            if (!std::isdigit(static_cast<unsigned char>(c))) 
+                return false;
+        }
+        return true;
+    }
+
+    bool isNumber(const std::wstring& str) const {
+        if (str.empty()) 
+            return false;
+        
+        for (char c : str) {
+            if (!std::isdigit(static_cast<unsigned char>(c))) 
+                return false;
+        }
+        return true;
+    }
+
+
+    // Обработка завершения токена
+    void processToken() {
+        if (!currentToken.empty()) {
+            if (!nodeStack.empty()) {
+                // Определяем тип токена
+                if (isNumber(currentToken)) {
+                    nodeStack.top()->addNumber(currentToken);
                 }
-            } else {
-                traversingNode = nullptr;
+                else {
+                    nodeStack.top()->addString(currentToken);
+                }
+            }
+            currentToken.clear();
+        }
+        inString = false;
+        isGuidMode = false;
+        inQuotedString = false;
+    }
+
+    // Обработка строки в кавычках
+    void processQuotedString(char c) {
+        if (!inQuotedString) {
+            // Начало строки в кавычках
+            inQuotedString = true;
+            quoteChar = c;
+            currentToken.clear();
+        }
+        else if (c == quoteChar) {
+            // Конец строки в кавычках
+            inQuotedString = false;
+            if (!nodeStack.empty()) {
+                nodeStack.top()->addString(currentToken);
+            }
+            currentToken.clear();
+        }
+        else {
+            // Символ внутри строки в кавычках
+            currentToken += c;
+        }
+    }
+
+    void processQuotedStringW(wchar_t c) {
+        if (!inQuotedString) {
+            // Начало строки в кавычках
+            inQuotedString = true;
+            quoteChar = c;
+            currentToken.clear();
+        }
+        else if (c == quoteChar) {
+            // Конец строки в кавычках
+            inQuotedString = false;
+            if (!nodeStack.empty()) {
+                nodeStack.top()->addString(currentToken);
+            }
+            currentToken.clear();
+        }
+        else {
+            // Символ внутри строки в кавычках
+            currentToken += c;
+        }
+    }
+
+
+public:
+    BracketParser() : inString(false), isGuidMode(false), inQuotedString(false), quoteChar('"') {}
+
+    // Парсинг строки и построение дерева
+    bool parse(const std::string& input) {
+        // Очистка состояния
+        while (!bracketStack.empty()) 
+            bracketStack.pop();
+        while (!nodeStack.empty()) 
+            nodeStack.pop();
+        
+        root.reset();
+        currentToken.clear();
+        inString = false;
+        isGuidMode = false;
+        inQuotedString = false;
+        quoteChar = '"';
+
+        // Создание корневого узла
+        root = std::make_unique<sTreeNode>();
+        nodeStack.push(root.get());
+
+        for (size_t i = 0; i < input.length(); ++i) {
+            unsigned char c = static_cast<unsigned char>(input[i]);
+
+            // Проверка валидности символа
+            if (!isValidChar(c)) {
+                // Для отладки выведем проблемный символ
+                std::cout << "Warning: Skipping invalid character at position " << i
+                    << " (code: " << static_cast<int>(c) << ")" << std::endl;
+                continue;
+            }
+
+            if (inQuotedString) {
+                // Обработка строки в кавычках
+                processQuotedString(c);
+            }
+            else if (c == '"' || c == '\'') {
+                // Начало или конец строки в кавычках
+                processQuotedString(c);
+            }
+            else if (c == '{') {
+                processToken(); // Сохраняем текущий токен перед открытием новой скобки
+
+                // Создаем новый узел для вложенной структуры
+                auto newNode = std::make_unique<sTreeNode>(sTreeNode::Type::OBJECT);
+                sTreeNode* newNodePtr = nodeStack.top()->addChild(std::move(newNode));
+
+                // Добавляем в стек для последующего заполнения
+                nodeStack.push(newNodePtr);
+                bracketStack.push(c);
+
+            }
+            else if (c == '}') {
+                processToken(); // Сохраняем текущий токен перед закрытием скобки
+
+                if (bracketStack.empty()) {
+                    return false; // Закрывающая скобка без открывающей
+                }
+
+                bracketStack.pop();
+                nodeStack.pop(); // Завершаем текущий узел
+
+            }
+            else if (c == ',') {
+                // Запятая разделяет элементы - сохраняем текущий токен
+                processToken();
+
+            }
+            else {
+                // Обработка содержимого токена
+                if (!inString && !std::isspace(c)) {
+                    inString = true;
+                    // Проверяем, не начинается ли GUID
+                    if (i + 36 <= input.length()) {
+                        std::string potentialGuid = input.substr(i, 36);
+                        if (isGuid(potentialGuid)) {
+                            isGuidMode = true;
+                        }
+                    }
+                }
+
+                if (!std::isspace(c) || inString) {
+                    currentToken += c;
+                }
+
+                // Если мы в режиме GUID, обрабатываем его целиком
+                if (isGuidMode && currentToken.length() == 36) {
+                    processToken();
+                }
             }
         }
 
-        this->m_currentNode = (traversingNode != this->m_endingNode) ? traversingNode : nullptr;
-        return *this;
+        processToken(); // Обрабатываем последний токен
+
+        return bracketStack.empty() && nodeStack.size() == 1;
     }
 
-    /**
-     * Post-fix increment operator.
-     */
-    typename Tree::LeafIterator operator++(int) noexcept
-    {
-        const auto result = *this;
-        ++(*this);
+    // Парсинг строки и построение дерева
+    bool parse(const std::wstring& input) {
+        // Очистка состояния
+        while (!bracketStack.empty())
+            bracketStack.pop();
+        while (!nodeStack.empty())
+            nodeStack.pop();
 
-        return result;
-    }
-};
+        root.reset();
+        currentToken.clear();
+        inString = false;
+        isGuidMode = false;
+        inQuotedString = false;
+        quoteChar = '"';
 
-/**
- * @brief A sibling node iterator.
- * 
- * Итератор родственного узла
- * 
- */
-template <typename DataType>
-class Tree<DataType>::SiblingIterator final : public Tree<DataType>::Iterator
-{
-  public:
-    /**
-     * Default constructor.
-     * 
-     * Конструктор по умолчанию
-     * 
-     */
-    SiblingIterator() noexcept = default;
+        // Создание корневого узла
+        root = std::make_unique<sTreeNode>();
+        nodeStack.push(root.get());
 
-    /**
-     * Constructs an iterator that starts at the specified node and iterates to the end.
-     * 
-     * Создает итератор, который начинается с указанного узла и выполняет итерацию до конца.
-     * 
-     * 
-     */
-    explicit SiblingIterator(const Node* node) noexcept : Iterator{ node }
-    {
-    }
+        for (size_t i = 0; i < input.length(); ++i) {
+            wchar_t c = static_cast<wchar_t>(input[i]);
 
-    /**
-     * Pre-fix increment operator.
-     * 
-     * Оператор увеличения префикса.
-     * 
-     */
-    typename Tree::SiblingIterator& operator++() noexcept
-    {
-        if (this->m_currentNode) {
-            this->m_currentNode = this->m_currentNode->GetNextSibling();
+            // Проверка валидности символа
+            //if (!isValidChar(c)) {
+            //    // Для отладки выведем проблемный символ
+            //    std::cout << "Warning: Skipping invalid character at position " << i
+            //        << " (code: " << static_cast<int>(c) << ")" << std::endl;
+            //    continue;
+            //}
+
+            if (inQuotedString) {
+                // Обработка строки в кавычках
+                processQuotedStringW(c);
+            }
+            else if (c == '"' || c == '\'') {
+                // Начало или конец строки в кавычках
+                processQuotedStringW(c);
+            }
+            else if (c == '{') {
+                processToken(); // Сохраняем текущий токен перед открытием новой скобки
+
+                // Создаем новый узел для вложенной структуры
+                auto newNode = std::make_unique<sTreeNode>(sTreeNode::Type::OBJECT);
+                sTreeNode* newNodePtr = nodeStack.top()->addChild(std::move(newNode));
+
+                // Добавляем в стек для последующего заполнения
+                nodeStack.push(newNodePtr);
+                bracketStack.push(c);
+
+            }
+            else if (c == '}') {
+                processToken(); // Сохраняем текущий токен перед закрытием скобки
+
+                if (bracketStack.empty()) {
+                    return false; // Закрывающая скобка без открывающей
+                }
+
+                bracketStack.pop();
+                nodeStack.pop(); // Завершаем текущий узел
+
+            }
+            else if (c == ',') {
+                // Запятая разделяет элементы - сохраняем текущий токен
+                processToken();
+
+            }
+            else {
+                // Обработка содержимого токена
+                if (!inString && !std::isspace(c)) {
+                    inString = true;
+                    // Проверяем, не начинается ли GUID
+                    if (i + 36 <= input.length()) {
+                        std::wstring potentialGuid = input.substr(i, 36);
+                        if (isGuid(potentialGuid)) {
+                            isGuidMode = true;
+                        }
+                    }
+                }
+
+                if (!std::isspace(c) || inString) {
+                    currentToken += c;
+                }
+
+                // Если мы в режиме GUID, обрабатываем его целиком
+                if (isGuidMode && currentToken.length() == 36) {
+                    processToken();
+                }
+            }
         }
 
-        return *this;
+        processToken(); // Обрабатываем последний токен
+
+        return bracketStack.empty() && nodeStack.size() == 1;
     }
 
-    /**
-     * Post-fix increment operator.
-     * 
-     * Оператор приращения после исправления
-     * 
-     */
-    typename Tree::SiblingIterator operator++(int) noexcept
-    {
-        const auto result = *this;
-        ++(*this);
 
-        return result;
+    // Получение корня дерева
+    sTreeNode* getRoot() const {
+        return root.get();
     }
+
+    // Валидация без построения дерева
+    bool isValid(const std::string& input) {
+        try {
+            return parse(input);
+        }
+        catch (const std::exception&) {
+            return false;
+        }
+    }
+
+    bool isValid(const std::wstring& input) {
+        try {
+            return parse(input);
+        }
+        catch (const std::exception&) {
+            return false;
+        }
+    }
+
+
+    // Вывод дерева
+    void printTree() const {
+        if (root) {
+            root->print();
+        }
+        else {
+            std::cout << "Tree is empty" << std::endl;
+        }
+    }
+
+    // Получение дерева в виде строки
+    std::wstring treeToString() const {
+        if (root && !root->children.empty()) {
+            return root->children[0]->toString(); // Пропускаем корневой контейнер
+        }
+        return L"{}";
+    }
+
+    // Поиск всех GUID'ов в дереве
+    //std::vector<std::string> findGuids() const {
+    //    std::vector<std::string> guids;
+    //    if (root) {
+    //        findGuidsRecursive(root.get(), guids);
+    //    }
+    //    return guids;
+    //}
+
+    // Поиск всех строк с кириллицей
+    //std::vector<std::string> findCyrillicStrings() const {
+    //    std::vector<std::string> cyrillicStrings;
+    //    if (root) {
+    //        findCyrillicRecursive(root.get(), cyrillicStrings);
+    //    }
+    //    return cyrillicStrings;
+    //}
+
+private:
+    //void findGuidsRecursive(sTreeNode* node, std::vector<std::string>& guids) const {
+    //    if (node->type == sTreeNode::Type::STRING && isGuid(node->value)) {
+    //        guids.push_back(node->value);
+    //    }
+
+    //    for (const auto& child : node->children) {
+    //        findGuidsRecursive(child.get(), guids);
+    //    }
+    //}
+
+    // Проверка содержит ли строка кириллицу
+    //bool containsCyrillic(const std::string& str) const {
+    //    for (unsigned char c : str) {
+    //        // Кириллица в UTF-8: диапазоны 0xD090-0xD0BF и 0xD180-0xD1BF
+    //        if (c >= 0xD0 && c <= 0xD1) {
+    //            return true;
+    //        }
+    //    }
+    //    return false;
+    //}
+
+    //void findCyrillicRecursive(sTreeNode* node, std::vector<std::string>& cyrillicStrings) const {
+    //    if (node->type == sTreeNode::Type::STRING && containsCyrillic(node->value)) {
+    //        cyrillicStrings.push_back(node->value);
+    //    }
+
+    //    for (const auto& child : node->children) {
+    //        findCyrillicRecursive(child.get(), cyrillicStrings);
+    //    }
+    //}
 };
+
+
+
+// Класс TreeNode представляет узел дерева
+class TreeNode {
+public:
+    std::wstring value; // Данные узла
+    std::vector<TreeNode*> children; // Вектор для хранения подчиненных узлов
+
+    // Конструктор
+    TreeNode(const std::wstring& val) : value(val) {}
+
+    // Деструктор, освобождающий память, выделенную подчиненным узлам
+    ~TreeNode();
+
+    // Метод для добавления подчиненного узла
+    void addChild(TreeNode* child);
+
+    // Метод для вывода дерева
+    void print(int level = 0) const;
+};
+
+#endif // TREE_H

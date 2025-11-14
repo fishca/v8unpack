@@ -26,18 +26,16 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/shared_array.hpp>
 #include <boost/filesystem.hpp>
 #include <algorithm>
+#include "SystemClasses/String.hpp"
+using namespace std;
 
 namespace v8unpack {
 
 const size_t V8_DEFAULT_PAGE_SIZE = 512;
-//const uint32_t V8_FF_SIGNATURE = 0x7fffffff;
-const uint32_t V8_FF_SIGNATURE = INT32_MAX;
-
+const uint32_t V8_FF_SIGNATURE = 0x7fffffff;
 
 // Для конфигурации старше 8.3.16, без режима совместимости
-//const uint64_t V8_FF64_SIGNATURE = 0xffffffffffffffff;
-const uint64_t V8_FF64_SIGNATURE = UINT64_MAX;
-//                                   0xffffffffffffffff
+const uint64_t V8_FF64_SIGNATURE = 0xffffffffffffffff;
 const size_t V8_OFFSET_8316 = 0x1359;  // волшебное смещение, откуда такая цифра неизвестно...
 
 const int V8UNPACK_OK = 0;
@@ -72,7 +70,7 @@ struct stFileHeader
 
 	static size_t Size()
 	{
-		return 4 + 4 + 4 + 4; // 16
+		return 4 + 4 + 4 + 4;
 	}
 
 };
@@ -86,7 +84,7 @@ struct stFileHeader64
 
 	static size_t Size()
 	{
-		return 8 + 4 + 4 + 4; // 20
+		return 8 + 4 + 4 + 4;
 	}
 };
 
@@ -98,11 +96,10 @@ struct stElemAddr
 
 	static size_t Size()
 	{
-		return 4 + 4 + 4; // 12
+		return 4 + 4 + 4;
 	}
 
-	//static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
-	static const uint32_t UNDEFINED_VALUE = V8_FF_SIGNATURE;
+	static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
 };
 
 struct stElemAddr64
@@ -114,11 +111,10 @@ struct stElemAddr64
 
 	static size_t Size()
 	{
-		return 8 + 8 + 8; // 24
+		return 8 + 8 + 8;
 	}
 
-	//static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
-	static const uint64_t UNDEFINED_VALUE = V8_FF64_SIGNATURE;
+	static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
 };
 
 struct stBlockHeader
@@ -139,18 +135,18 @@ struct stBlockHeader
 
 	static size_t Size()
 	{
-		return 1 + 1 + 8 + 1 + 8 + 1 + 8 + 1 + 1 + 1; // 31
+		return 1 + 1 + 8 + 1 + 8 + 1 + 8 + 1 + 1 + 1;
 	};
 
 	bool IsCorrect() const
 	{
-		return EOL_0D  == 0x0d && 
-			   EOL_0A  == 0x0a && 
-			   space1  == 0x20 && 
-			   space2  == 0x20 && 
-			   space3  == 0x20 && 
-			   EOL2_0D == 0x0d && 
-			   EOL2_0A == 0x0a;
+		return EOL_0D == 0x0d
+			   && EOL_0A == 0x0a
+			   && space1 == 0x20
+			   && space2 == 0x20
+			   && space3 == 0x20
+			   && EOL2_0D == 0x0d
+			   && EOL2_0A == 0x0a;
 	}
 
 	uint32_t data_size() const {
@@ -236,8 +232,7 @@ struct stBlockHeader64
 		_itoht64(next_page_addr, next_page_addr_hex);
 	}
 
-	//static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
-	static const uint64_t UNDEFINED_VALUE = V8_FF64_SIGNATURE;
+	static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
 };
 
 struct Format15
@@ -246,8 +241,7 @@ struct Format15
 	typedef stBlockHeader block_header_t;
 	typedef stElemAddr    elem_addr_t;
 
-	//static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
-	static const uint32_t UNDEFINED_VALUE = V8_FF_SIGNATURE;
+	static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
 	static const std::streamoff BASE_OFFSET = 0;
 	static const uint32_t DEFAULT_PAGE_SIZE = 512;
 
@@ -264,8 +258,7 @@ struct Format16
 	typedef stBlockHeader64 block_header_t;
 	typedef stElemAddr64    elem_addr_t;
 
-	//static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
-	static const uint64_t UNDEFINED_VALUE = V8_FF64_SIGNATURE;
+	static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
 	static const std::streamoff BASE_OFFSET = 0x1359;
 	static const uint64_t DEFAULT_PAGE_SIZE = 512;
 
@@ -309,7 +302,7 @@ public:
 		//после имени uint32_t res; // всегда 0x000000?
 		static size_t Size()
 		{
-			return 8 + 8 + 4; // 20
+			return 8 + 8 + 4;
 		};
 	};
 
@@ -344,17 +337,19 @@ int Parse(
 		const std::vector< std::string > &filter
 );
 
-int ParseFolder(
-	const std::string &filename,
-	const std::string &dirname,
-	const std::vector< std::string > &filter
+int Parse_Test(
+	const std::string& filename,
+	const std::string& dirname,
+	const std::vector< std::string >& filter
 );
 
+String getDataFromFile1C(const std::string& filename_in, const std::string& FileName);
+std::wstring wgetDataFromFile1C(const std::string& filename_in, const std::string& FileName, const std::string& DataFileName);
+
+std::string wstring_to_string(const std::wstring& wstr, bool utf8);
+std::string wstring_to_utf8(const std::wstring& str);
 
 int ListFiles(const std::string &filename);
-
-std::string FindRoot();
-
 bool IsV8File(std::basic_istream<char> &file);
 bool IsV8File16(std::basic_istream<char>& file);
 
@@ -401,9 +396,11 @@ try_inflate(
  * @return true - если данные были успешно распакованы
  *         false - ошибка распаковки: данные повреждены или не упакованы
  */
-bool try_inflate(const boost::filesystem::path &source, const boost::filesystem::path &dest);
-
-int RecursiveUnpack2(const std::string& directory, std::basic_istream<char>& file, const std::vector<std::string>& filter, bool boolInflate, bool UnpackWhenNeed);
+bool
+try_inflate(
+		const boost::filesystem::path &source,
+		const boost::filesystem::path &dest
+		);
 
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)

@@ -13,50 +13,60 @@ endif()
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 set (V8UNPACK_SOURCES 
-	src/main.cpp 
-	src/V8File.cpp 
-	src/utils.cpp 
-	src/placeholder216.cpp 
-	src/VersionFile.cpp 
-	src/atree.cpp 
-	src/MetaObject.cpp 
-	src/NodeTypes.cpp 
-	src/v8MetaCommand.cpp 
-	src/v8MetaDoc.cpp 
-	src/v8MetaForm.cpp
-	src/v8MetaMoxel.cpp
-	src/v8MetaObject.cpp
-	src/v8Tree.cpp 
-	src/NodeTypes.cpp
-	src/v8MetaCommonModules.cpp
-	src/v8MetaInterfaces.cpp
-	src/v8MetaNumerator.cpp
-	src/FileTypes.cpp
-)
+	src/main.cpp
+	src/binarydecimalnumber.cpp
+	src/common.cpp
+	src/EctoSoftTree.cpp
+	src/ExactStructureBuilder.cpp
+	src/logger.cpp
+	src/mdCommand.cpp
+	src/mdForm.cpp
+	src/mdLang.cpp
+	src/mdMoxel.cpp
+	src/mdObject.cpp
+	src/messageregistration.cpp
+	src/onesdata.cpp
+	src/parse_tree.cpp
+	src/placeholder216.cpp
+	src/StringUtils.cpp
+	src/THashedStringList.cpp
+	src/TMSTree.cpp
+	src/tree.cpp
+	src/treeparser.cpp
+	src/TStringList.cpp
+	src/utils.cpp
+	src/V8File.cpp
+	src/VersionFile.cpp
+	)
 set (V8UNPACK_HEADERS 
-	src/V8File.h 
-	src/version.h 
+	src/binarydecimalnumber.h
+	src/common.h
+	src/EctoSoftTree.h
+	src/guids.h
+	src/logger.h
+	src/mdCommand.h
+	src/mdForm.h
+	src/mdLang.h
+	src/mdMoxel.h
+	src/mdObject.h
+	src/messageregistration.h
+	src/nodetypes.h
+	src/parse_tree.h
+	src/StringUtils.h
+	src/THashedStringList.h
+	src/TMSTree.h
+	src/tree.h
+	src/TStringList.h
+	src/utils.cpp
+	src/V8File.h
+	src/version.h
+	src/VersionFile.h
 	src/zconf.h 
 	src/zlib.h 
-	src/VersionFile.h
-	src/atree.h 
-	src/MetaObject.h 
-	src/NodeTypes.h 
-	src/v8MetaCommand.h 
-	src/v8MetaDoc.h 
-	src/v8MetaForm.h
-	src/v8MetaMoxel.h
-	src/v8MetaObject.h
-	src/v8Tree.h 
-	src/v8constants.h
-	src/tree_utils.h
-	src/tree.h
-	src/NodeTypes.h
-	src/v8MetaCommonModules.h
-	src/v8MetaInterfaces.h
-	src/v8MetaNumerator.h
-	src/FileTypes.h
-)
+	src/onesdata.hpp
+	src/ExactStructureBuilder.hpp
+	src/treeparser.hpp
+	)
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 

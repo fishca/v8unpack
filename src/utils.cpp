@@ -18,6 +18,8 @@ at http://mozilla.org/MPL/2.0/.
 #  endif
 #endif
 
+namespace fs = boost::filesystem;
+
 namespace v8unpack {
 
 template<typename T, int length>
@@ -77,7 +79,6 @@ void _itoht64(uint64_t value, char *ht)
 
 int Inflate(const std::string &in_filename, const std::string &out_filename)
 {
-	int ret;
 
 	std::shared_ptr<std::istream> input;
 
@@ -88,8 +89,8 @@ int Inflate(const std::string &in_filename, const std::string &out_filename)
 
 	} else {
 
-		boost::filesystem::path inf(in_filename);
-		input.reset(new boost::filesystem::ifstream(inf, std::ios_base::binary));
+		fs::path inf(in_filename);
+		input.reset(new fs::ifstream(inf, std::ios_base::binary));
 
 		if (!*input) {
 			return V8UNPACK_DEFLATE_IN_FILE_NOT_FOUND;
@@ -106,8 +107,8 @@ int Inflate(const std::string &in_filename, const std::string &out_filename)
 
 	} else {
 
-		boost::filesystem::path ouf(out_filename);
-		output.reset(new boost::filesystem::ofstream (ouf, std::ios_base::binary));
+		fs::path ouf(out_filename);
+		output.reset(new fs::ofstream (ouf, std::ios_base::binary));
 
 		if (!*output) {
 			return V8UNPACK_INFLATE_OUT_FILE_NOT_CREATED;
@@ -132,8 +133,8 @@ int Deflate(const std::string &in_filename, const std::string &out_filename)
 
 	} else {
 
-		boost::filesystem::path inf(in_filename);
-		input.reset(new boost::filesystem::ifstream(inf, std::ios_base::binary));
+		fs::path inf(in_filename);
+		input.reset(new fs::ifstream(inf, std::ios_base::binary));
 
 		if (!*input) {
 			return V8UNPACK_DEFLATE_IN_FILE_NOT_FOUND;
@@ -150,8 +151,8 @@ int Deflate(const std::string &in_filename, const std::string &out_filename)
 
 	} else {
 
-		boost::filesystem::path ouf(out_filename);
-		output.reset(new boost::filesystem::ofstream (ouf, std::ios_base::binary));
+		fs::path ouf(out_filename);
+		output.reset(new fs::ofstream (ouf, std::ios_base::binary));
 
 		if (!*output) {
 			return V8UNPACK_INFLATE_OUT_FILE_NOT_CREATED;
@@ -422,7 +423,8 @@ bool try_inflate(std::vector<char> &data)
 	return false;
 }
 
-bool try_inflate(std::istream &source, std::ostream &dest)
+bool
+try_inflate(std::istream &source, std::ostream &dest)
 {
 	auto gpos = source.tellg();
 	auto ppos = dest.tellp();
@@ -442,10 +444,11 @@ bool try_inflate(std::istream &source, std::ostream &dest)
 	return true;
 }
 
-bool try_inflate(const boost::filesystem::path &source, const boost::filesystem::path &dest)
+bool
+try_inflate(const fs::path &source, const fs::path &dest)
 {
-	boost::filesystem::ifstream inf(source, std::ios_base::binary);
-	boost::filesystem::ofstream out(dest, std::ios_base::binary);
+	fs::ifstream inf(source, std::ios_base::binary);
+	fs::ofstream out(dest, std::ios_base::binary);
 
 	return try_inflate(inf, out);
 }
