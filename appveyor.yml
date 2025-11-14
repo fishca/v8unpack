@@ -1,7 +1,7 @@
 version: 3.0.43.{build}
 image:
   - Ubuntu1604
-  - Visual Studio 2015
+  
 for:
 -
   matrix:
