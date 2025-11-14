@@ -2,8 +2,7 @@ version: 3.0.{build}
 
 # --- MATRIX: 2 ОС ---
 image:
-  - Visual Studio 2022
-  - Ubuntu2204
+  - Ubuntu1604
 
 # --- ПРАВИЛО: Глубина клонирования ---
 clone_depth: 1
@@ -59,55 +58,5 @@ for:
       name: v8unpack-linux
     - path: v8unpack*.deb
       name: installer-deb
-
-
-
-# ==========================================================
-# ===============   WINDOWS BUILD   =========================
-# ==========================================================
-
--
-  matrix:
-    only:
-      - image: Visual Studio 2022
-
-  environment:
-    VCPKG_ROOT: C:\tools\vcpkg
-
-  install:
-    # Обновляем vcpkg и собираем зависимости
-    - cmd: |
-        cd %VCPKG_ROOT%
-        git pull
-        bootstrap-vcpkg.bat
-        vcpkg install boost-filesystem:x64-windows boost-system:x32-windows zlib:x32-windows
-
-  build_script:
-    # Генерируем Visual Studio solution через CMake
-    - cmd: cmake -B build -S . ^
-        -G "Visual Studio 17 2022" -A x64 ^
-        -DCMAKE_TOOLCHAIN_FILE=%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake ^
-        -DCMAKE_BUILD_TYPE=Release
-
-    # Сборка
-    - cmd: cmake --build build --config Release
-
-  after_build:
-    # Сборка MSI
-    - cmd: |
-        SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-        candle v8unpack.wxs
-        light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
-
-        rem Создание NuPkg через Chocolatey
-        choco pack
-
-  artifacts:
-    - path: build/Release/*.exe
-      name: v8unpack-win
-    - path: v8unpack-*.msi
-      name: installer-msi
-    - path: v8unpack*.nupkg
-      name: installer-nupkg
 
 deploy: off
