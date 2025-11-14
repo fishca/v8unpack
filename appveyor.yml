@@ -2,7 +2,7 @@
 version: 3.0.43.{build}
 image:
   - Ubuntu1604
-  - Visual Studio 2015
+  - Visual Studio 2022
 pull_requests:
   do_not_increment_build_number: true
 clone_depth: 1
@@ -10,7 +10,7 @@ for:
 -
   matrix:
     except:
-      - image: Visual Studio 2015
+      - image: Visual Studio 2022
   environment:
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system zlib
     DEPLOY_PLATFORM_ID: ubuntu
@@ -37,9 +37,9 @@ for:
 -
   matrix:
     only:
-      - image: Visual Studio 2015
+      - image: Visual Studio 2022
   environment:
-    VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\
+    VCDIR: C:\Program Files\Microsoft Visual Studio\2022\Community\VC\
     BOOST_ROOT: C:\Libraries\boost_1_60_0
     BOOST_LIBRARYDIR: C:\Libraries\boost_1_60_0\lib32-msvc-14.0
     BOOST_INCLUDEDIR: C:\Libraries\boost_1_60_0
