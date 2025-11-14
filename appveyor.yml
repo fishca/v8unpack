@@ -3,7 +3,9 @@ image:
   - Visual Studio 2022
 pull_requests:
   do_not_increment_build_number: true
+
 clone_depth: 1
+
 for:
 -
   matrix:
