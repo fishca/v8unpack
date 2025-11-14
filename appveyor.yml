@@ -7,8 +7,7 @@ pull_requests:
 clone_depth: 1
 
 for:
--
-  matrix:
+  - matrix:
     except:
       - image: Visual Studio 2022
   environment:
@@ -35,8 +34,7 @@ for:
   - path: v8unpack*.deb
 
 
--
-  matrix:
+  - matrix:
     only:
       - image: Visual Studio 2015
   environment:
