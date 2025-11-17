@@ -15,7 +15,12 @@ endif()
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-set (V8UNPACK_SOURCES 
+# Linux-specific definition
+if(UNIX)
+	add_definitions(-D__LINUX)
+endif()
+
+set (V8UNPACK_SOURCES
 	src/main.cpp
 	src/binarydecimalnumber.cpp
 	src/common.cpp
@@ -40,8 +45,20 @@ set (V8UNPACK_SOURCES
 	src/utils.cpp
 	src/V8File.cpp
 	src/VersionFile.cpp
+	# SystemClasses files
+	src/SystemClasses/String.cpp
+	src/SystemClasses/System.Classes.cpp
+	src/SystemClasses/System.SysUtils.cpp
+	src/SystemClasses/System.IOUtils.cpp
+	src/SystemClasses/System.cpp
+	src/SystemClasses/TStream.cpp
+	src/SystemClasses/TMemoryStream.cpp
+	src/SystemClasses/TFileStream.cpp
+	src/SystemClasses/TStreamReader.cpp
+	src/SystemClasses/TStreamWriter.cpp
+	src/SystemClasses/GetTickCount.cpp
 	)
-set (V8UNPACK_HEADERS 
+set (V8UNPACK_HEADERS
 	src/binarydecimalnumber.h
 	src/common.h
 	src/EctoSoftTree.h
@@ -53,19 +70,18 @@ set (V8UNPACK_HEADERS
 	src/mdMoxel.h
 	src/mdObject.h
 	src/messageregistration.h
-	src/nodetypes.h
+	src/NodeTypes.h
 	src/parse_tree.h
 	src/StringUtils.h
 	src/THashedStringList.h
 	src/TMSTree.h
 	src/tree.h
 	src/TStringList.h
-	src/utils.cpp
 	src/V8File.h
 	src/version.h
 	src/VersionFile.h
-	src/zconf.h 
-	src/zlib.h 
+	src/zconf.h
+	src/zlib.h
 	src/onesdata.hpp
 	src/ExactStructureBuilder.hpp
 	src/treeparser.hpp
@@ -94,9 +110,14 @@ add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
-SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+# Include directories for source files
+include_directories (src src/SystemClasses)
 
+# Windows-specific Boost paths (only if needed)
+if(WIN32)
+	SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
+	SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+endif()
 
 set (Boost_USE_STATIC_LIBS ON)
 set (Boost_USE_MULTITHREADED OFF)
