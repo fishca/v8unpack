@@ -297,9 +297,10 @@ int Inflate(const char* in_buf, char** out_buf, uint32_t in_len, uint32_t* out_l
 	z_stream strm;
 	unsigned char out[CHUNK];
 
-	// Use vector for efficient memory management
-	std::vector<char> out_buffer;
-	out_buffer.reserve(in_len * 2); // Reserve 2x input size initially
+	unsigned long out_buf_len = in_len + CHUNK;
+	*out_buf = static_cast<char*> (realloc(*out_buf, out_buf_len));
+	*out_len = 0;
+
 
 	// allocate inflate state
 	strm.zalloc = Z_NULL;
@@ -329,18 +330,20 @@ int Inflate(const char* in_buf, char** out_buf, uint32_t in_len, uint32_t* out_l
 				return ret;
 		}
 		have = CHUNK - strm.avail_out;
-		out_buffer.insert(out_buffer.end(), out, out + have);
+		if (*out_len + have > out_buf_len) {
+			//if (have < sizeof
+			out_buf_len = out_buf_len + sizeof(out);
+			*out_buf = static_cast<char*> (realloc(*out_buf, out_buf_len));
+			if (!out_buf) {
+				(void)deflateEnd(&strm);
+				return Z_ERRNO;
+			}
+		}
+		memcpy((*out_buf + *out_len), out, have);
+		*out_len += have;
 	} while (strm.avail_out == 0);
 
-	// Copy result to output buffer
-	*out_len = out_buffer.size();
-	*out_buf = static_cast<char*>(realloc(*out_buf, *out_len));
-	if (*out_buf) {
-		memcpy(*out_buf, out_buffer.data(), *out_len);
-	} else {
-		(void)inflateEnd(&strm);
-		return Z_ERRNO;
-	}
+	// done when inflate() says it's done
 
 	// clean up and return
 	(void)inflateEnd(&strm);
@@ -354,9 +357,9 @@ int Deflate(const char* in_buf, char** out_buf, uint32_t in_len, uint32_t* out_l
 	z_stream strm;
 	unsigned char out[CHUNK];
 
-	// Use vector for efficient memory management
-	std::vector<char> out_buffer;
-	out_buffer.reserve(in_len); // Reserve input size initially (compression typically reduces size)
+	unsigned long out_buf_len = in_len + CHUNK;
+	*out_buf = static_cast<char*> (realloc(*out_buf, out_buf_len));
+	*out_len = 0;
 
 	// allocate deflate state
 	strm.zalloc = Z_NULL;
@@ -366,6 +369,7 @@ int Deflate(const char* in_buf, char** out_buf, uint32_t in_len, uint32_t* out_l
 
 	if (ret != Z_OK)
 		return ret;
+
 
 	flush = Z_FINISH;
 	strm.next_in = (unsigned char *)(in_buf);
@@ -379,24 +383,27 @@ int Deflate(const char* in_buf, char** out_buf, uint32_t in_len, uint32_t* out_l
 		ret = deflate(&strm, flush);    // no bad return value
 		assert(ret != Z_STREAM_ERROR);  // state not clobbered
 		have = sizeof(out) - strm.avail_out;
-		out_buffer.insert(out_buffer.end(), out, out + have);
+		if (*out_len + have > out_buf_len) {
+			//if (have < sizeof
+			out_buf_len = out_buf_len + sizeof(out);
+			*out_buf = static_cast<char*> (realloc(*out_buf, out_buf_len));
+			if (!out_buf) {
+				(void)deflateEnd(&strm);
+				return Z_ERRNO;
+			}
+		}
+		memcpy((*out_buf + *out_len), out, have);
+		*out_len += have;
 	} while (strm.avail_out == 0);
 	assert(strm.avail_in == 0);     // all input will be used
-	assert(ret == Z_STREAM_END);    // stream will be complete
 
-	// Copy result to output buffer
-	*out_len = out_buffer.size();
-	*out_buf = static_cast<char*>(realloc(*out_buf, *out_len));
-	if (*out_buf) {
-		memcpy(*out_buf, out_buffer.data(), *out_len);
-	} else {
-		(void)deflateEnd(&strm);
-		return Z_ERRNO;
-	}
+	assert(ret == Z_STREAM_END);        // stream will be complete
+
 
 	// clean up and return
 	(void)deflateEnd(&strm);
 	return Z_OK;
+
 }
 
 bool try_inflate(std::vector<char> &data)

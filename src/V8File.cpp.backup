@@ -19,16 +19,11 @@ at http://mozilla.org/MPL/2.0/.
 #include "SystemClasses/String.hpp"
 #include <iostream>
 #include <sstream>
-#include <unordered_set>
-#include <locale>
-#include <codecvt>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <utility>
 #include <memory>
-#ifdef _WIN32
 #include <Windows.h>
-#endif
 #include <boost/filesystem/fstream.hpp>
 
 namespace v8unpack {
@@ -70,20 +65,17 @@ CV8Elem::CV8Elem(const string &name)
 string CV8Elem::GetName() const
 {
 	auto ElemNameLen = (header.size() - CV8Elem::stElemHeaderBegin::Size()) / 2;
-
-	// Optimized: direct string construction instead of stringstream
-	std::string result;
-	result.reserve(ElemNameLen);
+	stringstream ss;
 
 	auto currentChar = header.data() + CV8Elem::stElemHeaderBegin::Size();
 	for (size_t j = 0; j < ElemNameLen * 2; j += 2, currentChar += 2) {
 		if (*currentChar == '\0') {
 			break;
 		}
-		result.push_back(*currentChar);
+		ss << *currentChar;
 	}
 
-	return result;
+	return ss.str();
 }
 
 void CV8Elem::resizeHeader(size_t newSize)
@@ -95,9 +87,8 @@ int CV8Elem::SetName(const string &ElemName)
 {
 	uint32_t pos = CV8Elem::stElemHeaderBegin::Size();
 
-	// Optimized: avoid division in loop by using separate index
-	for (size_t i = 0; i < ElemName.size(); ++i, pos += 2) {
-		header[pos] = ElemName[i];
+	for (uint32_t j = 0; j < ElemName.size() * 2; j += 2, pos += 2) {
+		header[pos] = ElemName[j / 2];
 		header[pos + 1] = 0;
 	}
 
@@ -181,9 +172,9 @@ ReadBlockData(basic_istream<char> &file, const typename format::block_header_t &
 	auto Header = firstBlockHeader;
 	auto pBlockHeader = &Header;
 
-	// Optimized buffer size: 64KB for better I/O performance
-	const int buf_size = 65536;
-	std::vector<char> buffer(buf_size);
+	const int buf_size = 1024; // TODO: Настраиваемый размер буфера
+	char *pBlockData = new char[buf_size];
+	String strBlockData = "";
 
 	read_in_bytes = 0;
 	while (read_in_bytes < data_size) {
@@ -194,9 +185,9 @@ ReadBlockData(basic_istream<char> &file, const typename format::block_header_t &
 
 		uint32_t read_done = 0;
 		while (read_done < bytes_to_read) {
-			file.read(buffer.data(), MIN(buf_size, bytes_to_read - read_done));
+			file.read(pBlockData, MIN(buf_size, bytes_to_read - read_done));
 			uint32_t rd = file.gcount();
-			out.write(buffer.data(), rd);
+			out.write(pBlockData, rd);
 			read_done += rd;
 		}
 
@@ -209,6 +200,9 @@ ReadBlockData(basic_istream<char> &file, const typename format::block_header_t &
 		else
 			break;
 	}
+
+	strBlockData = pBlockData;
+	delete[] pBlockData;
 
 	return V8UNPACK_OK;
 }
@@ -239,8 +233,9 @@ ReadVector(in_stream_t &file)
 	file.read((char*)&firstBlockHeader, firstBlockHeader.Size());
 	auto elements_count = firstBlockHeader.data_size() / sizeof(element_t);
 
-	// Optimized: resize() is sufficient, no need for reserve()
-	vector<element_t> result(elements_count);
+	vector<element_t> result;
+	result.reserve(elements_count + 1);
+	result.resize(elements_count);
 
 	auto bytes_read = ReadBlockData<format>(file, firstBlockHeader, reinterpret_cast<char*>(result.data()));
 	result.resize(bytes_read / sizeof(element_t));
@@ -290,11 +285,9 @@ int SaveBlockDataToBuffer(char *&cur_pos, const char *pBlockData, uint32_t Block
 	memcpy(cur_pos, pBlockData, BlockDataSize);
 	cur_pos += BlockDataSize;
 
-	// Optimized: use memset instead of loop
-	uint32_t padding_size = PageSize - BlockDataSize;
-	if (padding_size > 0) {
-		memset(cur_pos, 0, padding_size);
-		cur_pos += padding_size;
+	for(uint32_t i = 0; i < PageSize - BlockDataSize; i++) {
+		*cur_pos = 0;
+		++cur_pos;
 	}
 
 	return 0;
@@ -311,14 +304,9 @@ int SaveBlockData(basic_ostream<char> &file_out, const vector<char> &data, size_
 	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
 	file_out.write(data.data(), BlockDataSize);
 
-	// Optimized: write zeros in blocks instead of byte-by-byte
 	if (PageSize > BlockDataSize) {
-		size_t padding_size = PageSize - BlockDataSize;
-		static const std::vector<char> zeros(4096, 0); // Reusable 4KB zero buffer
-		while (padding_size > 0) {
-			size_t write_size = std::min(padding_size, zeros.size());
-			file_out.write(zeros.data(), write_size);
-			padding_size -= write_size;
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
 		}
 	}
 
@@ -335,14 +323,9 @@ int SaveBlockData(basic_ostream<char> &file_out, basic_istream<char> &file_in, s
 	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
 	full_copy(file_in, file_out);
 
-	// Optimized: write zeros in blocks instead of byte-by-byte
 	if (PageSize > BlockDataSize) {
-		size_t padding_size = PageSize - BlockDataSize;
-		static const std::vector<char> zeros(4096, 0); // Reusable 4KB zero buffer
-		while (padding_size > 0) {
-			size_t write_size = std::min(padding_size, zeros.size());
-			file_out.write(zeros.data(), write_size);
-			padding_size -= write_size;
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
 		}
 	}
 
@@ -370,14 +353,9 @@ int SaveBlockData(basic_ostream<char> &file_out, const char *pBlockData, size_t 
 	file_out.write(reinterpret_cast<char *>(&CurBlockHeader), CurBlockHeader.Size());
 	file_out.write(reinterpret_cast<const char *>(pBlockData), BlockDataSize);
 
-	// Optimized: write zeros in blocks instead of byte-by-byte
 	if (PageSize > BlockDataSize) {
-		size_t padding_size = PageSize - BlockDataSize;
-		static const std::vector<char> zeros(4096, 0); // Reusable 4KB zero buffer
-		while (padding_size > 0) {
-			size_t write_size = std::min(padding_size, zeros.size());
-			file_out.write(zeros.data(), write_size);
-			padding_size -= write_size;
+		for (auto i = PageSize - BlockDataSize; i; i--) {
+			file_out << '\0';
 		}
 	}
 
@@ -528,18 +506,46 @@ prepare_smart_source(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_
 template<typename format>
 String prepare_smart_source_to_string(basic_istream<char>& file, bool NeedUnpack)
 {
+
 	typename format::block_header_t header;
+
 	file.read((char*)&header, header.Size());
+	auto data_size = header.data_size();
 
-	// Optimized: removed dead code and unnecessary copies
 	vector<char> source_data;
-	ReadBlockData<format>(file, header, source_data);
 
-	if (NeedUnpack) {
+	if (NeedUnpack && data_size < SmartLimit) {
+		
+		ReadBlockData<format>(file, header, source_data);
 		try_inflate(source_data);
+
+		return "";
 	}
 
-	return std::string(source_data.begin(), source_data.end());
+	auto tmp_path = ".v8unpack.tmp";
+	//DumpBlockData<format>(file, header, tmp_path);
+
+	//fs::ofstream out(path, ios_base::binary);
+	std::vector<char> out;
+	ReadBlockData<format>(file, header, out);
+
+	source_data = out;
+
+	if (NeedUnpack) {
+		//auto inf_path = elem_path.parent_path() / ".v8unpack.inf";
+		//try_inflate(tmp_path, inf_path);
+		try_inflate(source_data);
+		//fs::remove(tmp_path);
+		
+		
+		//std::string Result(source_data.begin(), source_data.end());
+		std::string Result(source_data.begin(), source_data.end());
+		
+
+		return Result;
+	}
+
+	return "";
 }
 
 
@@ -555,26 +561,10 @@ int SmartUnpack(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_path)
 	return V8UNPACK_OK;
 }
 
-// Optimized: O(1) lookup with unordered_set instead of O(n) vector search
 static bool NameInFilter(const string &name, const vector<string> &filter)
 {
-	if (filter.empty()) {
-		return true;
-	}
-
-	// Create static unordered_set for O(1) lookup
-	// This is computed once and reused across calls
-	static std::unordered_set<string> filter_set;
-	static const vector<string>* last_filter = nullptr;
-
-	// Rebuild set only if filter changed
-	if (&filter != last_filter) {
-		filter_set.clear();
-		filter_set.insert(filter.begin(), filter.end());
-		last_filter = &filter;
-	}
-
-	return filter_set.find(name) != filter_set.end();
+	return filter.empty()
+		|| find(filter.begin(), filter.end(), name) != filter.end();
 }
 
 template<typename format>
@@ -1008,52 +998,47 @@ int Parse_Test(const string& filename_in, const string& dirname, const vector< s
 }
 
 std::wstring string_to_wstring(const std::string& str) {
+	
 	if (str.empty()) return L"";
 
-#ifdef _WIN32
 	int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
+	
 	std::wstring wstr(size_needed, 0);
+	
 	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
+	
 	return wstr;
-#else
-	// Linux: use codecvt for UTF-8 to wstring conversion
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.from_bytes(str);
-#endif
 }
 
 std::string wstring_to_string(const std::wstring& wstr, bool utf8) {
-	if (wstr.empty())
+	
+	if (wstr.empty()) 
 		return "";
 
-#ifdef _WIN32
 	UINT code_page = utf8 ? CP_UTF8 : CP_ACP;
+
 	int size_needed = WideCharToMultiByte(code_page, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
+	
 	std::string str(size_needed, 0);
+	
 	WideCharToMultiByte(code_page, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, nullptr, nullptr);
+	
 	return str;
-#else
-	// Linux: use codecvt for wstring to UTF-8 conversion
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.to_bytes(wstr);
-#endif
 }
 
 // std::wstring (UTF-16) -> std::string (UTF-8)
 std::string wstring_to_utf8(const std::wstring& str) {
-	if (str.empty())
+
+	if (str.empty()) 
 		return std::string();
 
-#ifdef _WIN32
 	int size_needed = WideCharToMultiByte(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0, nullptr, nullptr);
+	
 	std::string result(size_needed, 0);
+	
 	WideCharToMultiByte(CP_UTF8, 0, &str[0], (int)str.size(), &result[0], size_needed, nullptr, nullptr);
+	
 	return result;
-#else
-	// Linux: use codecvt
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	return converter.to_bytes(str);
-#endif
 }
 
 String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
@@ -1246,13 +1231,14 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 	FileHeader.reserved = 0;
 
 	auto cur_block_addr = format::file_header_t::Size() + format::block_header_t::Size();
-	// Optimized: use vector instead of raw pointer for exception safety
-	std::vector<typename format::elem_addr_t> pTOC(ElemsNum);
+	typename format::elem_addr_t *pTOC;
+	pTOC = new typename format::elem_addr_t[ElemsNum];
 	cur_block_addr += MAX(format::elem_addr_t::Size() * ElemsNum, format::DEFAULT_PAGE_SIZE);
 
 	fs::ofstream file_out(out_filename, ios_base::binary);
 	//Открываем выходной файл контейнер на запись
 	if (!file_out) {
+		delete [] pTOC;
 		cout << "SaveFile. Error in creating file!" << endl;
 		return V8UNPACK_ERROR_CREATING_OUTPUT_FILE;
 	}
@@ -1335,7 +1321,9 @@ recursive_pack(const string &in_dirname, const string &out_filename, bool dont_d
 	file_out.write(reinterpret_cast<const char*>(&FileHeader), format::file_header_t::Size());
 
 	//Записываем блок TOC
-	SaveBlockData<format>(file_out, (const char*) pTOC.data(), format::elem_addr_t::Size() * ElemsNum);
+	SaveBlockData<format>(file_out, (const char*) pTOC, format::elem_addr_t::Size() * ElemsNum);
+
+	delete [] pTOC;
 
 	cout << endl << "Build `" << out_filename << "` OK!" << endl << flush;
 
@@ -1473,7 +1461,7 @@ int CV8File::GetData(vector<char> &data)
 	SaveBlockDataToBuffer<format>(cur_pos, (char*) pTempElemsAddrs.data(), format::elem_addr_t::Size() * ElemsNum);
 
 	// записываем элементы (заголовок и данные)
-	for (const auto &elem : Elems) {
+	for (auto elem : Elems) {
 		SaveBlockDataToBuffer<format>(cur_pos, elem.header.data(), elem.header.size(), elem.header.size());
 		SaveBlockDataToBuffer<format>(cur_pos, elem.data.data(), elem.data.size());
 	}

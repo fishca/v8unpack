@@ -11,7 +11,7 @@ AR = ar
 LD = g++
 WINDRES = 
 
-INC = 
+INC = -Isrc -Isrc/SystemClasses
 CFLAGS = -Wall -std=c++14
 RESINC = 
 LIBDIR = 
@@ -30,7 +30,22 @@ DEP_RELEASE =
 OUT_RELEASE = bin/Release/v8unpack
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJDIR_RELEASE)/src/utils.o \
-			  $(OBJDIR_RELEASE)/src/VersionFile.o $(OBJDIR_RELEASE)/src/placeholder216.o
+			  $(OBJDIR_RELEASE)/src/VersionFile.o $(OBJDIR_RELEASE)/src/placeholder216.o \
+			  $(OBJDIR_RELEASE)/src/binarydecimalnumber.o $(OBJDIR_RELEASE)/src/common.o \
+			  $(OBJDIR_RELEASE)/src/EctoSoftTree.o $(OBJDIR_RELEASE)/src/ExactStructureBuilder.o \
+			  $(OBJDIR_RELEASE)/src/logger.o $(OBJDIR_RELEASE)/src/mdCommand.o \
+			  $(OBJDIR_RELEASE)/src/mdForm.o $(OBJDIR_RELEASE)/src/mdLang.o \
+			  $(OBJDIR_RELEASE)/src/mdMoxel.o $(OBJDIR_RELEASE)/src/mdObject.o \
+			  $(OBJDIR_RELEASE)/src/messageregistration.o $(OBJDIR_RELEASE)/src/onesdata.o \
+			  $(OBJDIR_RELEASE)/src/parse_tree.o $(OBJDIR_RELEASE)/src/StringUtils.o \
+			  $(OBJDIR_RELEASE)/src/THashedStringList.o $(OBJDIR_RELEASE)/src/TMSTree.o \
+			  $(OBJDIR_RELEASE)/src/tree.o $(OBJDIR_RELEASE)/src/treeparser.o \
+			  $(OBJDIR_RELEASE)/src/TStringList.o \
+			  $(OBJDIR_RELEASE)/src/SystemClasses/String.o $(OBJDIR_RELEASE)/src/SystemClasses/System.Classes.o \
+			  $(OBJDIR_RELEASE)/src/SystemClasses/System.SysUtils.o $(OBJDIR_RELEASE)/src/SystemClasses/System.IOUtils.o $(OBJDIR_RELEASE)/src/SystemClasses/System.o \
+			  $(OBJDIR_RELEASE)/src/SystemClasses/TStream.o $(OBJDIR_RELEASE)/src/SystemClasses/TMemoryStream.o \
+			  $(OBJDIR_RELEASE)/src/SystemClasses/TFileStream.o $(OBJDIR_RELEASE)/src/SystemClasses/TStreamReader.o \
+			  $(OBJDIR_RELEASE)/src/SystemClasses/TStreamWriter.o $(OBJDIR_RELEASE)/src/SystemClasses/GetTickCount.o
 PREFIX=$(DESTDIR)/usr/bin
 BASH_COMPLETION_PREFIX=$(DESTDIR)/etc/bash_completion.d
 
@@ -53,6 +68,7 @@ before_release: bin/Release
 bin/Release:
 	test -d bin/Release || mkdir -p bin/Release
 	test -d $(OBJDIR_RELEASE)/src || mkdir -p $(OBJDIR_RELEASE)/src
+	test -d $(OBJDIR_RELEASE)/src/SystemClasses || mkdir -p $(OBJDIR_RELEASE)/src/SystemClasses
 
 after_release: 
 
@@ -75,6 +91,14 @@ $(OBJDIR_RELEASE)/src/VersionFile.o: src/VersionFile.cpp src/VersionFile.h
 
 $(OBJDIR_RELEASE)/src/placeholder216.o: src/placeholder216.cpp
 	$(CXX) -D__LINUX $(CFLAGS_RELEASE) $(INC_RELEASE) -c src/placeholder216.cpp -o $(OBJDIR_RELEASE)/src/placeholder216.o
+
+# Generic rule for all other .cpp files in src/
+$(OBJDIR_RELEASE)/src/%.o: src/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE) $(INC_RELEASE) -c $< -o $@
+
+# Generic rule for .cpp files in src/SystemClasses/
+$(OBJDIR_RELEASE)/src/SystemClasses/%.o: src/SystemClasses/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE) $(INC_RELEASE) -c $< -o $@
 
 clean_release: 
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)

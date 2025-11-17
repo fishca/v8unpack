@@ -217,9 +217,17 @@ std::string wstringToString(const std::wstring& wstr) {
 string WStringToString(const wstring& wstr)
 {
 	string str;
+	str.resize(wstr.length() * 4); // UTF-8 can use up to 4 bytes per character
+#ifdef _WIN32
 	size_t size;
-	str.resize(wstr.length());
 	wcstombs_s(&size, &str[0], str.size() + 1, wstr.c_str(), wstr.size());
+#else
+	size_t size = wcstombs(&str[0], wstr.c_str(), str.size());
+	if (size == static_cast<size_t>(-1)) {
+		return ""; // Conversion error
+	}
+#endif
+	str.resize(size);
 	return str;
 }
 
@@ -255,12 +263,14 @@ std::string utf8_to_string(const char* utf8str, const locale& loc) {
 }
 
 std::string from_utf8(const std::string& str, const std::locale& loc = std::locale{}) {
-	using wcvt = std::wstring_convert<std::codecvt_utf8<int32_t>, int32_t>;
-	auto wstr = wcvt{}.from_bytes(str);
+	// Simplified version using wchar_t instead of int32_t for better compatibility
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	std::wstring wstr = converter.from_bytes(str);
+
 	std::string result(wstr.size(), '0');
-	std::use_facet<std::ctype<char32_t>>(loc).narrow(
-		reinterpret_cast<const char32_t*>(wstr.data()),
-		reinterpret_cast<const char32_t*>(wstr.data() + wstr.size()),
+	std::use_facet<std::ctype<wchar_t>>(loc).narrow(
+		wstr.data(),
+		wstr.data() + wstr.size(),
 		'?', &result[0]);
 	return result;
 }

@@ -2,7 +2,7 @@
 #ifndef Parse_treeH
 #define Parse_treeH
 
-#include "nodetypes.h"
+#include "NodeTypes.h"
 #include "messageregistration.h"
 
 enum class state_type {

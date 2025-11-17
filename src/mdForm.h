@@ -5,11 +5,11 @@
 #include <memory>
 #include <string>
 #include <unordered_set>
-#include "TMStree.h"
+#include "TMSTree.h"
 #include "StringUtils.h"
 
 
-// Предварительные объявления (если не определены в этом файле)
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ)
 class TStorageReader;
 class TStorageReader64;
 
@@ -20,16 +20,16 @@ private:
     std::string FName;
 
 public:
-    // Геттеры вместо properties
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ properties
     const std::string& UUID() const { return FUUID; }
     const std::string& Name() const { return FName; }
 
-    // Конструкторы
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     mdForm() = default;
     mdForm(const std::string& strUUID);
     
 
-    // Методы
+    // пїЅпїЅпїЅпїЅпїЅпїЅ
     std::string MetaName();
     void FillUUID(std::unordered_set<std::string>& UUIDList);
 };
@@ -43,26 +43,26 @@ private:
     void Put(int Index, mdForm* Item);
 
 public:
-    // Доступ к элементам — как default property в Delphi
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ default property пїЅ Delphi
     mdForm* operator[](int Index) { return Get(Index); }
     const mdForm* operator[](int Index) const { return const_cast<mdFormList*>(this)->Get(Index); }
 
-    // Конструкторы
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     mdFormList(const std::string& StrUUID);
 
-    // Утилиты
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     size_t Count() const { return FList.size(); }
-    void Add(mdForm* Item); // если понадобится позже
+    void Add(mdForm* Item); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-    // Запрещаем копирование (т.к. unique_ptr non-copyable)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ.пїЅ. unique_ptr non-copyable)
     mdFormList(const mdFormList&) = delete;
     mdFormList& operator=(const mdFormList&) = delete;
 
-    // Перемещение разрешено (по умолчанию)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
     mdFormList(mdFormList&&) = default;
     mdFormList& operator=(mdFormList&&) = default;
 
-    ~mdFormList() = default; // unique_ptr сам всё удалит
+    ~mdFormList() = default; // unique_ptr пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 

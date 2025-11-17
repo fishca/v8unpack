@@ -8,19 +8,19 @@
 #include "THashedStringList.h"
 #include "EctoSoftTree.h"
 #include "mdObject.h"
-#include "TMStree.h"
+#include "TMSTree.h"
 
 
 
 class mdLang: public mdObject
 {
 public:
-    // Конструкторы
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     mdLang() = default;
     mdLang(const std::string strUUID);
     
 
-    // Методы
+    // пїЅпїЅпїЅпїЅпїЅпїЅ
     std::string MetaName();
     std::string MetaClassName();
 };
@@ -34,27 +34,27 @@ private:
     void Put(int Index, mdLang* Item);
 
 public:
-    // Доступ к элементам — как default property в Delphi
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ default property пїЅ Delphi
     mdLang* operator[](int Index) { return Get(Index); }
     const mdLang* operator[](int Index) const { return const_cast<mdLangList*>(this)->Get(Index); }
 
-    // Конструкторы
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     mdLangList(TMSTree MetaTree);
     
 
-    // Утилиты
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     size_t Count() const { return FList.size(); }
-    void Add(mdLang* Item); // если понадобится позже
+    void Add(mdLang* Item); // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-    // Запрещаем копирование (т.к. unique_ptr non-copyable)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ.пїЅ. unique_ptr non-copyable)
     mdLangList(const mdLangList&) = delete;
     mdLangList& operator=(const mdLangList&) = delete;
 
-    // Перемещение разрешено (по умолчанию)
+    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
     mdLangList(mdLangList&&) = default;
     mdLangList& operator=(mdLangList&&) = default;
 
-    ~mdLangList() = default; // unique_ptr сам всё удалит
+    ~mdLangList() = default; // unique_ptr пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 };
 
 

@@ -1,6 +1,6 @@
 #include "StringUtils.h"
 #include "mdObject.h"
-#include "TMStree.h"
+#include "TMSTree.h"
 
 
 
@@ -25,7 +25,7 @@ mdObject::mdObject(const std::string& strUUID, const std::string& FormsUUID)
 	//FName = SL[2];
 	FName = parser.ParseString(FName)[2];
 
-	// Определяем наличие формы
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	if (FormsUUID != "")
 	{
 		auto countChild = (*child00->children).size() - 1;
