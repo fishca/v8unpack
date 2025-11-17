@@ -28,7 +28,6 @@ set (V8UNPACK_SOURCES
 	src/mdMoxel.cpp
 	src/mdObject.cpp
 	src/messageregistration.cpp
-	src/onesdata.cpp
 	src/parse_tree.cpp
 	src/placeholder216.cpp
 	src/StringUtils.cpp
