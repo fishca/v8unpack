@@ -141,7 +141,9 @@ int main(int argc, char* argv[]) {
     const auto& all_metadata = parser.getAllMetadata();
     int total_objects = 0;
 
-    for (const auto& [type_guid, info] : all_metadata) {
+    for (const auto& pair : all_metadata) {
+        const auto& type_guid = pair.first;
+        const auto& info = pair.second;
         if (info.count > 0) {
             for (const auto& item_guid : info.items) {
                 std::string filename = parser.generateFileName(type_guid, item_guid);

@@ -5,6 +5,10 @@
 #include <map>
 #include <vector>
 #include <regex>
+#include <iostream>
+#include <sstream>
+#include <locale>
+#include <codecvt>
 #include "guids.h"
 
 namespace v8unpack {
