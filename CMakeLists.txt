@@ -53,7 +53,7 @@ set (V8UNPACK_HEADERS
 	src/mdMoxel.h
 	src/mdObject.h
 	src/messageregistration.h
-	src/nodetypes.h
+	src/NodeTypes.h
 	src/parse_tree.h
 	src/StringUtils.h
 	src/THashedStringList.h
