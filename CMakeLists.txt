@@ -66,7 +66,6 @@ set (V8UNPACK_HEADERS
 	src/VersionFile.h
 	src/zconf.h 
 	src/zlib.h 
-	src/onesdata.hpp
 	src/ExactStructureBuilder.hpp
 	src/treeparser.hpp
 	)
