@@ -70,6 +70,8 @@ at http://mozilla.org/MPL/2.0/.
 #include "version.h"
 #include "tree.h"
 
+using namespace v8unpack;
+
 #include "treeparser.hpp"
 
 #include "ExactStructureBuilder.hpp"
@@ -324,24 +326,7 @@ std::string from_utf8(const std::string& str, const std::locale& loc = std::loca
 	return result;
 }
 
-std::vector<std::string> find_guids(const std::string& text) {
-	std::vector<std::string> guids;
-	// Регулярное выражение для поиска GUID
-	std::regex guid_pattern(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
 
-	//std::regex guid_pattern(R"(\{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-
-
-	std::sregex_iterator it(text.begin(), text.end(), guid_pattern);
-	std::sregex_iterator end;
-
-	while (it != end) {
-		guids.push_back(it->str());
-		++it;
-	}
-
-	return guids;
-}
 
 
 

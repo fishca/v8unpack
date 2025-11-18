@@ -19,3 +19,4 @@ gmon.out
 
 cmake-build-*/*
 .idea/*
+*.log
