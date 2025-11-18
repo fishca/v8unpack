@@ -114,4 +114,4 @@ for:
       draft: false
       prerelease: false
       on:
-        appveyor_repo_tag: true # Only deploy on tagged commits
+        branch: master
