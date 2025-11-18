@@ -1,8 +1,6 @@
 cmake_minimum_required (VERSION 3.10)
 
 cmake_policy(SET CMP0074 NEW)
-# Suppress Boost find_package warning in newer CMake versions
-cmake_policy(SET CMP0167 OLD)
 
 project (v8unpack)
 
