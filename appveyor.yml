@@ -103,7 +103,7 @@ for:
   deploy:
     - provider: GitHub
       auth_token:
-        secure: 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 # Replace  with  actual  encrypted token
+        secure: $(auth_token) # Replace  with  actual  encrypted token
       artifact: /v8unpack-.*\.(exe|msi|nupkg)/
       draft: false
       prerelease: false
