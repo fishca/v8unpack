@@ -11,6 +11,12 @@
 ## Note
 
 V8Unpack - a small console program  for rebuild/build configuration files [1C](http://1c.ru) such as *.cf *.epf *.erf
+
+## System Requirements
+
+- **Boost C++ Libraries**: version 1.80 or newer (previously 1.53+)
+- **zlib**: version 1.31 or newer (addresses security vulnerabilities)
+- **C++14** compatible compiler (GCC 5+, Clang 3.4+, MSVC 2015+)
  
 ## Plaform 
 
