@@ -109,7 +109,7 @@ for:
   deploy:
     - provider: GitHub
       auth_token:
-        secure: 4f56e4a2-5c56-4b8a-9e8b-8b2f8e4b8f9e # Replace with actual encrypted token
+        secure: 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 # Replace with actual encrypted token
       artifact: /v8unpack-.*\.(exe|msi|nupkg)/
       draft: false
       prerelease: false
