@@ -23,19 +23,27 @@ The `.appveyor.yml` file is configured to automatically upload build artifacts t
 
 ### 2. Encrypt Token in AppVeyor
 
-1. Go to your [AppVeyor project settings](https://ci.appveyor.com/project/your-user/v8unpack/settings)
+#### Option A: Add encrypted environment variable (recommended):
+1. Go to your [AppVeyor project settings](https://ci.appveyor.com/project/fishca/v8unpack/settings)
 2. Navigate to "Environment" section
 3. Add encrypted variable:
-   - **Name**: `auth_token`
+   - **Name**: `GITHUB_TOKEN` (or `auth_token`)
    - **Value**: Paste your GitHub token and click "Encrypt"
+
+#### Option B: Encrypt token locally and update appveyor.yml:
+1. Get your encrypted token value from AppVeyor (add the variable, encrypt, then copy the encrypted value)
+2. Replace the placeholder in `appveyor.yml`
 
 ### 3. Update AppVeyor Configuration
 
-In `appveyor.yml`, replace the placeholder:
+In `appveyor.yml`, replace the placeholder with your encrypted token:
+
 ```yaml
 auth_token:
-  secure: YOUR_ENCRYPTED_TOKEN_HERE  # Replace with actual encrypted token
+  secure: YOUR_ENCRYPTED_TOKEN_HERE  # Replace with actual encrypted token from AppVeyor
 ```
+
+**Note:** The current placeholder token `secure: 4f56e4a2-5c56-4b8a-9e8b-8b2f8e4b8f9e` will cause 401 Unauthorized errors until replaced with a real encrypted token.
 
 ## 📋 Deployment Logic
 

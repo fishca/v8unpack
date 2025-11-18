@@ -108,8 +108,17 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
 
 
-# Find Boost - when using vcpkg toolchain, this is handled automatically
-find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
+# Find Boost - vcpkg on Linux, system installation on Windows
+if(WIN32)
+    # Windows: Use system Boost (pre-installed by AppVeyor)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME ON)
+    find_package(Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
+else()
+    # Linux: vcpkg provides Boost automatically through toolchain
+    find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
+endif()
 
 
 include_directories (${Boost_INCLUDE_DIRS})
