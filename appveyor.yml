@@ -78,21 +78,13 @@ for:
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-
       copy Release\v8unpack.exe package
-
       copy LICENSE package
-
       copy README.md package
-
       cd package
-
       candle v8unpack.wxs
-
       light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
-
       choco pack
-
   artifacts:
   - path: Release\*.exe
     name: v8unpack.exe
