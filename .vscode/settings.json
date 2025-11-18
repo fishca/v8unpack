@@ -1,5 +1,15 @@
 {
     "files.associations": {
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "sstream": "cpp",
+        "map": "cpp",
+        "regex": "cpp",
+        "codecvt": "cpp",
+        "locale": "cpp",
+        "utility": "cpp",
+        "memory": "cpp",
+        "unordered_map": "cpp",
+        "algorithm": "cpp",
+        "unordered_set": "cpp"
     }
 }

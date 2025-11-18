@@ -56,7 +56,7 @@ mkdir -p bin/Release
 echo ""
 echo "Компиляция исходных файлов..."
 
-CFLAGS="-Wall -std=c++14 -O2 -D__LINUX"
+CFLAGS="-Wall -std=c++14 -O2 -D__LINUX -I. -Isrc -Isrc/SystemClasses"
 LDFLAGS="-static"
 LIBS="-lz -lboost_filesystem -lboost_system"
 
