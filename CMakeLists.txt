@@ -108,7 +108,7 @@ else()
 	set (Boost_USE_STATIC_RUNTIME OFF)
 endif()
 
-find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
+find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
 
 
 include_directories (${Boost_INCLUDE_DIRS})
