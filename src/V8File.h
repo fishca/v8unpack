@@ -412,6 +412,15 @@ try_inflate(
  */
 int ParseToString(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
 
+/**
+ * @brief Распаковывание конфигурации 1C v8 в организованную файловую структуру по GUID метаданных
+ * Функция анализирует результаты ParseToString и сохраняет данные в поддиректории по типам метаданных
+ * @param config_string Входная строка с распакованными данными от ParseToString
+ * @param dirname Каталог для сохранения файлов
+ * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
+ */
+int ParseToStringWithFiles(const std::string &config_string, const std::string &dirname);
+
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)
 {

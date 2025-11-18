@@ -56,10 +56,11 @@ at http://mozilla.org/MPL/2.0/.
   * @section version Версия
   * Текущая версия: 3.0
   *
-  * Изменения в версии 3.0:
-  * - Оптимизированная сборка с динамическим созданием файлов
-  * - Улучшенное управление памятью для больших конфигураций
-  * - Расширенный парсинг метаданных
+ * Изменения в версии 3.0:
+ * - Оптимизированная сборка с динамическим созданием файлов
+ * - Улучшенное управление памятью для больших конфигураций
+ * - Расширенный парсинг метаданных
+ * - ParseToStringWithFiles: функция для организации файлов по типам метаданных
   */
 
 // main.cpp : Defines the entry point for the console application.
@@ -577,6 +578,7 @@ int usage(vector<string>& argv)
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
 	cout << "  -S[PARSESTRING]      in_filename" << endl;
+	cout << "  -SAVE|-SAVEFILES     in_filename        out_dirname" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
 	cout << "  -L[IST]              listfile" << endl;
@@ -781,6 +783,29 @@ int build_nopack(vector<string>& argv)
 	return ret;
 }
 
+int save_files(vector<string>& argv)
+{
+	if (argv.size() < 2) {
+		return V8UNPACK_SHOW_USAGE;
+	}
+
+	vector<string> filter;
+	for (size_t i = 2; i < argv.size(); i++) {
+		if (!argv[i].empty()) {
+			filter.push_back(argv[i]);
+		}
+	}
+
+	string config_string;
+	int ret = ParseToString(argv[0], filter, config_string);
+
+	if (ret != 0) {
+		return ret;
+	}
+
+	return ParseToStringWithFiles(config_string, argv[1]);
+}
+
 handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_listfile)
 {
 	if (args.size() - arg_base < 1) {
@@ -820,6 +845,10 @@ handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_li
 
 	if (cur_mode == "-parsestring" || cur_mode == "-s") {
 		return parsetostring;
+	}
+
+if (cur_mode == "-save" || cur_mode == "-savefiles") {
+		return save_files;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {

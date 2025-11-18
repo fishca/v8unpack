@@ -30,6 +30,8 @@ at http://mozilla.org/MPL/2.0/.
 #include <Windows.h>
 #endif
 #include <boost/filesystem/fstream.hpp>
+#include <regex>
+#include <unordered_map>
 
 namespace v8unpack {
 
@@ -1628,6 +1630,243 @@ stBlockHeader64 stBlockHeader64::create(uint64_t  block_data_size, uint64_t  pag
 	BlockHeader.set_page_size(page_size);
 	BlockHeader.set_next_page_addr(next_page_addr);
 	return BlockHeader;
+}
+
+/**
+ * @brief Helper function to find GUIDs in text
+ * @param text Text to search for GUIDs
+ * @return Vector of found GUIDs
+ */
+std::vector<std::string> find_guids(const std::string& text) {
+	std::vector<std::string> guids;
+	// Регулярное выражение для поиска GUID
+	std::regex guid_pattern(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
+
+	std::sregex_iterator it(text.begin(), text.end(), guid_pattern);
+	std::sregex_iterator end;
+
+	while (it != end) {
+		guids.push_back(it->str());
+		++it;
+	}
+
+	return guids;
+}
+
+/**
+ * @brief Helper function to create directory if it doesn't exist
+ * @param path Path to create
+ * @return true if successful
+ */
+bool ensure_directory(const fs::path& path) {
+	if (!fs::exists(path)) {
+		return fs::create_directories(path);
+	}
+	return true;
+}
+
+/**
+ * @brief Распаковывание конфигурации 1C v8 в организованную файловую структуру по GUID метаданных
+ * Функция анализирует результаты ParseToString и сохраняет данные в поддиректории по типам метаданных
+ * @param config_string Входная строка с распакованными данными от ParseToString
+ * @param dirname Каталог для сохранения файлов
+ * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
+ */
+int ParseToStringWithFiles(const std::string &config_string, const std::string &dirname) {
+	// Create base directory
+	fs::path base_dir(dirname);
+	if (!ensure_directory(base_dir)) {
+		cerr << "ParseToStringWithFiles: Failed to create base directory: " << dirname << endl;
+		return V8UNPACK_ERROR_CREATING_OUTPUT_FILE;
+	}
+
+	// Metadata type mapping based on GUID
+	std::unordered_map<std::string, std::string> guid_to_type = {
+		// Subsystems
+		{"37f2fa9a-b276-11d4-9435-004095e12fc7", "Subsystems"},
+		// Common modules, attributes, forms, templates, commands, pictures, XDTO packages, web services, HTTP services, WS references
+		{"0fe48980-252d-11d6-a3c7-0050bae0a776", "CommonModules"},
+		{"15794563-ccec-41f6-a83c-ec5f7b9a5bc1", "CommonAttributes"},
+		{"07ee8426-87f1-11d5-b99c-0050bae0a95d", "CommonForms"},
+		{"0c89c792-16c3-11d5-b96b-0050bae0a95d", "CommonTemplates"},
+		{"2f1a5187-fb0e-4b05-9489-dc5dd6412348", "CommonCommands"},
+		{"7dcd43d9-aca5-4926-b549-1842e6a4e8cf", "CommonPictures"},
+		{"cc9df798-7c94-4616-97d2-7aa0b7bc515e", "XDTOPackages"},
+		{"8657032e-7740-4e1d-a3ba-5dd6e8afb78f", "WebServices"},
+		{"0fffc09c-8f4c-47cc-b41c-8d5c5a221d79", "HTTPServices"},
+		{"d26096fb-7a5d-4df9-af63-47d04771fa9b", "WSReferences"},
+		// Styles, languages, interfaces
+		{"3e5404af-6ef8-4c73-ad11-91bd2dfac4c8", "Styles"},
+		{"9cd510ce-abfc-11d4-9434-004095e12fc7", "Languages"},
+		{"39bddf6a-0c3c-452b-921c-d99cfa1c2f1b", "Interfaces"},
+		// Roles, session parameters, exchange plans, filter criteria, event subscriptions, scheduled jobs, functional options
+		{"09736b02-9cac-4e3f-b4f7-d3e9576ab948", "Roles"},
+		{"24c43748-c938-45d0-8d14-01424a72b11e", "SessionParameters"},
+		{"857c4a91-e5f4-4fac-86ec-787626f1c108", "ExchangePlans"},
+		{"3e7bfcc0-067d-11d6-a3c7-0050bae0a776", "FilterCriteria"},
+		{"4e828da6-0f44-4b5b-b1c0-a2b3cfe7bdcc", "EventSubscriptions"},
+		{"11bdaf85-d5ad-4d91-bb24-aa0eee139052", "ScheduledJobs"},
+		{"af547940-3268-434f-a3e7-e47d6d2638c3", "FunctionalOptions"},
+		// Defined types, settings storages, command groups, style items, integration services
+		{"c045099e-13b9-4fb6-9d50-fca00202971e", "DefinedTypes"},
+		{"46b4cd97-fd13-4eaa-aba2-3bddd7699218", "SettingsStorages"},
+		{"1c57eabe-7349-44b3-b1de-ebfeab67b47d", "CommandGroups"},
+		{"58848766-36ea-4076-8800-e91eb49590d7", "StyleItems"},
+		// Constants, documents, documents journals, enumerations
+		{"0195e80c-b157-11d4-9435-004095e12fc7", "Constants"},
+		{"061d872a-5787-460e-95ac-ed74ea3a3e84", "Documents"},
+		{"4612bd75-71b7-4a5c-8cc5-2b0b65f9fa0d", "DocumentJournals"},
+		{"f6a80749-5ad7-400b-8519-39dc5dff2542", "Enums"},
+		// Catalogs, reports, data processors
+		{"cf4abea6-37b2-11d4-940f-008048da11f9", "Catalogs"},
+		{"631b75a0-29e2-11d6-a3c7-0050bae0a776", "Reports"},
+		{"bf845118-327b-4682-b5c6-285d2a0eb296", "DataProcessors"},
+		// Charts of characteristic types, accounts, calculation types
+		{"82a1b659-b220-4d94-a9bd-14d757b95a48", "ChartOfCharacteristicTypes"},
+		{"238e7e88-3c5f-48b2-8a3b-81ebbecb20ed", "ChartOfAccounts"},
+		{"30b100d6-b29f-47ac-aec7-cb8ca8a54767", "ChartOfCalculationTypes"},
+		// Information registers, accumulation registers, accounting registers, calculation registers
+		{"13134201-f60b-11d5-a3c7-0050bae0a776", "InformationRegisters"},
+		{"b64d9a40-1642-11d6-a3c7-0050bae0a776", "AccumulationRegisters"},
+		{"2deed9b8-0056-4ffe-a473-c20a6c32a0bc", "AccountingRegisters"},
+		{"f2de87a8-64e5-45eb-a22d-b3aedab050e7", "CalculationRegisters"},
+		// Business processes, tasks, external data sources
+		{"fcd3404e-1523-48ce-9bc0-ecdb822684a1", "BusinessProcesses"},
+		{"3e63355c-1378-4953-be9b-1deb5fb6bec5", "Tasks"},
+		{"5274d9fc-9c3a-4a71-8f5e-a0db8ab23de5", "ExternalDataSources"}
+	};
+
+	// Split string into sections based on "--- " delimiter
+	std::istringstream stream(config_string);
+	std::string line;
+	std::string current_section;
+	std::string current_data;
+	int file_count = 0;
+
+	while (std::getline(stream, line)) {
+		if (line.find("--- ") == 0 && line.find(" ---") != std::string::npos) {
+			// Save previous section if exists
+			if (!current_section.empty() && !current_data.empty()) {
+				// Find GUIDs in current data
+				auto guids = find_guids(current_data);
+
+				// Determine metadata type based on first found GUID
+				std::string metadata_type = "Unknown";
+				for (const auto& guid : guids) {
+					auto it = guid_to_type.find(guid);
+					if (it != guid_to_type.end()) {
+						metadata_type = it->second;
+						break;
+					}
+				}
+
+				// Create subdirectory for metadata type
+				fs::path type_dir = base_dir / metadata_type;
+				if (!ensure_directory(type_dir)) {
+					cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << endl;
+					continue;
+				}
+
+				// Create filename based on section name (clean it up)
+				std::string filename = current_section;
+				// Remove illegal filename characters
+				std::replace(filename.begin(), filename.end(), '"', '_');
+				std::replace(filename.begin(), filename.end(), '/', '_');
+				std::replace(filename.begin(), filename.end(), '\\', '_');
+				std::replace(filename.begin(), filename.end(), ':', '_');
+				std::replace(filename.begin(), filename.end(), '*', '_');
+				std::replace(filename.begin(), filename.end(), '?', '_');
+				std::replace(filename.begin(), filename.end(), '<', '_');
+				std::replace(filename.begin(), filename.end(), '>', '_');
+				std::replace(filename.begin(), filename.end(), '|', '_');
+
+				// Add file extension
+				filename += ".txt";
+
+				// Save file
+				fs::path file_path = type_dir / filename;
+				std::ofstream out_file(file_path.string(), std::ios::binary);
+				if (out_file) {
+					out_file.write(current_data.c_str(), current_data.size());
+					out_file.close();
+					file_count++;
+
+					logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+				} else {
+					cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << endl;
+				}
+			}
+
+			// Start new section
+			size_t start_pos = line.find("--- ") + 4;
+			size_t end_pos = line.find(" ---");
+			if (end_pos > start_pos) {
+				current_section = line.substr(start_pos, end_pos - start_pos);
+			} else {
+				current_section = line.substr(start_pos);
+			}
+			current_data.clear();
+		} else {
+			// Add data to current section
+			if (!current_data.empty()) {
+				current_data += "\n";
+			}
+			current_data += line;
+		}
+	}
+
+	// Save the last section
+	if (!current_section.empty() && !current_data.empty()) {
+		// Find GUIDs in current data
+		auto guids = find_guids(current_data);
+
+		// Determine metadata type based on first found GUID
+		std::string metadata_type = "Unknown";
+		for (const auto& guid : guids) {
+			auto it = guid_to_type.find(guid);
+			if (it != guid_to_type.end()) {
+				metadata_type = it->second;
+				break;
+			}
+		}
+
+		// Create subdirectory for metadata type
+		fs::path type_dir = base_dir / metadata_type;
+		if (!ensure_directory(type_dir)) {
+			cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << endl;
+		} else {
+			// Create filename
+			std::string filename = current_section;
+			std::replace(filename.begin(), filename.end(), '"', '_');
+			std::replace(filename.begin(), filename.end(), '/', '_');
+			std::replace(filename.begin(), filename.end(), '\\', '_');
+			std::replace(filename.begin(), filename.end(), ':', '_');
+			std::replace(filename.begin(), filename.end(), '*', '_');
+			std::replace(filename.begin(), filename.end(), '?', '_');
+			std::replace(filename.begin(), filename.end(), '<', '_');
+			std::replace(filename.begin(), filename.end(), '>', '_');
+			std::replace(filename.begin(), filename.end(), '|', '_');
+			filename += ".txt";
+
+			// Save file
+			fs::path file_path = type_dir / filename;
+			std::ofstream out_file(file_path.string(), std::ios::binary);
+			if (out_file) {
+				out_file.write(current_data.c_str(), current_data.size());
+				out_file.close();
+				file_count++;
+
+				logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+			} else {
+				cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << endl;
+			}
+		}
+	}
+
+	logger.log("ParseToStringWithFiles completed. Saved " + std::to_string(file_count) + " files.");
+	cout << "ParseToStringWithFiles: Saved " << file_count << " files in organized structure." << endl;
+
+	return V8UNPACK_OK;
 }
 
 }
