@@ -13,7 +13,7 @@ else()
 	set(RC_FILE "")
 endif()
 
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+# Removed -D_CRT_SECURE_NO_WARNINGS to enable warnings about unsafe CRT functions
 
 set (V8UNPACK_SOURCES
 	src/main.cpp
@@ -100,6 +100,13 @@ if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
+
+# Modern security flags (Linux/Unix only, not compatible with MSVC)
+if(NOT MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror=format-security -fstack-protector-strong -fPIE")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
+endif()
+
 add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
@@ -114,12 +121,15 @@ if(WIN32)
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_MULTITHREADED ON)
     set(Boost_USE_STATIC_RUNTIME ON)
-    find_package(Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
+    find_package(Boost 1.80 REQUIRED COMPONENTS filesystem system iostreams)
 else()
     # Linux: vcpkg provides Boost automatically through toolchain
-    find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
+    find_package (Boost 1.80 REQUIRED COMPONENTS filesystem system iostreams)
 endif()
 
+
+# Find zlib with minimum version 1.2.12 for security (addresses historical CVE vulnerabilities)
+find_package(ZLIB 1.2.12 REQUIRED)
 
 include_directories (${Boost_INCLUDE_DIRS})
 include_directories (${ZLIB_INCLUDE_DIRS})
