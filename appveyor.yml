@@ -2,7 +2,7 @@
 version: 3.0.43.{build}
 image:
   - Ubuntu2004
-  - Visual Studio 2015
+  - Visual Studio 2019
 pull_requests:
   do_not_increment_build_number: true
 clone_depth: 1
@@ -10,7 +10,7 @@ for:
 -
   matrix:
     except:
-      - image: Visual Studio 2015
+      - image: Visual Studio 2019
   environment:
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     DEPLOY_PLATFORM_ID: ubuntu
@@ -46,20 +46,20 @@ for:
 -
   matrix:
     only:
-      - image: Visual Studio 2015
+      - image: Visual Studio 2019
   environment:
-    VCDIR: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\
-    BOOST_ROOT: C:\Libraries\boost_1_60_0
-    BOOST_LIBRARYDIR: C:\Libraries\boost_1_60_0\lib32-msvc-14.0
-    BOOST_INCLUDEDIR: C:\Libraries\boost_1_60_0
+    VCDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\
+    BOOST_ROOT: C:\Libraries\boost_1_75_0
+    BOOST_LIBRARYDIR: C:\Libraries\boost_1_75_0\lib32-msvc-14.2
+    BOOST_INCLUDEDIR: C:\Libraries\boost_1_75_0
     DEPLOY_PLATFORM_ID: win
   install:
   - cmd: >-
-      appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.8.zip -FileName zlib-1.2.8.zip
+      appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip
 
-      7z x zlib-1.2.8.zip > NUL
+      7z x zlib-1.2.11.zip > NUL
 
-      cd zlib-1.2.8
+      cd zlib-1.2.11
 
       md build
 
@@ -76,9 +76,9 @@ for:
       cd ..
   build_script:
   - cmd: >-
-      "%VCDIR%"\vcvarsall.bat
+      call "%VCDIR%"\vcvarsall.bat x64 || call "%VCDIR%"\vcvars32.bat
 
-      cmake -G "Visual Studio 14" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8\build\Release\zlibstatic.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.8 .
+      cmake -G "Visual Studio 16 2019" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.11\build\Release\zlibstatic.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.11 .
 
   - cmake --build . --config Release
   after_build:
