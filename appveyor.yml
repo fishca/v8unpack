@@ -41,18 +41,19 @@ for:
       draft: false
       prerelease: false
       on:
-        appveyor_repo_tag: true # Only deploy on tagged commits
+        branch: master # Deploy on master branch for testing
 
 -
   matrix:
     only:
       - image: Visual Studio 2019
   environment:
-    VCDIR: C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\
-    BOOST_ROOT: C:\Libraries\boost_1_75_0
-    BOOST_LIBRARYDIR: C:\Libraries\boost_1_75_0\lib32-msvc-14.2
-    BOOST_INCLUDEDIR: C:\Libraries\boost_1_75_0
+    VCDIR: C:\Program Files\Misc\VS\2019\BuildTools\VC\Auxiliary\Build
     DEPLOY_PLATFORM_ID: win
+  init:
+  - if not exist ..\vcpkg git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
+  - "(cd ..\vcpkg && git pull && .\bootstrap-vcpkg.bat)"
+  - for /f "tokens=*" %i in ('where vcpkg') do set VCPKG_DIR=%~dpi
   install:
   - cmd: >-
       appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip
@@ -75,12 +76,11 @@ for:
 
       cd ..
   build_script:
-  - cmd: >-
-      call "%VCDIR%"\vcvarsall.bat x64 || call "%VCDIR%"\vcvars32.bat
-
-      cmake -G "Visual Studio 16 2019" -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DZLIB_LIBRARY=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.11\build\Release\zlibstatic.lib -DZLIB_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%\zlib-1.2.11 .
-
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake" ..
   - cmake --build . --config Release
+  - cd ..
+  cache:
+  - ../vcpkg/installed
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
@@ -114,5 +114,4 @@ for:
       draft: false
       prerelease: false
       on:
-        branch: master
-        appveyor_repo_tag: true # deploy on tag push only
+        branch: master # Deploy on master branch for testing

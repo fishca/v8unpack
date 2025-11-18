@@ -108,19 +108,8 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
 
 
-# Configure Boost based on platform
-if(WIN32 AND MSVC)
-	set (Boost_USE_STATIC_LIBS ON)
-	set (Boost_USE_MULTITHREADED OFF)
-	set (Boost_USE_STATIC_RUNTIME ON)
-	find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
-else()
-	# Linux: use system shared libraries, include header-only libs
-	set (Boost_USE_STATIC_LIBS OFF)
-	set (Boost_USE_MULTITHREADED OFF)
-	set (Boost_USE_STATIC_RUNTIME OFF)
-	find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree locale)
-endif()
+# Find Boost - when using vcpkg toolchain, this is handled automatically
+find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams property_tree)
 
 
 include_directories (${Boost_INCLUDE_DIRS})
