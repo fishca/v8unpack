@@ -12,7 +12,7 @@ for:
     except:
       - image: Visual Studio 2015
   environment:
-    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree zlib
+    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     DEPLOY_PLATFORM_ID: ubuntu
   init:
   - export CXX=g++-9 CC=gcc-9
