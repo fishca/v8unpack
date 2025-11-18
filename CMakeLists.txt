@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.10)
 
 cmake_policy(SET CMP0074 NEW)
+# Suppress Boost find_package warning in newer CMake versions
+cmake_policy(SET CMP0167 OLD)
 
 project (v8unpack)
 
@@ -115,24 +117,10 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
 
 
-# Find Boost - vcpkg on Linux, system installation on Windows
-if(WIN32)
-    # Windows: Use system Boost (pre-installed by AppVeyor)
-    set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_MULTITHREADED ON)
-    set(Boost_USE_STATIC_RUNTIME ON)
-    find_package(Boost 1.80 REQUIRED COMPONENTS filesystem system iostreams)
-else()
-    # Linux: vcpkg provides Boost automatically through toolchain
-    find_package (Boost 1.80 REQUIRED COMPONENTS filesystem system iostreams)
-endif()
-
-
 # Find zlib with minimum version 1.2.12 for security (addresses historical CVE vulnerabilities)
 find_package(ZLIB 1.2.12 REQUIRED)
 
-include_directories (${Boost_INCLUDE_DIRS})
 include_directories (${ZLIB_INCLUDE_DIRS})
 include_directories (src/SystemClasses)
 
-target_link_libraries (v8unpack ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
+target_link_libraries (v8unpack boost_filesystem boost_system boost_iostreams ${ZLIB_LIBRARIES})
