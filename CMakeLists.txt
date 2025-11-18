@@ -96,20 +96,22 @@ SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
 SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
 
 
-set (Boost_USE_STATIC_LIBS ON)
-set (Boost_USE_MULTITHREADED OFF)
-set (Boost_USE_STATIC_RUNTIME ON)
+# For Linux, use shared libraries. For Windows MSVC, static libraries are configured in appveyor.yml
+if(WIN32 AND MSVC)
+	set (Boost_USE_STATIC_LIBS ON)
+	set (Boost_USE_MULTITHREADED OFF)
+	set (Boost_USE_STATIC_RUNTIME ON)
+else()
+	# Linux: use system shared libraries
+	set (Boost_USE_STATIC_LIBS OFF)
+	set (Boost_USE_MULTITHREADED OFF)
+	set (Boost_USE_STATIC_RUNTIME OFF)
+endif()
 
 find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
 
 
 include_directories (${Boost_INCLUDE_DIRS})
-
-target_link_libraries (v8unpack ${Boost_LIBRARIES})
-target_link_libraries(v8unpack PRIVATE Boost::headers)
-
-find_package (ZLIB REQUIRED)
-
 include_directories (${ZLIB_INCLUDE_DIRS})
-target_link_libraries (v8unpack ${ZLIB_LIBRARIES})
 
+target_link_libraries (v8unpack ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
