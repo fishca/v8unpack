@@ -16,9 +16,18 @@ mkdir -p build_deb/usr/share/doc/v8unpack
 # Copy executable
 cp v8unpack build_deb/usr/bin/
 
-# Copy documentation
-cp ../../LICENSE build_deb/usr/share/doc/v8unpack/
-cp ../../README.md build_deb/usr/share/doc/v8unpack/
+# Copy documentation (find files relative to the script location)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$SCRIPT_DIR/../.."
+
+# Copy documentation if files exist
+if [ -f "$PROJECT_ROOT/LICENSE" ]; then
+    cp "$PROJECT_ROOT/LICENSE" build_deb/usr/share/doc/v8unpack/
+fi
+
+if [ -f "$PROJECT_ROOT/README.md" ]; then
+    cp "$PROJECT_ROOT/README.md" build_deb/usr/share/doc/v8unpack/
+fi
 
 # Create control file
 cat > build_deb/DEBIAN/control << EOF
@@ -31,13 +40,19 @@ Description: 1C:Enterprise v8 configuration unpacker
  Supports extraction, compression, deflate and metadata parsing.
 EOF
 
-# Build the package
+# Build the package in current directory
 dpkg-deb --build build_deb "${PACKAGE_NAME}-${VERSION}.deb"
 
-# Move to parent directory
-mv "${PACKAGE_NAME}-${VERSION}.deb" ..
+# Move to parent directory if file was created
+if [ -f "${PACKAGE_NAME}-${VERSION}.deb" ]; then
+    mv "${PACKAGE_NAME}-${VERSION}.deb" ..
+    echo "Debian package ${PACKAGE_NAME}-${VERSION}.deb created successfully."
+else
+    echo "Error: Debian package was not created."
+    exit 1
+fi
 
 # Cleanup
 rm -rf build_deb
 
-echo "Debian package ${PACKAGE_NAME}-${VERSION}.deb created successfully."
+echo "Packaging completed."
