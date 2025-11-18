@@ -33,6 +33,15 @@ for:
   - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
   - path: v8unpack*.deb
+  deploy:
+    - provider: GitHub
+      auth_token:
+        secure: 4f56e4a2-5c56-4b8a-9e8b-8b2f8e4b8f9e # Replace with actual encrypted token
+      artifact: /v8unpack-.*\.deb$/
+      draft: false
+      prerelease: false
+      on:
+        appveyor_repo_tag: true # Only deploy on tagged commits
 
 -
   matrix:
@@ -97,4 +106,12 @@ for:
     name: v8unpack.nupkg
   - path: package\v8unpack-*.msi
     name: v8unpack.msi
-deploy: off
+  deploy:
+    - provider: GitHub
+      auth_token:
+        secure: 4f56e4a2-5c56-4b8a-9e8b-8b2f8e4b8f9e # Replace with actual encrypted token
+      artifact: /v8unpack-.*\.(exe|msi|nupkg)/
+      draft: false
+      prerelease: false
+      on:
+        appveyor_repo_tag: true # Only deploy on tagged commits
