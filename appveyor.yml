@@ -30,7 +30,7 @@ for:
   cache:
   - ../vcpkg/installed
   after_build:
-  - cd build && ../package/deb/builddeb.sh && mv *.deb .. && cd ..
+  - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
   - path: v8unpack*.deb
 
