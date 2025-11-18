@@ -36,7 +36,7 @@ OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJ
 			  $(OBJDIR_RELEASE)/src/logger.o $(OBJDIR_RELEASE)/src/mdCommand.o \
 			  $(OBJDIR_RELEASE)/src/mdForm.o $(OBJDIR_RELEASE)/src/mdLang.o \
 			  $(OBJDIR_RELEASE)/src/mdMoxel.o $(OBJDIR_RELEASE)/src/mdObject.o \
-			  $(OBJDIR_RELEASE)/src/messageregistration.o $(OBJDIR_RELEASE)/src/onesdata.o \
+			  $(OBJDIR_RELEASE)/src/messageregistration.o \
 			  $(OBJDIR_RELEASE)/src/parse_tree.o $(OBJDIR_RELEASE)/src/StringUtils.o \
 			  $(OBJDIR_RELEASE)/src/THashedStringList.o $(OBJDIR_RELEASE)/src/TMSTree.o \
 			  $(OBJDIR_RELEASE)/src/tree.o $(OBJDIR_RELEASE)/src/treeparser.o \
