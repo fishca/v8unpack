@@ -15,7 +15,6 @@ mdObject::mdObject(const std::string& strUUID, const std::string& FormsUUID)
 	auto root = ST.nodes(0);
 	auto child0 = (*root->children)[0];
 	auto child00 = (*child0->children)[0];
-	auto child000 = (*child00->children)[0];
 	auto child0000 = (*child00->children)[0];
 	
 	FName = child0000->caption;

@@ -46,6 +46,11 @@ int RecursiveUnpack(
 		      bool                   UnpackWhenNeed
 );
 
+template<typename format>
+int SmartUnpackToString(basic_istream<char> &file, bool NeedUnpack, std::string &result);
+
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result);
+
 CV8File::CV8File()
 {
     IsDataPacked = true;
@@ -644,6 +649,57 @@ static int recursive_unpack(const string& directory, basic_istream<char>& file, 
 }
 
 template<typename format>
+static int recursive_unpack_to_string(basic_istream<char>& file, const vector<string>& filter, bool boolInflate, std::string& result)
+{
+	int ret = V8UNPACK_OK;
+
+	typename format::file_header_t FileHeader;
+
+	ifstream::pos_type offset = format::BASE_OFFSET;
+	file.seekg(offset);
+	file.read((char*)& FileHeader, FileHeader.Size());
+
+	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
+	auto ElemsNum = pElemsAddrs.size();
+
+	for (uint32_t i = 0; i < ElemsNum; i++) {
+
+		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
+			ElemsNum = i;
+			break;
+		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
+
+		CV8Elem elem;
+
+		if (!SafeReadBlockData<format>(file, elem.header)) {
+			ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+			break;
+		}
+		string ElemName = elem.GetName();
+
+		if (!NameInFilter(ElemName, filter)) {
+			continue;
+		}
+
+		// Добавляем имя элемента в результат
+		result += "--- " + ElemName + " ---\n";
+
+		//080228 Блока данных может не быть, тогда адрес блока данных равен 0xffffffffffffffff
+		if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
+			file.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, ios_base::beg);
+			SmartUnpackToString<format>(file, boolInflate, result);
+		}
+
+		result += "\n";
+
+	} // for i = ..ElemsNum
+
+	return ret;
+}
+
+template<typename format>
 static int list_files(fs::ifstream &file)
 {
 	typename format::file_header_t FileHeader;
@@ -957,6 +1013,38 @@ int RecursiveUnpack(const string &directory, basic_istream<char> &file, const ve
 	return recursive_unpack<Format15>(directory, file, filter, boolInflate, UnpackWhenNeed);
 }
 
+template<typename format>
+int SmartUnpackToString(basic_istream<char> &file, bool NeedUnpack, std::string &result)
+{
+	auto element_data = prepare_smart_source_to_string<format>(file, NeedUnpack);
+
+	// Если элемент содержит вложенные данные V8 - распаковываем их рекурсивно в строку
+	std::istringstream element_stream(element_data);
+	auto unpack_result = RecursiveUnpackToString(element_stream, {}, NeedUnpack, result);
+	if (unpack_result != V8UNPACK_OK) {
+		// Если не удалось распаковать как V8 файл, добавляем данные как есть
+		result += element_data;
+	}
+	return V8UNPACK_OK;
+}
+
+/**
+ * @brief Рекурсивное распаковывание в строку
+ * Функция аналогична RecursiveUnpack, но собирает все данные в строку вместо файловой системы
+ */
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result)
+{
+	if (!IsV8File(file)) {
+		return V8UNPACK_NOT_V8_FILE;
+	}
+
+	if (IsV8File16(file)) {
+		return recursive_unpack_to_string<Format16>(file, filter, boolInflate, result);
+	}
+
+	return recursive_unpack_to_string<Format15>(file, filter, boolInflate, result);
+}
+
 int Parse(const string &filename_in, const string &dirname, const vector< string > &filter)
 {
     int ret = 0;
@@ -980,6 +1068,39 @@ int Parse(const string &filename_in, const string &dirname, const vector< string
     cout << "Parse `" << filename_in << "`: ok" << endl << flush;
 
 	logger.log("Окончание распаковки");
+
+    return ret;
+}
+
+/**
+ * @brief Распаковывание конфигурации 1C v8 в строку
+ * Функция аналогична Parse, но сохраняет все распакованные данные в строку вместо директория
+ * @param filename_in Входной файл V8 (cf, epf, erf)
+ * @param filter Список имен элементов для распаковки (если пустой - все элементы)
+ * @param result Выходная строка с распакованными данными
+ * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
+ */
+int ParseToString(const string &filename_in, const vector<string> &filter, std::string &result)
+{
+    int ret = 0;
+
+    fs::ifstream file_in(filename_in, ios_base::binary);
+
+	logger.log("Начало распаковки конфигурации в строку");
+
+    if (!file_in) {
+        cerr << "ParseToString. `" << filename_in << "` not found!" << endl;
+        return -1;
+    }
+
+    ret = RecursiveUnpackToString(file_in, filter, true, result);
+
+    if (ret == V8UNPACK_NOT_V8_FILE) {
+        cerr << "ParseToString. `" << filename_in << "` is not V8 file!" << endl;
+        return ret;
+    }
+
+    logger.log("Окончание распаковки в строку");
 
     return ret;
 }

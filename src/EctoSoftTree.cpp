@@ -1,8 +1,8 @@
 #include "EctoSoftTree.h"
 
-// Реализация EctoTreeList
+// Р РµР°Р»РёР·Р°С†РёСЏ EctoTreeList
 EctoTreeList::~EctoTreeList() {
-    // Очистка памяти будет выполняться в EctoTreeNode
+    // РћС‡РёСЃС‚РєР° РїР°РјСЏС‚Рё Р±СѓРґРµС‚ РІС‹РїРѕР»РЅСЏС‚СЊСЃСЏ РІ EctoTreeNode
 }
 
 EctoTreeNode* EctoTreeList::get_(size_t index) const {
@@ -75,13 +75,13 @@ EctoTreeNode*& EctoTreeList::operator[](size_t index) {
     return nodes[index];
 }
 
-// Реализация EctoTreeNode
+// Р РµР°Р»РёР·Р°С†РёСЏ EctoTreeNode
 EctoTreeNode::EctoTreeNode() : parentNode(nullptr), parentTree(nullptr), data(nullptr) {
     children = std::make_unique<EctoTreeList>();
 }
 
 EctoTreeNode::~EctoTreeNode() {
-    // Рекурсивное удаление всех дочерних узлов
+    // Р РµРєСѓСЂСЃРёРІРЅРѕРµ СѓРґР°Р»РµРЅРёРµ РІСЃРµС… РґРѕС‡РµСЂРЅРёС… СѓР·Р»РѕРІ
     for (size_t i = 0; i < children->count(); i++) {
         delete (*children)[i];
     }
@@ -103,7 +103,7 @@ int EctoTreeNode::getDescendantCount() const {
     while (current != this && current != nullptr) {
         count++;
         current = current->getPrev();
-        if (current == node) break; // Защита от бесконечного цикла
+        if (current == node) break; // Р—Р°С‰РёС‚Р° РѕС‚ Р±РµСЃРєРѕРЅРµС‡РЅРѕРіРѕ С†РёРєР»Р°
     }
     return count;
 }
@@ -206,16 +206,16 @@ EctoTreeNode* EctoTreeNode::getLastChild() const {
 }
 
 EctoTreeNode* EctoTreeNode::getNext() {
-    // Если есть дочерние узлы, следующий - первый дочерний
+    // Р•СЃР»Рё РµСЃС‚СЊ РґРѕС‡РµСЂРЅРёРµ СѓР·Р»С‹, СЃР»РµРґСѓСЋС‰РёР№ - РїРµСЂРІС‹Р№ РґРѕС‡РµСЂРЅРёР№
     if (!children->empty()) {
         return (*children)[0];
     }
 
-    // Если дочерних нет, следующий - следующий сестринский узел
+    // Р•СЃР»Рё РґРѕС‡РµСЂРЅРёС… РЅРµС‚, СЃР»РµРґСѓСЋС‰РёР№ - СЃР»РµРґСѓСЋС‰РёР№ СЃРµСЃС‚СЂРёРЅСЃРєРёР№ СѓР·РµР»
     EctoTreeNode* result = getNextSibling();
     if (result != nullptr) return result;
 
-    // Если и сестринских нет, ищем первого сестринского у родителя
+    // Р•СЃР»Рё Рё СЃРµСЃС‚СЂРёРЅСЃРєРёС… РЅРµС‚, РёС‰РµРј РїРµСЂРІРѕРіРѕ СЃРµСЃС‚СЂРёРЅСЃРєРѕРіРѕ Сѓ СЂРѕРґРёС‚РµР»СЏ
     if (!isRoot()) {
         EctoTreeNode* node = getParentNode();
         while (node != nullptr && node->getNextSibling() == nullptr && !node->isRoot()) {
@@ -312,7 +312,7 @@ void EctoTreeNode::moveRight() {
 }
 
 void EctoTreeNode::sort(std::function<int(EctoTreeNode*, EctoTreeNode*)> compare, bool sortSubtrees) {
-    // Простая пузырьковая сортировка
+    // РџСЂРѕСЃС‚Р°СЏ РїСѓР·С‹СЂСЊРєРѕРІР°СЏ СЃРѕСЂС‚РёСЂРѕРІРєР°
     for (size_t j = 0; j < children->count(); j++) {
         for (size_t i = children->count() - 1; i > j; i--) {
             if (compare((*children)[i], (*children)[i - 1]) < 0) {
@@ -326,7 +326,7 @@ void EctoTreeNode::sort(std::function<int(EctoTreeNode*, EctoTreeNode*)> compare
     }
 }
 
-// Реализация EctoSoftTree
+// Р РµР°Р»РёР·Р°С†РёСЏ EctoSoftTree
 EctoSoftTree::EctoSoftTree() : root(nullptr) {}
 
 EctoSoftTree::~EctoSoftTree() {
@@ -366,18 +366,18 @@ void EctoSoftTree::deleteNode(int index) {
 void EctoSoftTree::deleteNode(EctoTreeNode* deletingNode) {
     if (deletingNode == nullptr) return;
 
-    // Вызываем callback перед удалением, если он установлен
+    // Р’С‹Р·С‹РІР°РµРј callback РїРµСЂРµРґ СѓРґР°Р»РµРЅРёРµРј, РµСЃР»Рё РѕРЅ СѓСЃС‚Р°РЅРѕРІР»РµРЅ
     if (onFreeNodeEvent) {
         onFreeNodeEvent(deletingNode);
     }
 
     if (deletingNode->isRoot()) {
-        // Для корневого узла просто удаляем его
+        // Р”Р»СЏ РєРѕСЂРЅРµРІРѕРіРѕ СѓР·Р»Р° РїСЂРѕСЃС‚Рѕ СѓРґР°Р»СЏРµРј РµРіРѕ
         delete root;
         root = nullptr;
     }
     else {
-        // Для не-корневого узла сначала удаляем из списка детей родителя
+        // Р”Р»СЏ РЅРµ-РєРѕСЂРЅРµРІРѕРіРѕ СѓР·Р»Р° СЃРЅР°С‡Р°Р»Р° СѓРґР°Р»СЏРµРј РёР· СЃРїРёСЃРєР° РґРµС‚РµР№ СЂРѕРґРёС‚РµР»СЏ
         EctoTreeNode* parent = deletingNode->getParentNode();
         if (parent != nullptr) {
             int index = parent->children->indexOf(deletingNode);
@@ -385,7 +385,7 @@ void EctoSoftTree::deleteNode(EctoTreeNode* deletingNode) {
                 parent->children->remove(index);
             }
         }
-        // Затем удаляем сам узел
+        // Р—Р°С‚РµРј СѓРґР°Р»СЏРµРј СЃР°Рј СѓР·РµР»
         delete deletingNode;
     }
 }
@@ -429,7 +429,7 @@ EctoTreeNode* EctoSoftTree::addNode(EctoTreeNode* parentNode, void* data) {
 void EctoSoftTree::clear() {
     if (root == nullptr) return;
 
-    // Вызываем callback для всех узлов перед очисткой
+    // Р’С‹Р·С‹РІР°РµРј callback РґР»СЏ РІСЃРµС… СѓР·Р»РѕРІ РїРµСЂРµРґ РѕС‡РёСЃС‚РєРѕР№
     if (onFreeNodeEvent) {
         std::function<void(EctoTreeNode*)> traverse;
         traverse = [&](EctoTreeNode* node) {
@@ -478,10 +478,10 @@ EctoTreeNode* EctoSoftTree::getNodeFromIndex(int index) {
 
 int EctoSoftTree::getNodeCount() const {
     if (root == nullptr) return 0;
-    return root->getDescendantCount() + 1; // +1 для корня
+    return root->getDescendantCount() + 1; // +1 РґР»СЏ РєРѕСЂРЅСЏ
 }
 
-// Тесты (остаются без изменений)
+// РўРµСЃС‚С‹ (РѕСЃС‚Р°СЋС‚СЃСЏ Р±РµР· РёР·РјРµРЅРµРЅРёР№)
 class TreeTests {
 public:
     static void runAllTests() {
@@ -582,9 +582,9 @@ private:
 
         EctoSoftTree tree;
         EctoTreeNode* root = tree.addNode(nullptr, "Root");
-        EctoTreeNode* child1 = tree.addNode(root, "Child1");
+        tree.addNode(root, "Child1"); // unused in test
         EctoTreeNode* child2 = tree.addNode(root, "Child2");
-        EctoTreeNode* child3 = tree.addNode(root, "Child3");
+        tree.addNode(root, "Child3"); // unused in test
 
         // Test moveUp/moveDown
         assert(child2->index() == 1);
@@ -602,7 +602,7 @@ private:
         EctoSoftTree tree;
         EctoTreeNode* root = tree.addNode(nullptr, "Root");
         EctoTreeNode* child1 = tree.addNode(root, "Child1");
-        EctoTreeNode* child2 = tree.addNode(root, "Child2");
+        tree.addNode(root, "Child2"); // unused in test
         EctoTreeNode* grandchild = tree.addNode(child1, "Grandchild");
 
         EctoTreeNode* found = tree.findNode("Child1");
@@ -623,7 +623,7 @@ private:
         EctoSoftTree tree;
         EctoTreeNode* root = tree.addNode(nullptr, "Root");
         EctoTreeNode* child1 = tree.addNode(root, "Child1");
-        EctoTreeNode* child2 = tree.addNode(root, "Child2");
+        tree.addNode(root, "Child2"); // unused in test, just need two nodes to delete one
 
         assert(tree.nodeCount() == 3);
 
@@ -643,9 +643,9 @@ private:
 
         EctoSoftTree tree;
         EctoTreeNode* root = tree.addNode(nullptr, "Root");
-        EctoTreeNode* child3 = tree.addNode(root, "Charlie");
-        EctoTreeNode* child1 = tree.addNode(root, "Alpha");
-        EctoTreeNode* child2 = tree.addNode(root, "Bravo");
+        tree.addNode(root, "Charlie"); // will be sorted
+        tree.addNode(root, "Alpha");   // will be sorted
+        tree.addNode(root, "Bravo");   // will be sorted
 
         // Sort by caption
         auto compare = [](EctoTreeNode* a, EctoTreeNode* b) -> int {
@@ -676,15 +676,14 @@ private:
         EctoTreeNode* child1 = tree.addNode(root, "Child1");
         EctoTreeNode* child2 = tree.addNode(root, "Child2");
 
-        // Удаление узла должно вызвать callback
+        // РЈРґР°Р»РµРЅРёРµ СѓР·Р»Р° РґРѕР»Р¶РЅРѕ РІС‹Р·РІР°С‚СЊ callback
         tree.deleteNode(child1);
         assert(callbackCount == 1);
 
-        // Очистка дерева должна вызвать callback для оставшихся узлов
+        // РћС‡РёСЃС‚РєР° РґРµСЂРµРІР° РґРѕР»Р¶РЅР° РІС‹Р·РІР°С‚СЊ callback РґР»СЏ РѕСЃС‚Р°РІС€РёС…СЃСЏ СѓР·Р»РѕРІ
         tree.clear();
         assert(callbackCount == 3); // root + child2
 
         std::cout << "OnFreeNode callback test passed!" << std::endl;
     }
 };
-

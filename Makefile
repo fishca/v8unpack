@@ -13,21 +13,45 @@ WINDRES =
 
 INC = -Isrc -Isrc/SystemClasses
 CFLAGS = -Wall -std=c++14
-RESINC = 
-LIBDIR = 
+RESINC =
+LIBDIR =
 LIB = -static -lz -lboost_filesystem -lboost_system
-LDFLAGS = 
+LDFLAGS =
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O2
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
 LIBDIR_RELEASE = $(LIBDIR)
-LIB_RELEASE = $(LIB) 
+LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = obj/Release
-DEP_RELEASE = 
+DEP_RELEASE =
 OUT_RELEASE = bin/Release/v8unpack
+
+# 32-bit build configuration
+INC_RELEASE_32 = $(INC)
+CFLAGS_RELEASE_32 = $(CFLAGS) -O2 -m32
+RESINC_RELEASE_32 = $(RESINC)
+RCFLAGS_RELEASE_32 = $(RCFLAGS)
+LIBDIR_RELEASE_32 = $(LIBDIR)
+LIB_RELEASE_32 = -lz -lboost_filesystem -lboost_system
+LDFLAGS_RELEASE_32 = $(LDFLAGS) -s -m32
+OBJDIR_RELEASE_32 = obj/Release32
+DEP_RELEASE_32 =
+OUT_RELEASE_32 = bin/Release/v8unpack-x86
+
+# 64-bit build configuration (explicit)
+INC_RELEASE_64 = $(INC)
+CFLAGS_RELEASE_64 = $(CFLAGS) -O2 -m64
+RESINC_RELEASE_64 = $(RESINC)
+RCFLAGS_RELEASE_64 = $(RCFLAGS)
+LIBDIR_RELEASE_64 = $(LIBDIR)
+LIB_RELEASE_64 = $(LIB)
+LDFLAGS_RELEASE_64 = $(LDFLAGS) -s -m64
+OBJDIR_RELEASE_64 = obj/Release64
+DEP_RELEASE_64 =
+OUT_RELEASE_64 = bin/Release/v8unpack-x64
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJDIR_RELEASE)/src/utils.o \
 			  $(OBJDIR_RELEASE)/src/VersionFile.o $(OBJDIR_RELEASE)/src/placeholder216.o \
@@ -46,6 +70,42 @@ OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJ
 			  $(OBJDIR_RELEASE)/src/SystemClasses/TStream.o $(OBJDIR_RELEASE)/src/SystemClasses/TMemoryStream.o \
 			  $(OBJDIR_RELEASE)/src/SystemClasses/TFileStream.o $(OBJDIR_RELEASE)/src/SystemClasses/TStreamReader.o \
 			  $(OBJDIR_RELEASE)/src/SystemClasses/TStreamWriter.o $(OBJDIR_RELEASE)/src/SystemClasses/GetTickCount.o
+
+OBJ_RELEASE_32 = $(OBJDIR_RELEASE_32)/src/V8File.o $(OBJDIR_RELEASE_32)/src/main.o  $(OBJDIR_RELEASE_32)/src/utils.o \
+			  $(OBJDIR_RELEASE_32)/src/VersionFile.o $(OBJDIR_RELEASE_32)/src/placeholder216.o \
+			  $(OBJDIR_RELEASE_32)/src/binarydecimalnumber.o $(OBJDIR_RELEASE_32)/src/common.o \
+			  $(OBJDIR_RELEASE_32)/src/EctoSoftTree.o $(OBJDIR_RELEASE_32)/src/ExactStructureBuilder.o \
+			  $(OBJDIR_RELEASE_32)/src/logger.o $(OBJDIR_RELEASE_32)/src/mdCommand.o \
+			  $(OBJDIR_RELEASE_32)/src/mdForm.o $(OBJDIR_RELEASE_32)/src/mdLang.o \
+			  $(OBJDIR_RELEASE_32)/src/mdMoxel.o $(OBJDIR_RELEASE_32)/src/mdObject.o \
+			  $(OBJDIR_RELEASE_32)/src/messageregistration.o \
+			  $(OBJDIR_RELEASE_32)/src/parse_tree.o $(OBJDIR_RELEASE_32)/src/StringUtils.o \
+			  $(OBJDIR_RELEASE_32)/src/THashedStringList.o $(OBJDIR_RELEASE_32)/src/TMSTree.o \
+			  $(OBJDIR_RELEASE_32)/src/tree.o $(OBJDIR_RELEASE_32)/src/treeparser.o \
+			  $(OBJDIR_RELEASE_32)/src/TStringList.o \
+			  $(OBJDIR_RELEASE_32)/src/SystemClasses/String.o $(OBJDIR_RELEASE_32)/src/SystemClasses/System.Classes.o \
+			  $(OBJDIR_RELEASE_32)/src/SystemClasses/System.SysUtils.o $(OBJDIR_RELEASE_32)/src/SystemClasses/System.IOUtils.o $(OBJDIR_RELEASE_32)/src/SystemClasses/System.o \
+			  $(OBJDIR_RELEASE_32)/src/SystemClasses/TStream.o $(OBJDIR_RELEASE_32)/src/SystemClasses/TMemoryStream.o \
+			  $(OBJDIR_RELEASE_32)/src/SystemClasses/TFileStream.o $(OBJDIR_RELEASE_32)/src/SystemClasses/TStreamReader.o \
+			  $(OBJDIR_RELEASE_32)/src/SystemClasses/TStreamWriter.o $(OBJDIR_RELEASE_32)/src/SystemClasses/GetTickCount.o
+
+OBJ_RELEASE_64 = $(OBJDIR_RELEASE_64)/src/V8File.o $(OBJDIR_RELEASE_64)/src/main.o  $(OBJDIR_RELEASE_64)/src/utils.o \
+			  $(OBJDIR_RELEASE_64)/src/VersionFile.o $(OBJDIR_RELEASE_64)/src/placeholder216.o \
+			  $(OBJDIR_RELEASE_64)/src/binarydecimalnumber.o $(OBJDIR_RELEASE_64)/src/common.o \
+			  $(OBJDIR_RELEASE_64)/src/EctoSoftTree.o $(OBJDIR_RELEASE_64)/src/ExactStructureBuilder.o \
+			  $(OBJDIR_RELEASE_64)/src/logger.o $(OBJDIR_RELEASE_64)/src/mdCommand.o \
+			  $(OBJDIR_RELEASE_64)/src/mdForm.o $(OBJDIR_RELEASE_64)/src/mdLang.o \
+			  $(OBJDIR_RELEASE_64)/src/mdMoxel.o $(OBJDIR_RELEASE_64)/src/mdObject.o \
+			  $(OBJDIR_RELEASE_64)/src/messageregistration.o \
+			  $(OBJDIR_RELEASE_64)/src/parse_tree.o $(OBJDIR_RELEASE_64)/src/StringUtils.o \
+			  $(OBJDIR_RELEASE_64)/src/THashedStringList.o $(OBJDIR_RELEASE_64)/src/TMSTree.o \
+			  $(OBJDIR_RELEASE_64)/src/tree.o $(OBJDIR_RELEASE_64)/src/treeparser.o \
+			  $(OBJDIR_RELEASE_64)/src/TStringList.o \
+			  $(OBJDIR_RELEASE_64)/src/SystemClasses/String.o $(OBJDIR_RELEASE_64)/src/SystemClasses/System.Classes.o \
+			  $(OBJDIR_RELEASE_64)/src/SystemClasses/System.SysUtils.o $(OBJDIR_RELEASE_64)/src/SystemClasses/System.IOUtils.o $(OBJDIR_RELEASE_64)/src/SystemClasses/System.o \
+			  $(OBJDIR_RELEASE_64)/src/SystemClasses/TStream.o $(OBJDIR_RELEASE_64)/src/SystemClasses/TMemoryStream.o \
+			  $(OBJDIR_RELEASE_64)/src/SystemClasses/TFileStream.o $(OBJDIR_RELEASE_64)/src/SystemClasses/TStreamReader.o \
+			  $(OBJDIR_RELEASE_64)/src/SystemClasses/TStreamWriter.o $(OBJDIR_RELEASE_64)/src/SystemClasses/GetTickCount.o
 PREFIX=$(DESTDIR)/usr/bin
 BASH_COMPLETION_PREFIX=$(DESTDIR)/etc/bash_completion.d
 
@@ -100,10 +160,87 @@ $(OBJDIR_RELEASE)/src/%.o: src/%.cpp
 $(OBJDIR_RELEASE)/src/SystemClasses/%.o: src/SystemClasses/%.cpp
 	$(CXX) -D__LINUX $(CFLAGS_RELEASE) $(INC_RELEASE) -c $< -o $@
 
-clean_release: 
+# 32-bit build targets
+before_release_32: bin/Release
+	mkdir -p $(OBJDIR_RELEASE_32)/src $(OBJDIR_RELEASE_32)/src/SystemClasses
+
+after_release_32:
+
+release_32: $(OUT_RELEASE_32) after_release_32
+
+$(OUT_RELEASE_32): bin/Release $(OBJ_RELEASE_32) $(DEP_RELEASE_32)
+	$(LD) $(LIBDIR_RELEASE_32) -o $(OUT_RELEASE_32) $(OBJ_RELEASE_32) $(LDFLAGS_RELEASE_32) $(LIB_RELEASE_32)
+
+$(OBJDIR_RELEASE_32)/src/V8File.o: src/V8File.cpp src/V8File.h src/VersionFile.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c src/V8File.cpp -o $(OBJDIR_RELEASE_32)/src/V8File.o
+
+$(OBJDIR_RELEASE_32)/src/main.o: src/main.cpp src/V8File.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c src/main.cpp -o $(OBJDIR_RELEASE_32)/src/main.o
+
+$(OBJDIR_RELEASE_32)/src/utils.o: src/utils.cpp src/V8File.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c src/utils.cpp -o $(OBJDIR_RELEASE_32)/src/utils.o
+
+$(OBJDIR_RELEASE_32)/src/VersionFile.o: src/VersionFile.cpp src/VersionFile.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c src/VersionFile.cpp -o $(OBJDIR_RELEASE_32)/src/VersionFile.o
+
+$(OBJDIR_RELEASE_32)/src/placeholder216.o: src/placeholder216.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c src/placeholder216.cpp -o $(OBJDIR_RELEASE_32)/src/placeholder216.o
+
+$(OBJDIR_RELEASE_32)/src/%.o: src/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c $< -o $@
+
+$(OBJDIR_RELEASE_32)/src/SystemClasses/%.o: src/SystemClasses/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c $< -o $@
+
+# 64-bit build targets
+before_release_64: bin/Release
+	mkdir -p $(OBJDIR_RELEASE_64)/src $(OBJDIR_RELEASE_64)/src/SystemClasses
+
+after_release_64:
+
+release_64: $(OUT_RELEASE_64) after_release_64
+
+$(OUT_RELEASE_64): bin/Release $(OBJ_RELEASE_64) $(DEP_RELEASE_64)
+	$(LD) $(LIBDIR_RELEASE_64) -o $(OUT_RELEASE_64) $(OBJ_RELEASE_64) $(LDFLAGS_RELEASE_64) $(LIB_RELEASE_64)
+
+$(OBJDIR_RELEASE_64)/src/V8File.o: src/V8File.cpp src/V8File.h src/VersionFile.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c src/V8File.cpp -o $(OBJDIR_RELEASE_64)/src/V8File.o
+
+$(OBJDIR_RELEASE_64)/src/main.o: src/main.cpp src/V8File.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c src/main.cpp -o $(OBJDIR_RELEASE_64)/src/main.o
+
+$(OBJDIR_RELEASE_64)/src/utils.o: src/utils.cpp src/V8File.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c src/utils.cpp -o $(OBJDIR_RELEASE_64)/src/utils.o
+
+$(OBJDIR_RELEASE_64)/src/VersionFile.o: src/VersionFile.cpp src/VersionFile.h
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c src/VersionFile.cpp -o $(OBJDIR_RELEASE_64)/src/VersionFile.o
+
+$(OBJDIR_RELEASE_64)/src/placeholder216.o: src/placeholder216.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c src/placeholder216.cpp -o $(OBJDIR_RELEASE_64)/src/placeholder216.o
+
+$(OBJDIR_RELEASE_64)/src/%.o: src/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c $< -o $@
+
+$(OBJDIR_RELEASE_64)/src/SystemClasses/%.o: src/SystemClasses/%.cpp
+	$(CXX) -D__LINUX $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c $< -o $@
+
+# Build all architectures
+all_arch: release release_32 release_64
+
+clean_release:
 	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
 	rm -rf bin/Release
 	rm -rf $(OBJDIR_RELEASE)/src
+
+clean_release_32:
+	rm -f $(OBJ_RELEASE_32) $(OUT_RELEASE_32)
+	rm -rf $(OBJDIR_RELEASE_32)
+
+clean_release_64:
+	rm -f $(OBJ_RELEASE_64) $(OUT_RELEASE_64)
+	rm -rf $(OBJDIR_RELEASE_64)
+
+clean_all: clean_release clean_release_32 clean_release_64
 
 # Documentation generation using Doxygen
 docs:
@@ -112,4 +249,4 @@ docs:
 docs_clean:
 	rm -rf docs/doxygen
 
-.PHONY: before_release after_release clean_release install uninstall docs docs_clean
+.PHONY: before_release after_release clean_release install uninstall docs docs_clean before_release_32 after_release_32 release_32 before_release_64 after_release_64 release_64 all_arch clean_release_32 clean_release_64 clean_all

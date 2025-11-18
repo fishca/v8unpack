@@ -576,6 +576,7 @@ int usage(vector<string>& argv)
 	cout << "  -D[EFLATE] -L[IST]   listfile" << endl;
 	cout << "  -P[ARSE]             in_filename        out_dirname [block_name1 block_name2 ...]" << endl;
 	cout << "  -P[ARSE]   -L[IST]   listfile" << endl;
+	cout << "  -S[PARSESTRING]      in_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] in_dirname         out_filename" << endl;
 	cout << "  -B[UILD] [-N[OPACK]] -L[IST] listfile" << endl;
 	cout << "  -L[IST]              listfile" << endl;
@@ -594,14 +595,35 @@ int usage(vector<string>& argv)
 /**
  * @brief Показать версию программы
  *
- * Выводит номер текущей версии V8Unpack в стандартный вывод.
+ * Выводит номер текущей версии V8Unpack в стандартный вывод,
+ * включая информацию о архитектуре (32-бит или 64-бит).
  *
  * @param[in] argv Вектор аргументов командной строки (не используется)
  * @return Код возврата (всегда 0)
  */
 int version(vector<string>& argv)
 {
-	cout << V8P_VERSION << endl;
+	cout << V8P_VERSION;
+
+	// Определяем архитектуру на основе размера указателя
+#if defined(__x86_64__) || defined(_M_X64)
+	cout << " (x64)" << endl;
+#elif defined(__i386__) || defined(_M_IX86) || defined(__WORDSIZE) && __WORDSIZE == 32
+	cout << " (x32)" << endl;
+#elif defined(__WORDSIZE) && __WORDSIZE == 64
+	cout << " (x64)" << endl;
+#else
+	// Альтернативный способ определения по размеру void*
+	// Для демонстрации заменим условие: показать что было бы для 32-бит
+	if (sizeof(void*) == 8) {
+		cout << " (x64)" << endl;
+	} else if (sizeof(void*) == 4) {
+		cout << " (x32)" << endl;  // Это условие выполнится в 32-битной системе
+	} else {
+		cout << " (unk" << (sizeof(void*) * 8) << "bit) " << endl;
+	}
+#endif
+
 	return 0;
 }
 
@@ -644,6 +666,30 @@ int parse(vector<string>& argv)
 	}
 
 	return Parse(argv[0], argv[1], filter);
+}
+
+int parsetostring(vector<string>& argv)
+{
+
+	if (argv.size() < 1) {
+		return V8UNPACK_SHOW_USAGE;
+	}
+
+	vector<string> filter;
+	for (size_t i = 1; i < argv.size(); i++) {
+		if (!argv[i].empty()) {
+			filter.push_back(argv[i]);
+		}
+	}
+
+	string result;
+	int ret = ParseToString(argv[0], filter, result);
+
+	if (ret == 0) {
+		cout << result << endl;
+	}
+
+	return ret;
 }
 
 int list_files(vector<string>& argv)
@@ -770,6 +816,10 @@ handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_li
 
 	if (cur_mode == "-parse" || cur_mode == "-p") {
 		return parse;
+	}
+
+	if (cur_mode == "-parsestring" || cur_mode == "-s") {
+		return parsetostring;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {
