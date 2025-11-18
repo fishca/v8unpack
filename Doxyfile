@@ -1,0 +1,173 @@
+# Doxyfile configuration for V8Unpack project
+
+# Project information
+PROJECT_NAME           = V8Unpack
+PROJECT_NUMBER         = 3.0
+PROJECT_BRIEF          = "Утилита для распаковки и упаковки файлов конфигураций 1C:Предприятие v8"
+PROJECT_LOGO           =
+OUTPUT_DIRECTORY       = docs/doxygen
+CREATE_SUBDIRS         = NO
+
+# Output format
+OUTPUT_LANGUAGE        = Russian
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+ABBREVIATE_BRIEF       = "The $name class" \
+                         "The $name widget" \
+                         "The $name file" \
+                         is \
+                         provides \
+                         specifies \
+                         contains \
+                         represents \
+                         a \
+                         an \
+                         the
+ALWAYS_DETAILED_SEC    = NO
+INLINE_INHERITED_MEMB  = NO
+FULL_PATH_NAMES        = YES
+STRIP_FROM_PATH       = $(PROJECT_SOURCE_DIR)/src
+STRIP_FROM_INC_PATH   = $(PROJECT_SOURCE_DIR)/src
+
+# Input files
+INPUT                  = src/main.cpp \
+                         src/V8File.cpp \
+                         src/V8File.h \
+                         src/APIcfBase.cpp \
+                         src/APIcfBase.h \
+                         src/common.cpp \
+                         src/common.h \
+                         src/tree.cpp \
+                         src/tree.h \
+                         src/ExactStructureBuilder.cpp \
+                         src/ExactStructureBuilder.hpp \
+                         src/treeparser.hpp
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.cpp *.hpp *.h
+RECURSIVE              = YES
+EXCLUDE                = src/SystemClasses/utf8
+EXCLUDE_PATTERNS       = */test/* \
+                         */build/* \
+                         */.git/*
+
+# Source browsing
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = NO
+REFERENCED_BY_RELATION = YES
+REFERENCES_RELATION    = YES
+REFERENCES_LINK_SOURCE = YES
+
+# External references
+TAGFILES               =
+GENERATE_TAGFILE       =
+
+# HTML output
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+HTML_FILE_EXTENSION    = .html
+HTML_HEADER            =
+HTML_FOOTER            =
+HTML_STYLESHEET        =
+HTML_TIMESTAMP         = YES
+HTML_DYNAMIC_SECTIONS  = NO
+GENERATE_DOCSET        = NO
+DOCSET_FEEDNAME        = "V8Unpack API Documentation"
+DOCSET_BUNDLE_ID       = org.doxygen.V8Unpack
+DOCSET_PUBLISHER_ID    = org.doxygen.Publisher
+DOCSET_PUBLISHER_NAME  = Publisher
+
+# LaTeX output
+GENERATE_LATEX         = NO
+LATEX_OUTPUT           = latex
+LATEX_CMD_NAME         = latex
+MAKEINDEX_CMD_NAME     = makeindex
+COMPACT_LATEX          = NO
+
+# man page output
+GENERATE_MAN           = NO
+MAN_OUTPUT             = man
+
+# RTF output
+GENERATE_RTF           = NO
+RTF_OUTPUT             = rtf
+
+# XML output
+GENERATE_XML           = NO
+
+# Compilation database
+GENERATE_QHP           = NO
+
+# Perl module output
+GENERATE_PERLMOD       = NO
+
+# Preprocessor options
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+EXPAND_ONLY_PREDEF     = NO
+SEARCH_INCLUDES        = YES
+INCLUDE_PATH           = src
+INCLUDE_FILE_PATTERNS  =
+PREDEFINED             = DOXYGEN_DOCS
+EXPAND_AS_DEFINED      =
+
+# External tools
+CLASS_DIAGRAMS         = YES
+MSCGEN_PATH            =
+DIA_PATH               =
+HIDE_UNDOC_RELATIONS   = YES
+HAVE_DOT               = YES
+DOT_NUM_THREADS        = 0
+DOT_FONTNAME           = Helvetica
+DOT_FONTSIZE           = 10
+DOT_FONTPATH           =
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+GROUP_GRAPHS           = YES
+UML_LOOK               = NO
+UML_LIMIT_NUM_FIELDS   = 10
+TEMPLATE_RELATIONS     = NO
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+GRAPHICAL_HIERARCHY    = YES
+DIRECTORY_GRAPH        = YES
+DOT_IMAGE_FORMAT       = png
+INTERACTIVE_SVG        = NO
+DOT_PATH               =
+DOTFILE_DIRS           =
+MSCFILE_DIRS           =
+DIAFILE_DIRS           =
+PLANTUML_JAR_PATH      =
+
+# Messages
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+WARN_FORMAT            = "$file:$line: $text"
+WARN_LOGFILE           =
+
+# Documentation style
+AUTOLINK_SUPPORT       = YES
+SIP_SUPPORT            = NO
+IDL_PROPERTY_SUPPORT   = YES
+DISTRIBUTE_GROUP_DOC   = NO
+GROUP_NESTED_COMPOUNDS = NO
+SUBGROUPING            = YES
+INLINE_GROUPED_CLASSES = NO
+INLINE_SIMPLE_STRUCTS  = NO
+TYPEDEF_HIDES_STRUCT   = NO
+LOOKUP_CACHE_SIZE      = 0
+
+# Alphabetical index
+ALPHABETICAL_INDEX     = YES
+COLS_IN_ALPHA_INDEX    = 5
+IGNORE_PREFIX          =
+
+# HTML customization
+HTML_COLORSTYLE_HUE    = 220
+HTML_COLORSTYLE_SAT    = 100
+HTML_COLORSTYLE_GAMMA  = 80

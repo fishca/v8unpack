@@ -105,5 +105,11 @@ clean_release:
 	rm -rf bin/Release
 	rm -rf $(OBJDIR_RELEASE)/src
 
-.PHONY: before_release after_release clean_release install uninstall
+# Documentation generation using Doxygen
+docs:
+	doxygen Doxyfile
 
+docs_clean:
+	rm -rf docs/doxygen
+
+.PHONY: before_release after_release clean_release install uninstall docs docs_clean
