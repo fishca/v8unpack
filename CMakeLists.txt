@@ -13,7 +13,12 @@ else()
 	set(RC_FILE "")
 endif()
 
-# Removed -D_CRT_SECURE_NO_WARNINGS to enable warnings about unsafe CRT functions
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+# Linux-specific definition
+if(UNIX)
+	add_definitions(-D__LINUX)
+endif()
 
 set (V8UNPACK_SOURCES
 	src/main.cpp
@@ -39,8 +44,6 @@ set (V8UNPACK_SOURCES
 	src/utils.cpp
 	src/V8File.cpp
 	src/VersionFile.cpp
-	src/V8MetaParser.cpp
-	src/ConfigStructureParser.cpp
 	# SystemClasses files
 	src/SystemClasses/String.cpp
 	src/SystemClasses/System.Classes.cpp
@@ -54,7 +57,7 @@ set (V8UNPACK_SOURCES
 	src/SystemClasses/TStreamWriter.cpp
 	src/SystemClasses/GetTickCount.cpp
 	)
-set (V8UNPACK_HEADERS 
+set (V8UNPACK_HEADERS
 	src/binarydecimalnumber.h
 	src/common.h
 	src/EctoSoftTree.h
@@ -73,15 +76,11 @@ set (V8UNPACK_HEADERS
 	src/TMSTree.h
 	src/tree.h
 	src/TStringList.h
-	src/utils.cpp
 	src/V8File.h
 	src/version.h
 	src/VersionFile.h
-	src/zconf.h
-	src/zlib.h
 	src/ExactStructureBuilder.hpp
 	src/treeparser.hpp
-	src/ConfigStructureParser.h
 	)
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
@@ -103,25 +102,31 @@ if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
-
-# Modern security flags (Linux/Unix only, not compatible with MSVC)
-if(NOT MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror=format-security -fstack-protector-strong -fPIE")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pie")
-endif()
-
 add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 add_definitions (-DBOOST_ALL_NO_LIB)
 
-SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
-SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+# Include directories for source files
+include_directories (src src/SystemClasses)
 
+# Windows-specific Boost paths (only if needed)
+if(WIN32)
+	SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
+	SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
+endif()
 
-# Find zlib with minimum version 1.2.12 for security (addresses historical CVE vulnerabilities)
-find_package(ZLIB 1.2.12 REQUIRED)
+set (Boost_USE_STATIC_LIBS OFF)
+set (Boost_USE_MULTITHREADED OFF)
+set (Boost_USE_STATIC_RUNTIME OFF)
+
+find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
+
+include_directories (${Boost_INCLUDE_DIRS})
+
+target_link_libraries (v8unpack ${Boost_LIBRARIES})
+
+find_package (ZLIB REQUIRED)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
-include_directories (src/SystemClasses)
+target_link_libraries (v8unpack ${ZLIB_LIBRARIES})
 
-target_link_libraries (v8unpack boost_filesystem boost_system boost_iostreams ${ZLIB_LIBRARIES})
