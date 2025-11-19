@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.10)
 
+# Настройка политик CMake
 cmake_policy(SET CMP0074 NEW)
+cmake_policy(SET CMP0167 NEW)
 
 project (v8unpack)
 
@@ -109,15 +111,18 @@ add_definitions (-DBOOST_ALL_NO_LIB)
 # Include directories for source files
 include_directories (src src/SystemClasses)
 
-# Windows-specific Boost paths (only if needed)
-if(WIN32)
-	SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "C:/Libraries/boost_1_60_0")
-	SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "C:/Libraries/boost_1_60_0/lib32-msvc-15.0")
-endif()
-
+# Улучшенные настройки поиска Boost
 set (Boost_USE_STATIC_LIBS OFF)
-set (Boost_USE_MULTITHREADED OFF)
+set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME OFF)
+
+# Дополнительные пути для поиска Boost в Windows
+if(WIN32)
+	# Поиск в стандартных местах установки Boost
+	find_library(BOOST_FILESYSTEM_LIBRARY NAMES boost_filesystem boost_filesystem-mt)
+	find_library(BOOST_SYSTEM_LIBRARY NAMES boost_system boost_system-mt)
+	find_library(BOOST_IOSTREAMS_LIBRARY NAMES boost_iostreams boost_iostreams-mt)
+endif()
 
 find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
 
@@ -128,5 +133,3 @@ target_link_libraries (v8unpack ${Boost_LIBRARIES})
 find_package (ZLIB REQUIRED)
 
 include_directories (${ZLIB_INCLUDE_DIRS})
-target_link_libraries (v8unpack ${ZLIB_LIBRARIES})
-
