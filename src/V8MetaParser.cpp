@@ -73,7 +73,7 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
         {"d26096fb-7a5d-4df9-af63-47d04771fa9b", "WS_ссылки"},
         // Styles, languages, interfaces
         {"3e5404af-6ef8-4c73-ad11-91bd2dfac4c8", "Стили"},
-        {"9cd510ce-abfc-11d4-9434-004095e12fc7", "Языки"},
+        {"9cd510cd-abfc-11d4-9434-004095e12fc7", "Языки"},
         {"39bddf6a-0c3c-452b-921c-d99cfa1c2f1b", "Интерфейсы"},
         // Roles, session parameters, exchange plans, filter criteria, event subscriptions, scheduled jobs, functional options
         {"09736b02-9cac-4e3f-b4f7-d3e9576ab948", "Роли"},

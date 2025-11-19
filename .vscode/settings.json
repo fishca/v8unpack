@@ -12,6 +12,7 @@
         "algorithm": "cpp",
         "unordered_set": "cpp",
         "string": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "vector": "cpp"
     }
 }

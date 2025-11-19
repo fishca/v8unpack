@@ -1464,17 +1464,126 @@ stBlockHeader64 stBlockHeader64::create(uint64_t  block_data_size, uint64_t  pag
 	return BlockHeader;
 }
 
-// Stub implementations for missing functions used by main.cpp
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result);
+
 int ParseToString(const string &filename_in, const vector<string> &filter, std::string &result)
 {
-    result = "ParseToString stub implementation";
-    return V8UNPACK_OK;
+    result.clear();
+
+    fs::ifstream file_in(filename_in, ios_base::binary);
+
+    logger.log("Начало ParseToString для конфигурации");
+
+    if (!file_in) {
+        cerr << "ParseToString. `" << filename_in << "` not found!" << endl;
+        return -1;
+    }
+
+    if (!IsV8File(file_in)) {
+        cerr << "ParseToString. `" << filename_in << "` is not V8 file!" << endl;
+        return V8UNPACK_NOT_V8_FILE;
+    }
+
+    // Use RecursiveUnpackToString function instead of RecursiveUnpack
+    int ret = RecursiveUnpackToString(file_in, filter, true, result);
+
+    if (ret == V8UNPACK_NOT_V8_FILE) {
+        cerr << "ParseToString. `" << filename_in << "` is not V8 file!" << endl;
+        return ret;
+    }
+
+    cout << "ParseToString `" << filename_in << "`: ok" << endl << flush;
+
+    logger.log("Окончание ParseToString");
+
+    return ret;
+}
+
+template<typename format>
+static int recursive_unpack_to_string(basic_istream<char>& file, const vector<string>& filter, bool boolInflate, std::string &result)
+{
+	int ret = 0;
+
+	typename format::file_header_t FileHeader;
+
+	ifstream::pos_type offset = format::BASE_OFFSET;
+	file.seekg(offset);
+	file.read((char*)& FileHeader, FileHeader.Size());
+
+	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
+	auto ElemsNum = pElemsAddrs.size();
+
+	logger.log("RecursiveUnpackToString. Найдено " + std::to_string(ElemsNum) + " файлов");
+
+	for (uint32_t i = 0; i < ElemsNum; i++) {
+
+		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
+			ElemsNum = i;
+			break;
+		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
+
+		CV8Elem elem;
+
+		if (!SafeReadBlockData<format>(file, elem.header)) {
+			ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+			break;
+		}
+		string ElemName = elem.GetName();
+
+		logger.log("RecursiveUnpackToString. Обрабатывается файл " + ElemName);
+
+		if (!NameInFilter(ElemName, filter)) {
+			continue;
+		}
+
+		// Add section delimiter
+		result += "--- ";
+		result += ElemName;
+		result += " ---\n";
+
+		//080228 Блока данных может не быть, тогда адрес блока данных равен 0xffffffffffffffff
+		if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
+			file.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, ios_base::beg);
+
+			typename format::block_header_t header;
+			file.read((char*)&header, header.Size());
+			auto data_size = header.data_size();
+
+			vector<char> source_data;
+			ReadBlockData<format>(file, header, source_data);
+
+			// Try to inflate if needed
+			if (boolInflate && data_size < SmartLimit) {
+				vector<char> inflated_data = source_data;
+				if (try_inflate(inflated_data)) {
+					source_data = inflated_data;
+				}
+			}
+
+			// Add data to result
+			result.append(source_data.begin(), source_data.end());
+			result += "\n";
+		}
+
+	} // for i = ..ElemsNum
+
+	return ret;
 }
 
 int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result)
 {
-    result = "RecursiveUnpackToString stub implementation";
-    return V8UNPACK_OK;
+	if (!IsV8File(file)) {
+		return V8UNPACK_NOT_V8_FILE;
+	}
+
+	if (IsV8File16(file)) {
+		logger.log("Обнаружен формат файла 8.3.16 для ParseToString");
+		return recursive_unpack_to_string<Format16>(file, filter, boolInflate, result);
+	}
+
+	return recursive_unpack_to_string<Format15>(file, filter, boolInflate, result);
 }
 
-}
+} // namespace v8unpack
