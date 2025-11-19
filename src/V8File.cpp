@@ -23,9 +23,10 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/iostreams/stream.hpp>
 #include <utility>
 extern Logger logger;
-extern Logger logger;
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
+#include <codecvt>
+#include <locale>
 
 namespace v8unpack {
 
@@ -999,16 +1000,10 @@ int Parse_Test(const string& filename_in, const string& dirname, const vector< s
 }
 
 std::wstring string_to_wstring(const std::string& str) {
-	
-	if (str.empty()) return L"";
+    if (str.empty()) return L"";
 
-	int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), nullptr, 0);
-	
-	std::wstring wstr(size_needed, 0);
-	
-	MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
-	
-	return wstr;
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
 }
 
 
@@ -1069,10 +1064,7 @@ String getDataFromFile1C(const string& filename_in, const string& FileName)
 	fs::ifstream file_in(filename_in, ios_base::binary);
 
 	return GetDataFromFile1C(file_in, FileName);
-
 }
-return "";
-return "";
 
 wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, const string& DataDir = "1")
 {
@@ -1470,6 +1462,19 @@ stBlockHeader64 stBlockHeader64::create(uint64_t  block_data_size, uint64_t  pag
 	BlockHeader.set_page_size(page_size);
 	BlockHeader.set_next_page_addr(next_page_addr);
 	return BlockHeader;
+}
+
+// Stub implementations for missing functions used by main.cpp
+int ParseToString(const string &filename_in, const vector<string> &filter, std::string &result)
+{
+    result = "ParseToString stub implementation";
+    return V8UNPACK_OK;
+}
+
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result)
+{
+    result = "RecursiveUnpackToString stub implementation";
+    return V8UNPACK_OK;
 }
 
 }

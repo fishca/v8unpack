@@ -60,31 +60,120 @@ CFLAGS="-Wall -std=c++14 -O2 -D__LINUX -I. -Isrc -Isrc/SystemClasses"
 LDFLAGS="-static"
 LIBS="-lz -lboost_filesystem -lboost_system"
 
-echo "  [1/5] Компиляция V8File.cpp (оптимизированный)..."
-g++ $CFLAGS -c src/V8File.cpp -o obj/Release/src/V8File.o 2>&1 | grep -i "error" || true
+echo "  Компиляция всех исходных файлов..."
 
-echo "  [2/5] Компиляция utils.cpp (оптимизированный)..."
-g++ $CFLAGS -c src/utils.cpp -o obj/Release/src/utils.o 2>&1 | grep -i "error" || true
+# Создание директорий для объектных файлов
+mkdir -p obj/Release/src/SystemClasses
 
-echo "  [3/5] Компиляция main.cpp..."
-g++ $CFLAGS -c src/main.cpp -o obj/Release/src/main.o 2>&1 | grep -i "error" || true
+# Компиляция всех .cpp файлов
+cpp_files=(
+    "src/APIcfBase.cpp"
+    "src/EctoSoftTree.cpp"
+    "src/ExactStructureBuilder.cpp"
+    "src/NodeTypes.cpp"
+    "src/StringUtils.cpp"
+    "src/SystemClasses/GetTickCount.cpp"
+    "src/SystemClasses/String.cpp"
+    "src/SystemClasses/System.Classes.cpp"
+    "src/SystemClasses/System.IOUtils.cpp"
+    "src/SystemClasses/System.SysUtils.cpp"
+    "src/SystemClasses/System.cpp"
+    "src/SystemClasses/TFileStream.cpp"
+    "src/SystemClasses/TMemoryStream.cpp"
+    "src/SystemClasses/TStream.cpp"
+    "src/SystemClasses/TStreamReader.cpp"
+    "src/SystemClasses/TStreamWriter.cpp"
+    "src/THashedStringList.cpp"
+    "src/TMSTree.cpp"
+    "src/TStringList.cpp"
+    "src/V8File.cpp"
+    "src/V8MetaParser.cpp"
+    "src/VersionFile.cpp"
+    "src/binarydecimalnumber.cpp"
+    "src/common.cpp"
+    "src/logger.cpp"
+    "src/main.cpp"
+    "src/mdCommand.cpp"
+    "src/mdForm.cpp"
+    "src/mdLang.cpp"
+    "src/mdMoxel.cpp"
+    "src/mdObject.cpp"
+    "src/messageregistration.cpp"
+    "src/parse_tree.cpp"
+    "src/placeholder216.cpp"
+    "src/tree.cpp"
+    "src/treeparser.cpp"
+    "src/utils.cpp"
+)
 
-echo "  [4/5] Компиляция VersionFile.cpp..."
-g++ $CFLAGS -c src/VersionFile.cpp -o obj/Release/src/VersionFile.o 2>&1 | grep -i "error" || true
-
-echo "  [5/5] Компиляция placeholder216.cpp..."
-g++ $CFLAGS -c src/placeholder216.cpp -o obj/Release/src/placeholder216.o 2>&1 | grep -i "error" || true
+total_files=${#cpp_files[@]}
+for i in "${!cpp_files[@]}"; do
+    file="${cpp_files[$i]}"
+    obj_file="obj/Release/${file%.cpp}.o"
+    mkdir -p "$(dirname "$obj_file")"
+    echo "  [$((i+1))/$total_files] Компиляция $(basename "$file")..."
+    if ! g++ $CFLAGS -c "$file" -o "$obj_file" 2>&1; then
+        echo "Ошибка компиляции $file"
+        exit 1
+    fi
+done
 
 # Линковка
 echo ""
 echo "Линковка исполняемого файла..."
-g++ $LDFLAGS -o bin/Release/v8unpack \
-    obj/Release/src/V8File.o \
-    obj/Release/src/main.o \
-    obj/Release/src/utils.o \
-    obj/Release/src/VersionFile.o \
-    obj/Release/src/placeholder216.o \
-    $LIBS 2>&1 | grep -i "error" || true
+
+# Список всех объектных файлов
+obj_files=(
+    "obj/Release/src/APIcfBase.o"
+    "obj/Release/src/EctoSoftTree.o"
+    "obj/Release/src/ExactStructureBuilder.o"
+    "obj/Release/src/NodeTypes.o"
+    "obj/Release/src/StringUtils.o"
+    "obj/Release/src/SystemClasses/GetTickCount.o"
+    "obj/Release/src/SystemClasses/String.o"
+    "obj/Release/src/SystemClasses/System.Classes.o"
+    "obj/Release/src/SystemClasses/System.IOUtils.o"
+    "obj/Release/src/SystemClasses/System.SysUtils.o"
+    "obj/Release/src/SystemClasses/System.o"
+    "obj/Release/src/SystemClasses/TFileStream.o"
+    "obj/Release/src/SystemClasses/TMemoryStream.o"
+    "obj/Release/src/SystemClasses/TStream.o"
+    "obj/Release/src/SystemClasses/TStreamReader.o"
+    "obj/Release/src/SystemClasses/TStreamWriter.o"
+    "obj/Release/src/THashedStringList.o"
+    "obj/Release/src/TMSTree.o"
+    "obj/Release/src/TStringList.o"
+    "obj/Release/src/V8File.o"
+    "obj/Release/src/V8MetaParser.o"
+    "obj/Release/src/VersionFile.o"
+    "obj/Release/src/binarydecimalnumber.o"
+    "obj/Release/src/common.o"
+    "obj/Release/src/logger.o"
+    "obj/Release/src/main.o"
+    "obj/Release/src/mdCommand.o"
+    "obj/Release/src/mdForm.o"
+    "obj/Release/src/mdLang.o"
+    "obj/Release/src/mdMoxel.o"
+    "obj/Release/src/mdObject.o"
+    "obj/Release/src/messageregistration.o"
+    "obj/Release/src/parse_tree.o"
+    "obj/Release/src/placeholder216.o"
+    "obj/Release/src/tree.o"
+    "obj/Release/src/treeparser.o"
+    "obj/Release/src/utils.o"
+)
+
+linking_command="g++ $LDFLAGS -o bin/Release/v8unpack"
+for obj in "${obj_files[@]}"; do
+    linking_command="$linking_command $obj"
+done
+linking_command="$linking_command $LIBS"
+
+echo "Команда линковки: $linking_command"
+if ! eval "$linking_command" 2>&1; then
+    echo "Ошибка линковки!"
+    exit 1
+fi
 
 # Проверка результата
 if [ -f bin/Release/v8unpack ]; then

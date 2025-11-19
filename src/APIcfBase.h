@@ -1,9 +1,18 @@
 #pragma once
 
+#ifdef __linux__
+#include <stdint.h>
+#endif
+
 //---------------------------------------------------------------------------
 struct v8header_struct {
+#ifdef _WIN32
 	__int64 time_create;
 	__int64 time_modify;
+#else
+	int64_t time_create;
+	int64_t time_modify;
+#endif
 	int zero;
 };
 
@@ -11,15 +20,15 @@ struct v8header_struct {
 struct fat_item {
 	int header_start;
 	int data_start;
-	int ff; // всегда 7fffffff
+	int ff; // РІСЃРµРіРґР° 7fffffff
 };
 
 //---------------------------------------------------------------------------
 struct catalog_header {
-	int start_empty; // начало первого пустого блока
-	int page_size; // размер страницы по умолчанию
-	int version; // версия
-	int zero; // всегда ноль?
+	int start_empty; // РЅР°С‡Р°Р»Рѕ РїРµСЂРІРѕРіРѕ РїСѓСЃС‚РѕРіРѕ Р±Р»РѕРєР°
+	int page_size; // СЂР°Р·РјРµСЂ СЃС‚СЂР°РЅРёС†С‹ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+	int version; // РІРµСЂСЃРёСЏ
+	int zero; // РІСЃРµРіРґР° РЅРѕР»СЊ?
 };
 
 //---------------------------------------------------------------------------
