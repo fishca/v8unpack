@@ -408,17 +408,7 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
         }
     }
 
-    // Ensure version file exists (create empty if not found)
-    fs::path version_file = config_dir / "version";
-    logger.log("Creating version file: " + version_file.string());
-    std::ofstream ver_file(version_file.string(), std::ios::binary);
-    if (ver_file) {
-        ver_file.close();
-        file_count++;
-        logger.log("Created empty version file: " + version_file.string());
-    } else {
-        logger.log("Failed to create version file");
-    }
+
 
     logger.log("ParseToStringWithFiles completed. Saved " + std::to_string(file_count) + " files.");
     cout << "ParseToStringWithFiles: Saved " << file_count << " files in organized structure by metadata types." << endl;
