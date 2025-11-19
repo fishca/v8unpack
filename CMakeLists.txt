@@ -40,6 +40,7 @@ set (V8UNPACK_SOURCES
 	src/V8File.cpp
 	src/VersionFile.cpp
 	src/V8MetaParser.cpp
+	src/ConfigStructureParser.cpp
 	# SystemClasses files
 	src/SystemClasses/String.cpp
 	src/SystemClasses/System.Classes.cpp
@@ -76,10 +77,11 @@ set (V8UNPACK_HEADERS
 	src/V8File.h
 	src/version.h
 	src/VersionFile.h
-	src/zconf.h 
-	src/zlib.h 
+	src/zconf.h
+	src/zlib.h
 	src/ExactStructureBuilder.hpp
 	src/treeparser.hpp
+	src/ConfigStructureParser.h
 	)
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))

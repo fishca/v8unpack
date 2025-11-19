@@ -15,6 +15,7 @@
         "fstream": "cpp",
         "vector": "cpp",
         "ostream": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "cstdlib": "cpp"
     }
 }

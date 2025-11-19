@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.10)
+project(ConfigParserTest)
+
+set(CMAKE_CXX_STANDARD 14)
+
+# Add include directories
+include_directories(src)
+include_directories(src/SystemClasses)
+
+# Test executable
+add_executable(test_parser
+    src/ConfigStructureParser.cpp
+    src/ConfigStructureParser.h
+    src/parse_tree.cpp
+    src/tree.cpp
+    src/logger.cpp
+    src/test_parser_demo.cpp
+    src/SystemClasses/String.cpp
+    src/SystemClasses/System.Classes.cpp
+    src/SystemClasses/System.SysUtils.cpp
+    src/SystemClasses/System.IOUtils.cpp
+    src/SystemClasses/System.cpp
+    src/SystemClasses/TStream.cpp
+    src/SystemClasses/TMemoryStream.cpp
+    src/SystemClasses/TFileStream.cpp
+    src/SystemClasses/TStreamReader.cpp
+    src/SystemClasses/TStreamWriter.cpp
+    src/SystemClasses/GetTickCount.cpp
+)
+
+# Find boost and zlib
+find_package(Boost REQUIRED COMPONENTS filesystem system iostreams)
+find_package(ZLIB REQUIRED)
+
+include_directories(${ZLIB_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS})
+
+target_link_libraries(test_parser
+    ${Boost_LIBRARIES}
+    ${ZLIB_LIBRARIES}
+)
