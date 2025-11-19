@@ -145,7 +145,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                     // Save configuration files directly
                     std::string filename = current_section;
                     if (filename.find("root") != std::string::npos) filename = "root";
-                    filename += ".txt";
 
                     fs::path file_path = config_dir / filename;
                     std::ofstream out_file(file_path.string(), std::ios::binary);
@@ -255,11 +254,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 std::replace(filename.begin(), filename.end(), '}', '_');
 
                 // Add file extension
-                if (filename != current_section) { // If we cleaned something
-                    filename += ".txt";
-                } else {
-                    filename += ".txt";
-                }
 
                 // Create subdirectory path for this object
                 fs::path sub_dir = type_dir / current_section;
@@ -335,7 +329,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
             // Save configuration files directly
             std::string filename = current_section;
             if (filename.find("root") != std::string::npos) filename = "root";
-            filename += ".txt";
 
             fs::path file_path = config_dir / filename;
             std::ofstream out_file(file_path.string(), std::ios::binary);
@@ -396,7 +389,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 std::replace(filename.begin(), filename.end(), '|', '_');
                 std::replace(filename.begin(), filename.end(), '{', '_');
                 std::replace(filename.begin(), filename.end(), '}', '_');
-                filename += ".txt";
 
                 fs::path file_path = type_dir / filename;
                 std::ofstream out_file(file_path.string(), std::ios::binary);
