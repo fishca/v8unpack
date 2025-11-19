@@ -165,7 +165,7 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                     }
 
                     // Analyze metadata file to find object type mappings
-                    if (current_section == "metadata" && !config_guid.empty()) {
+                    if (current_section == config_guid && !config_guid.empty()) {
                         std::smatch match;
                         auto search_start = current_data.cbegin();
                         while (std::regex_search(search_start, current_data.cend(), match, metadata_section_regex)) {

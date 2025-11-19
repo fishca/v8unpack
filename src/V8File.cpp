@@ -398,8 +398,8 @@ void CV8File::Dispose()
 	Elems.clear();
 }
 
-// Нѣкоторый условный предѣл
-const size_t SmartLimit = 00 *1024;
+// Условный предел - распаковка всегда для -parse
+const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
 const size_t SmartUnpackedLimit = 20 *1024*1024;
 
 /*
@@ -1555,7 +1555,7 @@ static int recursive_unpack_to_string(basic_istream<char>& file, const vector<st
 			ReadBlockData<format>(file, header, source_data);
 
 			// Try to inflate if needed
-			if (boolInflate && data_size < SmartLimit) {
+			if (boolInflate) {
 				vector<char> inflated_data = source_data;
 				if (try_inflate(inflated_data)) {
 					source_data = inflated_data;
