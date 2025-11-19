@@ -2,9 +2,7 @@ cmake_minimum_required (VERSION 3.10)
 
 # Настройка политик CMake
 cmake_policy(SET CMP0074 NEW)
-if(POLICY CMP0167)
-    cmake_policy(SET CMP0167 NEW)
-endif()
+cmake_policy(SET CMP0167 NEW)
 
 project (v8unpack)
 
@@ -117,42 +115,6 @@ include_directories (src src/SystemClasses)
 set (Boost_USE_STATIC_LIBS OFF)
 set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME OFF)
-
-# Автоматическое определение путей vcpkg для Windows
-if(WIN32)
-    # Поиск установленного vcpkg
-    if(DEFINED ENV{VCPKG_ROOT})
-        set(VCPKG_ROOT $ENV{VCPKG_ROOT})
-        message(STATUS "Using VCPKG_ROOT from environment: ${VCPKG_ROOT}")
-    elseif(DEFINED ENV{VCPKG_ROOT_DIR})
-        set(VCPKG_ROOT $ENV{VCPKG_ROOT_DIR})
-        message(STATUS "Using VCPKG_ROOT_DIR from environment: ${VCPKG_ROOT}")
-    else()
-        # Поиск vcpkg в стандартных местах
-        find_path(VCPKG_ROOT patterns/names.txt PATHS
-            "$ENV{USERPROFILE}/vcpkg"
-            "C:/vcpkg"
-            "D:/vcpkg"
-            "E:/vcpkg"
-            PATH_SUFFIXES installed/x64-windows installed/x86-windows
-            DOC "Path to vcpkg installation"
-        )
-        if(VCPKG_ROOT)
-            message(STATUS "Found vcpkg at: ${VCPKG_ROOT}")
-        endif()
-    endif()
-    
-    # Добавление путей vcpkg в поиск
-    if(VCPKG_ROOT)
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows/share")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows/share")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows")
-    endif()
-    
-    # Альтернативные пути для Boost
-    list(APPEND CMAKE_PREFIX_PATH "C:/boost" "C:/Boost" "C:/local/boost" "C:/Libraries/boost_1_75_0" "C:/Libraries/boost_1_70_0" "C:/Libraries/boost_1_65_1")
-endif()
 
 # Дополнительные пути для поиска Boost в Windows
 if(WIN32)
