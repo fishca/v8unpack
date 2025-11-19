@@ -19,27 +19,21 @@ at http://mozilla.org/MPL/2.0/.
 #include "SystemClasses/String.hpp"
 #include <iostream>
 #include <sstream>
-#include <unordered_set>
-#include <locale>
-#include <codecvt>
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <utility>
+extern Logger logger;
 #include <memory>
-#include <regex>
-#include <unordered_map>
-#include <boost/filesystem.hpp>
-#ifdef _WIN32
-#include <Windows.h>
-#endif
 #include <boost/filesystem/fstream.hpp>
+#include <codecvt>
+#include <locale>
 
 namespace v8unpack {
 
 using namespace std;
 namespace fs = boost::filesystem;
 
-Logger logger("Debug\\app.log");
+Logger logger("Debug_app.log");
 
 int RecursiveUnpack(
 		const string                &directory,
@@ -404,8 +398,8 @@ void CV8File::Dispose()
 	Elems.clear();
 }
 
-// Нѣкоторый условный предѣл
-const size_t SmartLimit = 00 *1024;
+// Условный предел - распаковка всегда для -parse
+const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
 const size_t SmartUnpackedLimit = 20 *1024*1024;
 
 /*
@@ -494,7 +488,7 @@ prepare_smart_source(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_
 		ReadBlockData<format>(file, header, source_data);
 		try_inflate(source_data);
 
-		return unique_ptr<data_source_t>(new vector_data_source_t(source_data));
+		return make_unique<vector_data_source_t>(source_data);
 	}
 
 	auto tmp_path = elem_path.parent_path() / ".v8unpack.tmp";
@@ -505,10 +499,10 @@ prepare_smart_source(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_
 		try_inflate(tmp_path, inf_path);
 		fs::remove(tmp_path);
 
-		return unique_ptr<data_source_t>(new temp_file_data_source_t(inf_path));
+		return make_unique<temp_file_data_source_t>(inf_path);
 	}
 
-	return unique_ptr<data_source_t>(new temp_file_data_source_t(tmp_path));
+	return make_unique<temp_file_data_source_t>(tmp_path);
 }
 
 template<typename format>
@@ -1005,113 +999,15 @@ int Parse_Test(const string& filename_in, const string& dirname, const vector< s
 	return ret;
 }
 
-/**
- * @brief Парсинг конфигурации 1C v8 и возврат результата в строку
- * Аналогично Parse, но возвращает результат в виде строки
- * @param filename_in Входной файл конфигурации
- * @param filter Фильтр блоков для распаковки (пустой = все блоки)
- * @param result Выходная строка с результатом парсинга
- * @return Код возврата (0 = успех, отрицательные значения = ошибки)
- */
-int ParseToString(const string &filename_in, const vector<string> &filter, string &result)
-{
-    int ret = 0;
+std::wstring string_to_wstring(const std::string& str) {
+    if (str.empty()) return L"";
 
-    fs::ifstream file_in(filename_in, ios_base::binary);
-
-    logger.log("Начало ParseToString конфигурации: " + filename_in);
-
-    if (!file_in) {
-        logger.log("ParseToString: Ошибка открытия файла: " + filename_in);
-        return -1;
-    }
-
-    if (!IsV8File(file_in)) {
-        logger.log("ParseToString: " + filename_in + " не является файлом V8");
-        return V8UNPACK_NOT_V8_FILE;
-    }
-
-    result.clear();
-
-    if (!IsV8File16(file_in)) {
-        // Для Format15 возвращаем пустую строку или сообщение об ошибке
-        logger.log("ParseToString: Формат файла не поддерживается (Format15)");
-        return V8UNPACK_NOT_V8_FILE;
-    }
-
-    // Перематываем файл обратно к началу
-    file_in.clear();
-    file_in.seekg(0, ios_base::beg);
-
-    typedef Format16 format;
-    typename format::file_header_t FileHeader;
-    ifstream::pos_type offset = format::BASE_OFFSET;
-    file_in.seekg(offset);
-    file_in.read((char*)&FileHeader, FileHeader.Size());
-
-    auto pElemsAddrs = ReadElementsAllocationTable<format>(file_in);
-    auto ElemsNum = pElemsAddrs.size();
-
-    logger.log("ParseToString: Найдено " + std::to_string(ElemsNum) + " блоков");
-
-    for (uint32_t i = 0; i < ElemsNum; i++) {
-        if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
-            ElemsNum = i;
-            break;
-        }
-
-        file_in.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
-
-        CV8Elem elem;
-        if (!SafeReadBlockData<format>(file_in, elem.header)) {
-            logger.log("ParseToString: Ошибка чтения заголовка элемента " + std::to_string(i));
-            ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
-            break;
-        }
-
-        string ElemName = elem.GetName();
-
-        // Проверяем фильтр
-        if (!NameInFilter(ElemName, filter)) {
-            continue;
-        }
-
-        logger.log("ParseToString: Обрабатываем элемент: " + ElemName);
-
-        // Добавляем разделитель и имя элемента
-        result += "--- " + ElemName + " ---";
-        result += "\n";
-
-        // Читаем данные, если они есть
-        if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
-            file_in.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, ios_base::beg);
-
-            // Создаем временный поток для чтения данных
-            stringstream data_stream;
-            ReadBlockData<format>(file_in, data_stream);
-
-            // Декодируем данные если необходимо
-            stringstream inflated_stream;
-            if (try_inflate(data_stream, inflated_stream)) {
-                string data_str;
-                inflated_stream.seekg(0);
-                getline(inflated_stream, data_str, '\0');
-                result += data_str;
-            } else {
-                // Если декодирование не удалось, используем сырые данные
-                result += data_stream.str();
-            }
-        }
-
-        result += "\n";
-    }
-
-    logger.log("ParseToString: Завершена обработка файла " + filename_in);
-
-    return ret;
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+    return converter.from_bytes(str);
 }
 
 
+// std::wstring (UTF-16) -> std::string (UTF-8)
 
 String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 {
@@ -1158,7 +1054,7 @@ String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 		}
 	}
 
-	return "";
+	
 }
 
 
@@ -1168,7 +1064,6 @@ String getDataFromFile1C(const string& filename_in, const string& FileName)
 	fs::ifstream file_in(filename_in, ios_base::binary);
 
 	return GetDataFromFile1C(file_in, FileName);
-
 }
 
 wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, const string& DataDir = "1")
@@ -1207,14 +1102,13 @@ wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, co
 			if (pElemsAddrs[i].elem_data_addr != Format16::UNDEFINED_VALUE) {
 				file.seekg(pElemsAddrs[i].elem_data_addr + Format16::BASE_OFFSET, ios_base::beg);
 				auto Result = prepare_smart_source_to_string<Format16>(file, true);
-				// Note: Windows-specific function removed for cross-platform compatibility
-				return L"";
+				return string_to_wstring(Result);
 			}
 
 		}
 	}
 
-	return L"";
+
 }
 
 
@@ -1570,395 +1464,126 @@ stBlockHeader64 stBlockHeader64::create(uint64_t  block_data_size, uint64_t  pag
 	return BlockHeader;
 }
 
-/**
- * @brief Helper function to find GUIDs in text
- * @param text Text to search for GUIDs
- * @return Vector of found GUIDs
- */
-std::vector<std::string> find_guids(const std::string& text) {
-	std::vector<std::string> guids;
-	// Регулярное выражение для поиска GUID
-	std::regex guid_pattern(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result);
 
-	std::sregex_iterator it(text.begin(), text.end(), guid_pattern);
-	std::sregex_iterator end;
+int ParseToString(const string &filename_in, const vector<string> &filter, std::string &result)
+{
+    result.clear();
 
-	while (it != end) {
-		guids.push_back(it->str());
-		++it;
-	}
+    fs::ifstream file_in(filename_in, ios_base::binary);
 
-	return guids;
+    logger.log("Начало ParseToString для конфигурации");
+
+    if (!file_in) {
+        cerr << "ParseToString. `" << filename_in << "` not found!" << endl;
+        return -1;
+    }
+
+    if (!IsV8File(file_in)) {
+        cerr << "ParseToString. `" << filename_in << "` is not V8 file!" << endl;
+        return V8UNPACK_NOT_V8_FILE;
+    }
+
+    // Use RecursiveUnpackToString function instead of RecursiveUnpack
+    int ret = RecursiveUnpackToString(file_in, filter, true, result);
+
+    if (ret == V8UNPACK_NOT_V8_FILE) {
+        cerr << "ParseToString. `" << filename_in << "` is not V8 file!" << endl;
+        return ret;
+    }
+
+    cout << "ParseToString `" << filename_in << "`: ok" << endl << flush;
+
+    logger.log("Окончание ParseToString");
+
+    return ret;
 }
 
-/**
- * @brief Helper function to extract object name from 1C file content
- * @param content File content to parse
- * @param expected_guid Expected GUID to find the matching name
- * @return Object name or empty string if not found
- */
-std::string extract_object_name(const std::string& content, const std::string& expected_guid) {
-	// Pattern: GUID},"Name"
-	// For example: 36b34b4a-30fc-40f3-be9d-59e7d39f8e95},"Справочник1",
-	std::string pattern_str = expected_guid + "\\},\"([^\"]+)\",";
-	std::regex name_pattern(pattern_str);
+template<typename format>
+static int recursive_unpack_to_string(basic_istream<char>& file, const vector<string>& filter, bool boolInflate, std::string &result)
+{
+	int ret = 0;
 
-	std::smatch match;
-	if (std::regex_search(content, match, name_pattern)) {
-		if (match.size() > 1) {
-			return match[1].str();
+	typename format::file_header_t FileHeader;
+
+	ifstream::pos_type offset = format::BASE_OFFSET;
+	file.seekg(offset);
+	file.read((char*)& FileHeader, FileHeader.Size());
+
+	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
+	auto ElemsNum = pElemsAddrs.size();
+
+	logger.log("RecursiveUnpackToString. Найдено " + std::to_string(ElemsNum) + " файлов");
+
+	for (uint32_t i = 0; i < ElemsNum; i++) {
+
+		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
+			ElemsNum = i;
+			break;
 		}
+
+		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, ios_base::beg);
+
+		CV8Elem elem;
+
+		if (!SafeReadBlockData<format>(file, elem.header)) {
+			ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+			break;
+		}
+		string ElemName = elem.GetName();
+
+		logger.log("RecursiveUnpackToString. Обрабатывается файл " + ElemName);
+
+		if (!NameInFilter(ElemName, filter)) {
+			continue;
+		}
+
+		// Add section delimiter
+		result += "--- ";
+		result += ElemName;
+		result += " ---\n";
+
+		//080228 Блока данных может не быть, тогда адрес блока данных равен 0xffffffffffffffff
+		if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
+			file.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, ios_base::beg);
+
+			typename format::block_header_t header;
+			file.read((char*)&header, header.Size());
+			auto data_size = header.data_size();
+
+			vector<char> source_data;
+			ReadBlockData<format>(file, header, source_data);
+
+			// Try to inflate if needed
+			if (boolInflate) {
+				vector<char> inflated_data = source_data;
+				if (try_inflate(inflated_data)) {
+					source_data = inflated_data;
+				}
+			}
+
+			// Add data to result
+			result.append(source_data.begin(), source_data.end());
+			result += "\n";
+		}
+
+	} // for i = ..ElemsNum
+
+	return ret;
+}
+
+int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &filter, bool boolInflate, std::string &result)
+{
+	if (!IsV8File(file)) {
+		return V8UNPACK_NOT_V8_FILE;
 	}
-	return "";
-}
 
-/**
- * @brief Helper function to create directory if it doesn't exist
- * @param path Path to create
- * @return true if successful
- */
-bool ensure_directory(const fs::path& path) {
-	if (!fs::exists(path)) {
-		return fs::create_directories(path);
+	if (IsV8File16(file)) {
+		logger.log("Обнаружен формат файла 8.3.16 для ParseToString");
+		return recursive_unpack_to_string<Format16>(file, filter, boolInflate, result);
 	}
-	return true;
+
+	return recursive_unpack_to_string<Format15>(file, filter, boolInflate, result);
 }
 
-/**
- * @brief Распаковывание конфигурации 1C v8 в организованную файловую структуру по GUID метаданных
- * Функция анализирует результаты ParseToString и сохраняет данные в поддиректории по типам метаданных
- * @param config_string Входная строка с распакованными данными от ParseToString
- * @param dirname Каталог для сохранения файлов
- * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
- */
-int ParseToStringWithFiles(const std::string &config_string, const std::string &dirname) {
-    // Create base directory
-    fs::path base_dir(dirname);
-    if (!ensure_directory(base_dir)) {
-        std::cerr << "ParseToStringWithFiles: Failed to create base directory: " << dirname << std::endl;
-        return V8UNPACK_ERROR_CREATING_OUTPUT_FILE;
-    }
-
-    // Create "Конфигурация" directory for configuration files
-    fs::path config_dir = base_dir / "Конфигурация";
-    if (!ensure_directory(config_dir)) {
-        std::cerr << "ParseToStringWithFiles: Failed to create configuration directory: " << config_dir.string() << std::endl;
-        return V8UNPACK_ERROR_CREATING_OUTPUT_FILE;
-    }
-
-    // Metadata type mapping based on root GUID (из main.cpp)
-    std::unordered_map<std::string, std::string> guid_to_type = {
-        {"37f2fa9a-b276-11d4-9435-004095e12fc7", "Подсистемы"},           // Roli
-        {"0fe48980-252d-11d6-a3c7-0050bae0a776", "Общие_модули"},         // CommonModules
-        {"15794563-ccec-41f6-a83c-ec5f7b9a5bc1", "Общие_реквизиты"},     // CommonAttributes
-        {"07ee8426-87f1-11d5-b99c-0050bae0a95d", "Общие_формы"},          // CommonForms
-        {"0c89c792-16c3-11d5-b96b-0050bae0a95d", "Общие_макеты"},         // CommonTemplates
-        {"2f1a5187-fb0e-4b05-9489-dc5dd6412348", "Общие_команды"},        // CommonCommands
-        {"7dcd43d9-aca5-4926-b549-1842e6a4e8cf", "Общие_картинки"},       // CommonPictures
-        {"cc9df798-7c94-4616-97d2-7aa0b7bc515e", "XDTO_пакеты"},          // XDTOPackages
-        {"8657032e-7740-4e1d-a3ba-5dd6e8afb78f", "Web_сервисы"},          // WebServices
-        {"0fffc09c-8f4c-47cc-b41c-8d5c5a221d79", "HTTP_сервисы"},         // HTTPServices
-        {"d26096fb-7a5d-4df9-af63-47d04771fa9b", "WS_ссылки"},            // WSReferences
-        {"3e5404af-6ef8-4c73-ad11-91bd2dfac4c8", "Стили"},                 // Styles
-        {"9cd510ce-abfc-11d4-9434-004095e12fc7", "Языки"},                // Languages
-        {"39bddf6a-0c3c-452b-921c-d99cfa1c2f1b", "Интерфейсы"},           // Interfaces
-        {"09736b02-9cac-4e3f-b4f7-d3e9576ab948", "Роли"},                 // Roles
-        {"24c43748-c938-45d0-8d14-01424a72b11e", "Параметры_сеанса"},     // SessionParameters
-        {"857c4a91-e5f4-4fac-86ec-787626f1c108", "Планы_обмена"},         // ExchangePlans
-        {"3e7bfcc0-067d-11d6-a3c7-0050bae0a776", "Критерии_отбора"},      // FilterCriteria
-        {"4e828da6-0f44-4b5b-b1c0-a2b3cfe7bdcc", "Подписки_на_события"}, // EventSubscriptions
-        {"11bdaf85-d5ad-4d91-bb24-aa0eee139052", "Регламентные_задания"}, // ScheduledJobs
-        {"af547940-3268-434f-a3e7-e47d6d2638c3", "Функциональные_опции"}, // FunctionalOptions
-        {"c045099e-13b9-4fb6-9d50-fca00202971e", "Определяемые_типы"},    // DefinedTypes
-        {"46b4cd97-fd13-4eaa-aba2-3bddd7699218", "Хранилища_настроек"},   // SettingsStorages
-        {"1c57eabe-7349-44b3-b1de-ebfeab67b47d", "Группы_команд"},        // CommandGroups
-        {"58848766-36ea-4076-8800-e91eb49590d7", "Элементы_стиля"},       // StyleItems
-        {"0195e80c-b157-11d4-9435-004095e12fc7", "Константы"},            // Constants
-        {"061d872a-5787-460e-95ac-ed74ea3a3e84", "Документы"},            // Documents
-        {"4612bd75-71b7-4a5c-8cc5-2b0b65f9fa0d", "Журналы_документов"},   // DocumentJournals
-        {"f6a80749-5ad7-400b-8519-39dc5dff2542", "Перечисления"},         // Enums
-        {"cf4abea6-37b2-11d4-940f-008048da11f9", "Справочники"},          // Catalogs
-        {"631b75a0-29e2-11d6-a3c7-0050bae0a776", "Отчеты"},               // Reports
-        {"bf845118-327b-4682-b5c6-285d2a0eb296", "Обработки"},            // DataProcessors
-        {"82a1b659-b220-4d94-a9bd-14d757b95a48", "Планы_видов_характеристик"}, // ChartsOfCharacteristicTypes
-        {"238e7e88-3c5f-48b2-8a3b-81ebbecb20ed", "Планы_счетов"},         // ChartsOfAccounts
-        {"30b100d6-b29f-47ac-aec7-cb8ca8a54767", "Планы_видов_расчета"}, // ChartsOfCalculationTypes
-        {"13134201-f60b-11d5-a3c7-0050bae0a776", "Регистры_сведений"},    // InformationRegisters
-        {"b64d9a40-1642-11d6-a3c7-0050bae0a776", "Регистры_накопления"},  // AccumulationRegisters
-        {"2deed9b8-0056-4ffe-a473-c20a6c32a0bc", "Регистры_бухгалтерии"}, // AccountingRegisters
-        {"f2de87a8-64e5-45eb-a22d-b3aedab050e7", "Регистры_расчета"},     // CalculationRegisters
-        {"fcd3404e-1523-48ce-9bc0-ecdb822684a1", "Бизнес_процессы"},     // BusinessProcesses
-        {"3e63355c-1378-4953-be9b-1deb5fb6bec5", "Задачи"},               // Tasks
-        {"5274d9fc-9c3a-4a71-8f5e-a0db8ab23de5", "Внешние_источники_данных"} // ExternalDataSources
-    };
-
-    // Map to store object GUID to type mapping
-    std::unordered_map<std::string, std::string> object_guid_to_type;
-
-    // Parse metadata first to build object type mappings
-    std::istringstream metadata_stream(config_string);
-    std::string line;
-    std::string current_section;
-    std::string current_data;
-    bool found_metadata = false;
-
-    // First pass: find metadata and build object mappings
-    while (std::getline(metadata_stream, line)) {
-        if (line.find("--- ") == 0 && line.find(" ---") != std::string::npos) {
-            // Process previous section
-            if (current_section == "metadata" && !current_data.empty()) {
-                found_metadata = true;
-                // Parse metadata to build object mappings
-                std::regex metadata_pattern(R"(\{([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}),(\d+),([^\}]*)\})");
-                std::smatch match;
-                std::string::const_iterator search_start(current_data.cbegin());
-
-                while (std::regex_search(search_start, current_data.cend(), match, metadata_pattern)) {
-                    std::string root_guid = match[1].str();
-                    std::transform(root_guid.begin(), root_guid.end(), root_guid.begin(), ::tolower);
-
-                    auto type_it = guid_to_type.find(root_guid);
-                    if (type_it != guid_to_type.end()) {
-                        std::string objects_str = match[3].str();
-                        // Extract object GUIDs
-                        std::regex guid_regex(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-                        std::sregex_iterator guid_it(objects_str.begin(), objects_str.end(), guid_regex);
-                        std::sregex_iterator guid_end;
-
-                        for (; guid_it != guid_end; ++guid_it) {
-                            std::string obj_guid = guid_it->str();
-                            std::transform(obj_guid.begin(), obj_guid.end(), obj_guid.begin(), ::tolower);
-                            object_guid_to_type[obj_guid] = type_it->second;
-                            logger.log("Mapped object " + obj_guid + " to type " + type_it->second);
-                        }
-                    }
-                    search_start = match.suffix().first;
-                }
-            }
-
-            // Start new section
-            size_t start_pos = line.find("--- ") + 4;
-            size_t end_pos = line.find(" ---");
-            current_section = (end_pos > start_pos) ? line.substr(start_pos, end_pos - start_pos) : line.substr(start_pos);
-            current_data.clear();
-        } else {
-            if (!current_data.empty()) current_data += "\n";
-            current_data += line;
-        }
-    }
-
-    // Second pass: save files by type
-    std::istringstream content_stream(config_string);
-    int file_count = 0;
-    current_section.clear();
-    current_data.clear();
-
-    while (std::getline(content_stream, line)) {
-        if (line.find("--- ") == 0 && line.find(" ---") != std::string::npos) {
-            // Process previous section
-            if (!current_section.empty() && !current_data.empty()) {
-                std::string metadata_type = "Неизвестные_объекты";
-                fs::path target_dir = base_dir;  // Default target directory
-
-                // Determine type based on object GUID in section name or content
-                std::string section_name = current_section;
-                std::transform(section_name.begin(), section_name.end(), section_name.begin(), ::tolower);
-
-                // Check if this is a configuration file (root, version, versions, metadata)
-                bool is_config_file = (current_section.find("root") != std::string::npos ||
-                                     current_section == "version" ||
-                                     current_section == "versions" ||
-                                     current_section == "metadata");
-
-                // Also check if this is the main configuration object (contains "Конфигурация" in content)
-                if (!is_config_file && current_data.find("Конфигурация") != std::string::npos) {
-                    is_config_file = true;
-                }
-
-                if (is_config_file) {
-                    metadata_type = "Конфигурация";
-                    target_dir = config_dir;  // Use configuration directory for config files
-                } else {
-                    // Check if section name is a GUID
-                    std::regex guid_pattern(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-                    if (std::regex_match(section_name, guid_pattern)) {
-                        // Look up object GUID
-                        auto type_it = object_guid_to_type.find(section_name);
-                        if (type_it != object_guid_to_type.end()) {
-                            metadata_type = type_it->second;
-                        }
-                    }
-
-                    if (metadata_type == "Неизвестные_объекты") {
-                        // Direct GUID to type mappings based on provided configuration
-                        std::string section_name = current_section;
-                        std::transform(section_name.begin(), section_name.end(), section_name.begin(), ::tolower);
-
-                        std::unordered_map<std::string, std::string> direct_guid_mappings = {
-                            {"36b34b4a-30fc-40f3-be9d-59e7d39f8e95", "Справочники"},
-                            {"154c4235-35f5-42c3-a0d5-07b9ea861f14", "Языки"}
-                        };
-
-                        auto direct_it = direct_guid_mappings.find(section_name);
-                        if (direct_it != direct_guid_mappings.end()) {
-                            metadata_type = direct_it->second;
-                        } else {
-                            // Fallback: search for root GUIDs in content
-                            auto guids_in_content = find_guids(current_data);
-                            for (const auto& guid : guids_in_content) {
-                                std::string lower_guid = guid;
-                                std::transform(lower_guid.begin(), lower_guid.end(), lower_guid.begin(), ::tolower);
-                                auto type_it = guid_to_type.find(lower_guid);
-                                if (type_it != guid_to_type.end()) {
-                                    metadata_type = type_it->second;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    // Create type directory only for non-config files
-                    target_dir = base_dir / metadata_type;
-                }
-
-                if (!ensure_directory(target_dir)) {
-                    std::cerr << "Failed to create type directory: " << target_dir.string() << std::endl;
-                    continue;
-                }
-
-                // Для типов объектов с именами (Справочники, Языки и др.) создаем второй уровень вложенности
-                if (metadata_type == "Справочники" || metadata_type == "Языки") {
-                    std::string object_name = extract_object_name(current_data, current_section);
-                    if (!object_name.empty()) {
-                        logger.log("Extracted object name: " + object_name + " for GUID: " + current_section);
-                        target_dir = target_dir / object_name;
-                        if (!ensure_directory(target_dir)) {
-                            std::cerr << "Failed to create object directory: " << target_dir.string() << std::endl;
-                            continue;
-                        }
-                    }
-                }
-
-                // Clean filename
-                std::string filename = current_section;
-                std::replace(filename.begin(), filename.end(), '"', '_');
-                std::replace(filename.begin(), filename.end(), '/', '_');
-                std::replace(filename.begin(), filename.end(), '\\', '_');
-                std::replace(filename.begin(), filename.end(), ':', '_');
-                std::replace(filename.begin(), filename.end(), '*', '_');
-                std::replace(filename.begin(), filename.end(), '?', '_');
-                std::replace(filename.begin(), filename.end(), '<', '_');
-                std::replace(filename.begin(), filename.end(), '>', '_');
-                std::replace(filename.begin(), filename.end(), '|', '_');
-                std::replace(filename.begin(), filename.end(), '{', '_');
-                std::replace(filename.begin(), filename.end(), '}', '_');
-
-                // For versions file, remove .txt extension properly
-                if (filename == "versions.txt") {
-                    filename = "versions";
-                }
-
-                // Save file
-                fs::path file_path = target_dir / filename;
-                std::ofstream out_file(file_path.string(), std::ios::binary);
-                if (out_file) {
-                    out_file.write(current_data.c_str(), current_data.size());
-                    out_file.close();
-                    file_count++;
-                    logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
-                } else {
-                    std::cerr << "Failed to create file: " << file_path.string() << std::endl;
-                }
-            }
-
-            // Start new section
-            size_t start_pos = line.find("--- ") + 4;
-            size_t end_pos = line.find(" ---");
-            current_section = (end_pos > start_pos) ? line.substr(start_pos, end_pos - start_pos) : line.substr(start_pos);
-            current_data.clear();
-        } else {
-            // Add data to current section
-            if (!current_data.empty()) current_data += "\n";
-            current_data += line;
-        }
-    }
-
-    // Process the last section
-    if (!current_section.empty() && !current_data.empty()) {
-        std::string metadata_type = "Неизвестные_объекты";
-        fs::path target_dir = base_dir;  // Default target directory
-
-        // Check if this is a configuration file (root, version, versions, metadata)
-        bool is_config_file = (current_section.find("root") != std::string::npos ||
-                             current_section == "version" ||
-                             current_section == "versions" ||
-                             current_section == "metadata");
-
-        if (is_config_file) {
-            metadata_type = "Конфигурация";
-            target_dir = config_dir;  // Use configuration directory for config files
-        } else {
-            // Check if section name is a GUID
-            std::string section_name = current_section;
-            std::transform(section_name.begin(), section_name.end(), section_name.begin(), ::tolower);
-            std::regex guid_pattern(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-            if (std::regex_match(section_name, guid_pattern)) {
-                auto type_it = object_guid_to_type.find(section_name);
-                if (type_it != object_guid_to_type.end()) {
-                    metadata_type = type_it->second;
-                }
-            }
-
-            if (metadata_type == "Неизвестные_объекты") {
-                // Fallback: search for root GUIDs in content
-                auto guids_in_content = find_guids(current_data);
-                for (const auto& guid : guids_in_content) {
-                    std::string lower_guid = guid;
-                    std::transform(lower_guid.begin(), lower_guid.end(), lower_guid.begin(), ::tolower);
-                    auto type_it = guid_to_type.find(lower_guid);
-                    if (type_it != guid_to_type.end()) {
-                        metadata_type = type_it->second;
-                        break;
-                    }
-                }
-            }
-
-            // Create type directory only for non-config files
-            target_dir = base_dir / metadata_type;
-        }
-
-        if (!ensure_directory(target_dir)) {
-            std::cerr << "Failed to create directory: " << target_dir.string() << std::endl;
-        } else {
-            std::string filename = current_section;
-            std::replace(filename.begin(), filename.end(), '"', '_');
-            std::replace(filename.begin(), filename.end(), '/', '_');
-            std::replace(filename.begin(), filename.end(), '\\', '_');
-            std::replace(filename.begin(), filename.end(), ':', '_');
-            std::replace(filename.begin(), filename.end(), '*', '_');
-            std::replace(filename.begin(), filename.end(), '?', '_');
-            std::replace(filename.begin(), filename.end(), '<', '_');
-            std::replace(filename.begin(), filename.end(), '>', '_');
-            std::replace(filename.begin(), filename.end(), '|', '_');
-            std::replace(filename.begin(), filename.end(), '{', '_');
-            std::replace(filename.begin(), filename.end(), '}', '_');
-            filename += ".txt";
-
-            fs::path file_path = target_dir / filename;
-            std::ofstream out_file(file_path.string(), std::ios::binary);
-            if (out_file) {
-                out_file.write(current_data.c_str(), current_data.size());
-                out_file.close();
-                file_count++;
-                logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
-            }
-        }
-    }
-
-    logger.log("ParseToStringWithFiles completed. Saved " + std::to_string(file_count) + " files.");
-    std::cout << "ParseToStringWithFiles: Saved " << file_count << " files in organized structure by metadata types." << std::endl;
-
-    return V8UNPACK_OK;
-}
-
-}
+} // namespace v8unpack
