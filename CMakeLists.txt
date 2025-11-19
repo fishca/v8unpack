@@ -113,54 +113,74 @@ add_definitions (-DBOOST_ALL_NO_LIB)
 # Include directories for source files
 include_directories (src src/SystemClasses)
 
-# Улучшенные настройки поиска Boost
+# Windows-specific Boost paths (only if needed)
+if(WIN32)
+	# Проверка переменных окружения Boost
+	if(DEFINED ENV{BOOST_ROOT})
+		set(BOOST_ROOT $ENV{BOOST_ROOT})
+		message(STATUS "Using BOOST_ROOT from environment: ${BOOST_ROOT}")
+		list(APPEND CMAKE_PREFIX_PATH ${BOOST_ROOT})
+	endif()
+	if(DEFINED ENV{BOOST_LIBRARYDIR})
+		set(BOOST_LIBRARYDIR $ENV{BOOST_LIBRARYDIR})
+		message(STATUS "Using BOOST_LIBRARYDIR from environment: ${BOOST_LIBRARYDIR}")
+		list(APPEND CMAKE_LIBRARY_PATH ${BOOST_LIBRARYDIR})
+	endif()
+	if(DEFINED ENV{BOOST_INCLUDEDIR})
+		set(BOOST_INCLUDEDIR $ENV{BOOST_INCLUDEDIR})
+		message(STATUS "Using BOOST_INCLUDEDIR from environment: ${BOOST_INCLUDEDIR}")
+		list(APPEND CMAKE_INCLUDE_PATH ${BOOST_INCLUDEDIR})
+	endif()
+
+	# Автоматическое определение путей vcpkg для Windows
+	if(DEFINED ENV{VCPKG_ROOT})
+		set(VCPKG_ROOT $ENV{VCPKG_ROOT})
+		message(STATUS "Using VCPKG_ROOT from environment: ${VCPKG_ROOT}")
+	elseif(DEFINED ENV{VCPKG_ROOT_DIR})
+		set(VCPKG_ROOT $ENV{VCPKG_ROOT_DIR})
+		message(STATUS "Using VCPKG_ROOT_DIR from environment: ${VCPKG_ROOT}")
+	else()
+		# Поиск vcpkg в стандартных местах
+		find_path(VCPKG_ROOT patterns/names.txt PATHS
+			"$ENV{USERPROFILE}/vcpkg"
+			"C:/vcpkg"
+			"D:/vcpkg"
+			"E:/vcpkg"
+			PATH_SUFFIXES installed/x64-windows installed/x86-windows
+			DOC "Path to vcpkg installation"
+		)
+		if(VCPKG_ROOT)
+			message(STATUS "Found vcpkg at: ${VCPKG_ROOT}")
+		endif()
+	endif()
+	
+	# Добавление путей vcpkg в поиск
+	if(VCPKG_ROOT)
+		list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows/share")
+		list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows/share")
+		list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows")
+		list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows")
+		
+		# Добавление модулей CMake в путь поиска
+		list(APPEND CMAKE_MODULE_PATH "${VCPKG_ROOT}/installed/x64-windows/share/cmake")
+		list(APPEND CMAKE_MODULE_PATH "${VCPKG_ROOT}/installed/x86-windows/share/cmake")
+		list(APPEND CMAKE_MODULE_PATH "${VCPKG_ROOT}/installed/x64-windows/lib/cmake/boost")
+		list(APPEND CMAKE_MODULE_PATH "${VCPKG_ROOT}/installed/x86-windows/lib/cmake/boost")
+	endif()
+	
+	# Альтернативные пути для модулей CMake
+	list(APPEND CMAKE_MODULE_PATH "C:/boost/lib/cmake" "C:/Boost/lib/cmake" "C:/local/boost/lib/cmake")
+	
+	# Дополнительные пути для стандартного FindBoost модуля
+	list(APPEND CMAKE_MODULE_PATH "C:/Program Files/CMake/share/cmake-3.28/Modules" "C:/Program Files/CMake/share/cmake-3.27/Modules" "C:/Program Files/CMake/share/cmake-3.26/Modules")
+	
+	# Альтернативные пути для Boost
+	list(APPEND CMAKE_PREFIX_PATH "C:/boost" "C:/Boost" "C:/local/boost" "C:/Libraries/boost_1_75_0" "C:/Libraries/boost_1_70_0" "C:/Libraries/boost_1_65_1")
+endif()
+
 set (Boost_USE_STATIC_LIBS OFF)
 set (Boost_USE_MULTITHREADED ON)
 set (Boost_USE_STATIC_RUNTIME OFF)
-
-# Автоматическое определение путей vcpkg для Windows
-if(WIN32)
-    # Поиск установленного vcpkg
-    if(DEFINED ENV{VCPKG_ROOT})
-        set(VCPKG_ROOT $ENV{VCPKG_ROOT})
-        message(STATUS "Using VCPKG_ROOT from environment: ${VCPKG_ROOT}")
-    elseif(DEFINED ENV{VCPKG_ROOT_DIR})
-        set(VCPKG_ROOT $ENV{VCPKG_ROOT_DIR})
-        message(STATUS "Using VCPKG_ROOT_DIR from environment: ${VCPKG_ROOT}")
-    else()
-        # Поиск vcpkg в стандартных местах
-        find_path(VCPKG_ROOT patterns/names.txt PATHS
-            "$ENV{USERPROFILE}/vcpkg"
-            "C:/vcpkg"
-            "D:/vcpkg"
-            "E:/vcpkg"
-            PATH_SUFFIXES installed/x64-windows installed/x86-windows
-            DOC "Path to vcpkg installation"
-        )
-        if(VCPKG_ROOT)
-            message(STATUS "Found vcpkg at: ${VCPKG_ROOT}")
-        endif()
-    endif()
-    
-    # Добавление путей vcpkg в поиск
-    if(VCPKG_ROOT)
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows/share")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows/share")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x64-windows")
-        list(APPEND CMAKE_PREFIX_PATH "${VCPKG_ROOT}/installed/x86-windows")
-    endif()
-    
-    # Альтернативные пути для Boost
-    list(APPEND CMAKE_PREFIX_PATH "C:/boost" "C:/Boost" "C:/local/boost" "C:/Libraries/boost_1_75_0" "C:/Libraries/boost_1_70_0" "C:/Libraries/boost_1_65_1")
-endif()
-
-# Дополнительные пути для поиска Boost в Windows
-if(WIN32)
-	# Поиск в стандартных местах установки Boost
-	find_library(BOOST_FILESYSTEM_LIBRARY NAMES boost_filesystem boost_filesystem-mt)
-	find_library(BOOST_SYSTEM_LIBRARY NAMES boost_system boost_system-mt)
-	find_library(BOOST_IOSTREAMS_LIBRARY NAMES boost_iostreams boost_iostreams-mt)
-endif()
 
 find_package (Boost 1.53 REQUIRED COMPONENTS filesystem system iostreams)
 
