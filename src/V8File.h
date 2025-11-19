@@ -279,7 +279,6 @@ public:
 
 	CV8File(const CV8File &src);
 
-	CV8File& operator=(const CV8File& other) = delete;
 
 	void Dispose();
 

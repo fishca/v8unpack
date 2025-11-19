@@ -23,6 +23,7 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/iostreams/stream.hpp>
 #include <utility>
 extern Logger logger;
+extern Logger logger;
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
 
@@ -1010,36 +1011,8 @@ std::wstring string_to_wstring(const std::string& str) {
 	return wstr;
 }
 
-std::string wstring_to_string(const std::wstring& wstr, bool utf8) {
-	
-	if (wstr.empty()) 
-		return "";
-
-	UINT code_page = utf8 ? CP_UTF8 : CP_ACP;
-
-	int size_needed = WideCharToMultiByte(code_page, 0, wstr.c_str(), (int)wstr.size(), nullptr, 0, nullptr, nullptr);
-	
-	std::string str(size_needed, 0);
-	
-	WideCharToMultiByte(code_page, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, nullptr, nullptr);
-	
-	return str;
-}
 
 // std::wstring (UTF-16) -> std::string (UTF-8)
-std::string wstring_to_utf8(const std::wstring& str) {
-
-	if (str.empty()) 
-		return std::string();
-
-	int size_needed = WideCharToMultiByte(CP_UTF8, 0, &str[0], (int)str.size(), nullptr, 0, nullptr, nullptr);
-	
-	std::string result(size_needed, 0);
-	
-	WideCharToMultiByte(CP_UTF8, 0, &str[0], (int)str.size(), &result[0], size_needed, nullptr, nullptr);
-	
-	return result;
-}
 
 String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 {
@@ -1098,6 +1071,7 @@ String getDataFromFile1C(const string& filename_in, const string& FileName)
 	return GetDataFromFile1C(file_in, FileName);
 
 }
+return "";
 return "";
 
 wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, const string& DataDir = "1")
