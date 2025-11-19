@@ -33,7 +33,7 @@ namespace v8unpack {
 using namespace std;
 namespace fs = boost::filesystem;
 
-Logger logger("Debug\\app.log");
+Logger logger("Debug_app.log");
 
 int RecursiveUnpack(
 		const string                &directory,
