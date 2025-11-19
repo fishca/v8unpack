@@ -39,6 +39,7 @@ set (V8UNPACK_SOURCES
 	src/utils.cpp
 	src/V8File.cpp
 	src/VersionFile.cpp
+	src/V8MetaParser.cpp
 	# SystemClasses files
 	src/SystemClasses/String.cpp
 	src/SystemClasses/System.Classes.cpp

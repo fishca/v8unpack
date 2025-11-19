@@ -278,6 +278,7 @@ public:
 	virtual ~CV8File() = default;
 
 	CV8File(const CV8File &src);
+CV8File& operator=(const CV8File& other) = delete;
 
 	void Dispose();
 
@@ -307,6 +308,7 @@ public:
 	};
 
 	CV8Elem(const CV8Elem &src) = default;
+CV8Elem& operator=(const CV8Elem& other) = delete;
 	explicit CV8Elem(const std::string &name);
 	CV8Elem() = default;
 	~CV8Elem() = default;
