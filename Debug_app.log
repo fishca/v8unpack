@@ -505,3 +505,60 @@ Wed Nov 19 14:31:44 2025 - Saved file: /tmp/v8unpack_test/save_out/Неизве�
 Wed Nov 19 14:31:44 2025 - Saved config file: /tmp/v8unpack_test/save_out/Конфигурация/root.txt
 Wed Nov 19 14:31:44 2025 - Saved config file: /tmp/v8unpack_test/save_out/Конфигурация/versions.txt
 Wed Nov 19 14:31:44 2025 - ParseToStringWithFiles completed. Saved 15 files.
+Wed Nov 19 14:38:41 2025 - Начало ParseToString для конфигурации
+Wed Nov 19 14:39:00 2025 - Начало ParseToString для конфигурации
+Wed Nov 19 14:39:00 2025 - Обнаружен формат файла 8.3.16 для ParseToString
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Найдено 16 файлов
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 154c4235-35f5-42c3-a0d5-07b9ea861f14
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 36b34b4a-30fc-40f3-be9d-59e7d39f8e95
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 36b34b4a-30fc-40f3-be9d-59e7d39f8e95.0
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 36b34b4a-30fc-40f3-be9d-59e7d39f8e95.1c
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 36b34b4a-30fc-40f3-be9d-59e7d39f8e95.3
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 3dd233d2-458e-4bd2-bfe3-437a37e1895a
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 5a0542b6-b956-403b-8486-51fc3b171a4c
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 5a0542b6-b956-403b-8486-51fc3b171a4c.0
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл 6c5aa477-1814-4ccd-9870-0274a9595f85
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл d0a5886a-a2b5-4c0d-b221-955328e5548d.2
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл d5e20966-24a3-4184-a1b0-e5aa4773c2b8
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл dc0673ef-ceb5-4048-b3b1-431ef48f764c
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл dc0673ef-ceb5-4048-b3b1-431ef48f764c.0
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл root
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл version
+Wed Nov 19 14:39:00 2025 - RecursiveUnpackToString. Обрабатывается файл versions
+Wed Nov 19 14:39:00 2025 - Окончание ParseToString
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/154c4235-35f5-42c3-a0d5-07b9ea861f14.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Найдено 2 файлов
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.0/info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл text
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.0/text
+Wed Nov 19 14:39:00 2025 - Unpacked container to directory: /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.0 (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.1c.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Найдено 2 файлов
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.3/info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл text
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.3/text
+Wed Nov 19 14:39:00 2025 - Unpacked container to directory: /home/fishca/test_data/Неизвестные_объекты/36b34b4a-30fc-40f3-be9d-59e7d39f8e95.3 (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/3dd233d2-458e-4bd2-bfe3-437a37e1895a.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/5a0542b6-b956-403b-8486-51fc3b171a4c.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Найдено 2 файлов
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл form
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/5a0542b6-b956-403b-8486-51fc3b171a4c.0/form
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл module
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/5a0542b6-b956-403b-8486-51fc3b171a4c.0/module
+Wed Nov 19 14:39:00 2025 - Unpacked container to directory: /home/fishca/test_data/Неизвестные_объекты/5a0542b6-b956-403b-8486-51fc3b171a4c.0 (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/6c5aa477-1814-4ccd-9870-0274a9595f85.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Найдено 2 файлов
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/d0a5886a-a2b5-4c0d-b221-955328e5548d.2/info
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Обрабатывается файл text
+Wed Nov 19 14:39:00 2025 - RecursiveUnpack. Создаем каталог /home/fishca/test_data/Неизвестные_объекты/d0a5886a-a2b5-4c0d-b221-955328e5548d.2/text
+Wed Nov 19 14:39:00 2025 - Unpacked container to directory: /home/fishca/test_data/Неизвестные_объекты/d0a5886a-a2b5-4c0d-b221-955328e5548d.2 (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/d5e20966-24a3-4184-a1b0-e5aa4773c2b8.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/dc0673ef-ceb5-4048-b3b1-431ef48f764c.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved file: /home/fishca/test_data/Неизвестные_объекты/dc0673ef-ceb5-4048-b3b1-431ef48f764c.0.txt (type: Неизвестные_объекты)
+Wed Nov 19 14:39:00 2025 - Saved config file: /home/fishca/test_data/Конфигурация/root.txt
+Wed Nov 19 14:39:00 2025 - Saved config file: /home/fishca/test_data/Конфигурация/versions.txt
+Wed Nov 19 14:39:00 2025 - ParseToStringWithFiles completed. Saved 15 files.
