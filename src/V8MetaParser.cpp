@@ -6,10 +6,14 @@
 #include <unordered_map>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 namespace v8unpack {
 
 extern Logger logger;
+
+extern int RecursiveUnpack(const std::string &directory, std::basic_istream<char> &file,
+						   const std::vector<std::string> &filter, bool boolInflate, bool UnpackWhenNeed);
 
 std::vector<std::string> find_guids(const std::string& text) {
     std::vector<std::string> guids;
@@ -257,17 +261,48 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                     filename += ".txt";
                 }
 
-                // Save file
-                fs::path file_path = type_dir / filename;
-                std::ofstream out_file(file_path.string(), std::ios::binary);
-                if (out_file) {
-                    out_file.write(current_data.c_str(), current_data.size());
-                    out_file.close();
-                    file_count++;
+                // Create subdirectory path for this object
+                fs::path sub_dir = type_dir / current_section;
 
-                    logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+                // Check if the data is a V8 container that needs to be unpacked
+                std::istringstream data_stream(current_data);
+                if (IsV8File(data_stream)) {
+                    // Create subdirectory and unpack
+                    if (!ensure_directory(sub_dir)) {
+                        std::cerr << "ParseToStringWithFiles: Failed to create subdirectory: " << sub_dir.string() << std::endl;
+                    } else {
+                        // Reset stream position
+                        data_stream.seekg(0);
+                        int unpack_result = RecursiveUnpack(sub_dir.string(), data_stream, {}, true, false);
+                        if (unpack_result != V8UNPACK_OK) {
+                            // Fallback to saving as file
+                            fs::path file_path = type_dir / filename;
+                            std::ofstream out_file(file_path.string(), std::ios::binary);
+                            if (out_file) {
+                                out_file.write(current_data.c_str(), current_data.size());
+                                out_file.close();
+                                file_count++;
+                                logger.log("Saved file (fallback): " + file_path.string() + " (type: " + metadata_type + ")");
+                            } else {
+                                std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                            }
+                        } else {
+                            file_count++;
+                            logger.log("Unpacked container to directory: " + sub_dir.string() + " (type: " + metadata_type + ")");
+                        }
+                    }
                 } else {
-                    std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                    // Save as regular file
+                    fs::path file_path = type_dir / filename;
+                    std::ofstream out_file(file_path.string(), std::ios::binary);
+                    if (out_file) {
+                        out_file.write(current_data.c_str(), current_data.size());
+                        out_file.close();
+                        file_count++;
+                        logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+                    } else {
+                        std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                    }
                 }
             }
 

@@ -53,7 +53,7 @@ OBJDIR_RELEASE_64 = obj/Release64
 DEP_RELEASE_64 =
 OUT_RELEASE_64 = bin/Release/v8unpack-x64
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJDIR_RELEASE)/src/utils.o \
+OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o $(OBJDIR_RELEASE)/src/utils.o \
 			  $(OBJDIR_RELEASE)/src/VersionFile.o $(OBJDIR_RELEASE)/src/placeholder216.o \
 			  $(OBJDIR_RELEASE)/src/binarydecimalnumber.o $(OBJDIR_RELEASE)/src/common.o \
 			  $(OBJDIR_RELEASE)/src/EctoSoftTree.o $(OBJDIR_RELEASE)/src/ExactStructureBuilder.o \
@@ -64,7 +64,7 @@ OBJ_RELEASE = $(OBJDIR_RELEASE)/src/V8File.o $(OBJDIR_RELEASE)/src/main.o  $(OBJ
 			  $(OBJDIR_RELEASE)/src/parse_tree.o $(OBJDIR_RELEASE)/src/StringUtils.o \
 			  $(OBJDIR_RELEASE)/src/THashedStringList.o $(OBJDIR_RELEASE)/src/TMSTree.o \
 			  $(OBJDIR_RELEASE)/src/tree.o $(OBJDIR_RELEASE)/src/treeparser.o \
-			  $(OBJDIR_RELEASE)/src/TStringList.o \
+			  $(OBJDIR_RELEASE)/src/TStringList.o $(OBJDIR_RELEASE)/src/V8MetaParser.o \
 			  $(OBJDIR_RELEASE)/src/SystemClasses/String.o $(OBJDIR_RELEASE)/src/SystemClasses/System.Classes.o \
 			  $(OBJDIR_RELEASE)/src/SystemClasses/System.SysUtils.o $(OBJDIR_RELEASE)/src/SystemClasses/System.IOUtils.o $(OBJDIR_RELEASE)/src/SystemClasses/System.o \
 			  $(OBJDIR_RELEASE)/src/SystemClasses/TStream.o $(OBJDIR_RELEASE)/src/SystemClasses/TMemoryStream.o \
