@@ -45,12 +45,12 @@ for:
     BOOST_LIBRARYDIR: C:\local\boost_1_75_0\lib64-msvc-14.2
     BOOST_INCLUDEDIR: C:\local\boost_1_75_0
   install:
-  - ps: >-
-      appveyor DownloadFile "https://downloads.sourceforge.net/project/boost/boost-binaries/1.75.0/boost_1_75_0-msvc-14.2-64.exe" $env:TEMP\boost.exe
+  - cmd: >-
+      appveyor DownloadFile https://downloads.sourceforge.net/project/boost/boost-binaries/1.75.0/boost_1_75_0-msvc-14.2-64.exe boost.exe
 
-      & $env:TEMP\boost.exe /NOICONS /DIR="C:\local\boost_1_75_0" /SP- /SUPPRESSMSGBOXES /VERYSILENT
+      boost.exe /NOICONS /DIR="C:\local\boost_1_75_0" /SP- /SUPPRESSMSGBOXES /VERYSILENT
 
-      if(!$LastExitCode -eq 0) { throw "Boost installation failed" }
+      if %errorlevel% neq 0 exit /b %errorlevel%
 
       appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip
 
