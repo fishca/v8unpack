@@ -49,16 +49,16 @@ for:
       BUILD_PLATFORM: x64    
   install:
   - ps: choco install boost-msvc-14.2 -y --no-progress
+  - cmd: if not exist "..\\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\\vcpkg
+  - cmd: cd ..\\vcpkg && if not exist ".git\\HEAD" git pull && bootstrap-vcpkg.bat
+
   - cmd: appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip && 7z x zlib-1.2.11.zip && cd zlib-1.2.11 && md build && cd build && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5.0 -DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:MSVCRT -DCMAKE_C_FLAGS_RELEASE=/MT /O2 /Ob2 /D NDEBUG .. && cmake --build . --config Release --target zlibstatic && copy zconf.h .. && cd C:\projects\v8unpack
+
+  - cmd: ..\\vcpkg\\vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
   build_script:
-  - cmd: set BOOST_LIBRARYDIR=%BOOST_ROOT%\lib64-msvc-14.2
-  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release && cd ..
-  before_build:
-  # Настраиваем переменные окружения для Boost
-  - set BOOST_ROOT=C:\local\boost_1_87_0
-  - set BOOST_LIBRARYDIR=%BOOST_ROOT%\lib32-msvc-14.2
-  - if "%ARCH%"=="x64" set BOOST_LIBRARYDIR=%BOOST_ROOT%\lib64-msvc-14.2
-  - set PATH=%BOOST_LIBRARYDIR%;%PATH%
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release && cd ..
+  cache:
+  - ../vcpkg/installed
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
