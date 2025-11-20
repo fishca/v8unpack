@@ -176,7 +176,7 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
             message(STATUS "Found Boost include directory via vcpkg custom search: ${Boost_INCLUDE_DIR}")
             include_directories(${Boost_INCLUDE_DIR})
 
-            # Library paths relative to found include
+            # Library paths relative to found include - try multiple vcpkg patterns
             set(BOOST_LIB_SEARCH_PATHS
                 ${Boost_INCLUDE_DIR}/../lib
                 C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
@@ -184,22 +184,44 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
                 ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib
                 ${CMAKE_CURRENT_BINARY_DIR}/../../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
                 ${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                # Try the package directories directly
+                C:/Tools/vcpkg/packages/boost-filesystem_${VCPKG_TARGET_TRIPLET}/lib
+                C:/Tools/vcpkg/packages/boost-system_${VCPKG_TARGET_TRIPLET}/lib
+                C:/Tools/vcpkg/packages/boost-iostreams_${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_CURRENT_BINARY_DIR}/../../vcpkg/packages/boost-filesystem_${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/packages/boost-filesystem_${VCPKG_TARGET_TRIPLET}/lib
             )
 
+            message(STATUS "Searching for Boost libraries in: ${BOOST_LIB_SEARCH_PATHS}")
+
+            # Try to find what boost library files actually exist
+            file(GLOB_RECURSE BOOST_LIB_FILES
+                "C:/Tools/vcpkg/packages/boost-filesystem*/lib/*.lib"
+                "C:/Tools/vcpkg/packages/boost-system*/lib/*.lib"
+                "C:/Tools/vcpkg/packages/boost-iostreams*/lib/*.lib"
+                "C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib/*.lib"
+            )
+            if(BOOST_LIB_FILES)
+                message(STATUS "Found boost library files: ${BOOST_LIB_FILES}")
+            else()
+                message(WARNING "No boost library files found in common vcpkg locations")
+            endif()
+
+            # Find Boost libraries - try different naming patterns
             find_library(BOOST_FILESYSTEM_LIBRARY
-                NAMES boost_filesystem boost_filesystem-vc142-mt libboost_filesystem libboost_filesystem-vc142-mt
+                NAMES boost_filesystem-vc142-mt boost_filesystem-vc142-mt-x64-1_89 boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost filesystem library from vcpkg"
             )
 
             find_library(BOOST_SYSTEM_LIBRARY
-                NAMES boost_system boost_system-vc142-mt libboost_system libboost_system-vc142-mt
+                NAMES boost_system-vc142-mt boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost system library from vcpkg"
             )
 
             find_library(BOOST_IOSTREAMS_LIBRARY
-                NAMES boost_iostreams boost_iostreams-vc142-mt libboost_iostreams libboost_iostreams-vc142-mt
+                NAMES boost_iostreams-vc142-mt boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost iostreams library from vcpkg"
             )
