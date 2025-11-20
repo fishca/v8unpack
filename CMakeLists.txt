@@ -111,11 +111,21 @@ add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 # Include directories for source files
 include_directories (src src/SystemClasses)
 
-# КАСТОМНЫЙ ПОИСК BOOST - Обход проблемы FindBoost.cmake
-# Настройки поиска Boost
-set (Boost_USE_STATIC_LIBS OFF)
-set (Boost_USE_MULTITHREADED ON)
-set (Boost_USE_STATIC_RUNTIME OFF)
+# Поиск Boost
+if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+    # Используем стандартный find_package когда используется vcpkg toolchain
+    find_package(Boost REQUIRED COMPONENTS filesystem system iostreams)
+    include_directories(${Boost_INCLUDE_DIRS})
+    target_link_libraries(v8unpack ${Boost_LIBRARIES})
+else()
+    # КАСТОМНЫЙ ПОИСК BOOST - Обход проблемы FindBoost.cmake
+    # Настройки поиска Boost
+    set (Boost_USE_STATIC_LIBS OFF)
+    set (Boost_USE_MULTITHREADED ON)
+    set (Boost_USE_STATIC_RUNTIME OFF)
+
+    # Поиск Boost с множественными путями и fallback
+    message(STATUS "Starting custom Boost search...")
 
 # Поиск Boost с множественными путями и fallback
 message(STATUS "Starting custom Boost search...")
@@ -174,7 +184,7 @@ find_path(Boost_INCLUDE_DIR
 
 if(Boost_INCLUDE_DIR)
     message(STATUS "Found Boost include directory: ${Boost_INCLUDE_DIR}")
-    
+
     # Извлечение версии Boost из version.hpp
     file(READ "${Boost_INCLUDE_DIR}/boost/version.hpp" BOOST_VERSION_CONTENT)
     if(BOOST_VERSION_CONTENT MATCHES "#define BOOST_VERSION[ \\t]+([0-9]+)")
@@ -183,12 +193,23 @@ if(Boost_INCLUDE_DIR)
         math(EXPR BOOST_VERSION_MINOR "${BOOST_VERSION} / 100 % 1000")
         message(STATUS "Detected Boost version: ${BOOST_VERSION_MAJOR}.${BOOST_VERSION_MINOR}")
     endif()
-    
+
     include_directories(${Boost_INCLUDE_DIR})
 else()
-    message(FATAL_ERROR "Boost headers not found. Please install Boost or set BOOST_ROOT environment variable.")
+    # Попытка стандартного find_package если кастомный поиск не удался
+    message(WARNING "Custom Boost search failed, trying standard find_package(Boost)")
+    find_package(Boost QUIET COMPONENTS filesystem system iostreams)
+    if(Boost_FOUND)
+        message(STATUS "Found Boost via find_package")
+        include_directories(${Boost_INCLUDE_DIRS})
+        target_link_libraries(v8unpack ${Boost_LIBRARIES})
+        set(BOOST_FOUND_VIA_PACKAGE TRUE)
+    else()
+        message(FATAL_ERROR "Boost headers not found. Please install Boost or set BOOST_ROOT environment variable.")
+    endif()
 endif()
 
+if(NOT BOOST_FOUND_VIA_PACKAGE)
 # Поиск Boost libraries
 set(BOOST_LIB_SEARCH_PATHS
     ${BOOST_LIBRARYDIR}
@@ -252,7 +273,9 @@ target_link_libraries(v8unpack
     ${BOOST_SYSTEM_LIBRARY} 
     ${BOOST_IOSTREAMS_LIBRARY}
 )
+endif()
 
-# Поиск ZLIB
-find_package (ZLIB REQUIRED)
-include_directories (${ZLIB_INCLUDE_DIRS})
+    # Поиск ZLIB
+    find_package (ZLIB REQUIRED)
+    include_directories (${ZLIB_INCLUDE_DIRS})
+endif()
