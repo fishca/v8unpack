@@ -209,32 +209,50 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
 
             # Find Boost libraries - try different naming patterns
             find_library(BOOST_FILESYSTEM_LIBRARY
-                NAMES boost_filesystem-vc142-mt boost_filesystem-vc142-mt-x64-1_89 boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
+                NAMES boost_filesystem-vc142-mt-x64-1_89 boost_filesystem-vc142-mt boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost filesystem library from vcpkg"
             )
 
             find_library(BOOST_SYSTEM_LIBRARY
-                NAMES boost_system-vc142-mt boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
+                NAMES boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost system library from vcpkg"
+                NO_DEFAULT_PATH
             )
 
             find_library(BOOST_IOSTREAMS_LIBRARY
-                NAMES boost_iostreams-vc142-mt boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
+                NAMES boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
                 DOC "Boost iostreams library from vcpkg"
             )
 
-            if(BOOST_FILESYSTEM_LIBRARY AND BOOST_SYSTEM_LIBRARY AND BOOST_IOSTREAMS_LIBRARY)
-                message(STATUS "Found Boost libraries via custom search")
-                target_link_libraries(v8unpack
-                    ${BOOST_FILESYSTEM_LIBRARY}
-                    ${BOOST_SYSTEM_LIBRARY}
-                    ${BOOST_IOSTREAMS_LIBRARY}
-                )
+            # Debug: check if boost_system library exists in package directory
+            if(NOT BOOST_SYSTEM_LIBRARY)
+                file(GLOB_RECURSE BOOST_SYSTEM_FILES "C:/Tools/vcpkg/packages/boost-system*/lib/*.lib")
+                message(STATUS "Boost system files found: ${BOOST_SYSTEM_FILES}")
+            endif()
+
+            # Check which libraries were actually found
+            set(FOUND_LIBS "")
+            if(BOOST_FILESYSTEM_LIBRARY)
+                list(APPEND FOUND_LIBS ${BOOST_FILESYSTEM_LIBRARY})
+            endif()
+            if(BOOST_SYSTEM_LIBRARY)
+                list(APPEND FOUND_LIBS ${BOOST_SYSTEM_LIBRARY})
             else()
-                message(FATAL_ERROR "Boost libraries not found via custom search. filesystem=${BOOST_FILESYSTEM_LIBRARY}, system=${BOOST_SYSTEM_LIBRARY}, iostreams=${BOOST_IOSTREAMS_LIBRARY}")
+                message(WARNING "Boost system library not found - this may be expected in newer Boost versions where it's header-only")
+            endif()
+            if(BOOST_IOSTREAMS_LIBRARY)
+                list(APPEND FOUND_LIBS ${BOOST_IOSTREAMS_LIBRARY})
+            endif()
+
+            # Require filesystem and iostreams, but make system optional
+            if(BOOST_FILESYSTEM_LIBRARY AND BOOST_IOSTREAMS_LIBRARY)
+                message(STATUS "Found Boost libraries via custom search: ${FOUND_LIBS}")
+                target_link_libraries(v8unpack ${FOUND_LIBS})
+            else()
+                message(FATAL_ERROR "Required Boost libraries not found. filesystem=${BOOST_FILESYSTEM_LIBRARY}, iostreams=${BOOST_IOSTREAMS_LIBRARY}")
             endif()
         else()
             message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vcpkg.")
