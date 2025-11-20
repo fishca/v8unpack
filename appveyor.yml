@@ -45,16 +45,16 @@ for:
     BOOST_LIBRARYDIR: C:\local\boost_1_75_0\lib64-msvc-14.2
     BOOST_INCLUDEDIR: C:\local\boost_1_75_0
   install:
-  - cmd: >-
-      appveyor DownloadFile https://downloads.sourceforge.net/project/boost/boost-binaries/1.75.0/boost_1_75_0-msvc-14.2-64.exe boost.exe
+  - ps: >-
+      Invoke-WebRequest -Uri 'https://downloads.sourceforge.net/project/boost/boost-binaries/1.75.0/boost_1_75_0-msvc-14.2-64.exe' -OutFile 'boost.exe'
 
-      boost.exe /NOICONS /DIR="C:\local\boost_1_75_0" /SP- /SUPPRESSMSGBOXES /VERYSILENT
+      & .\boost.exe /NOICONS /DIR="C:\local\boost_1_75_0" /SP- /SUPPRESSMSGBOXES /VERYSILENT
 
-      if %errorlevel% neq 0 exit /b %errorlevel%
+      if(!$LastExitCode -eq 0) { throw "Boost installation failed" }
 
-      appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip
+      (new-object System.Net.WebClient).DownloadFile('https://github.com/madler/zlib/archive/v1.2.11.zip', "$PWD\zlib-1.2.11.zip")
 
-      7z x zlib-1.2.11.zip > NUL
+      & 7z x zlib-1.2.11.zip | out-null
 
       cd zlib-1.2.11
 
@@ -62,15 +62,17 @@ for:
 
       cd build
 
-      cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
+      & cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5.0 -DCMAKE_SHARED_LINKER_FLAGS="/NODEFAULTLIB:MSVCRT" -DCMAKE_C_FLAGS_RELEASE="/MT /O2 /Ob2 /D NDEBUG" ..
 
-      cmake --build . --config Release --target zlibstatic
+      & cmake --build . --config Release --target zlibstatic
 
       copy zconf.h ..
 
       cd ..
 
       cd ..
+
+      cd C:\projects\v8unpack
   build_script:
   - mkdir build && cd build && cmake -DBOOST_ROOT="%BOOST_ROOT%" -DBOOST_LIBRARYDIR="%BOOST_LIBRARYDIR%" -DBOOST_INCLUDEDIR="%BOOST_INCLUDEDIR%" -DCMAKE_BUILD_TYPE=Release ..
   - cmake --build . --config Release
