@@ -128,11 +128,42 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
         # Fallback: используем кастомный поиск для vcpkg
         message(WARNING "Standard Boost search with vcpkg failed, using custom search")
 
-        # Customs Boost search logic for vcpkg fallback
+        # Improved vcpkg Boost search logic
+        # Check common vcpkg installation patterns
+        if(DEFINED ENV{VCPKG_ROOT})
+            set(VCPKG_ROOT $ENV{VCPKG_ROOT})
+        endif()
+
+        # Determine target triplet - defaults to x64-windows on Windows
+        if(NOT VCPKG_TARGET_TRIPLET)
+            if(WIN32)
+                if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+                    set(VCPKG_TARGET_TRIPLET "x64-windows")
+                else()
+                    set(VCPKG_TARGET_TRIPLET "x86-windows")
+                endif()
+            else()
+                if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+                    set(VCPKG_TARGET_TRIPLET "x64-linux")
+                else()
+                    set(VCPKG_TARGET_TRIPLET "x86-linux")
+                endif()
+            endif()
+        endif()
+
+        # Common vcpkg installation paths for Boost headers
         set(BOOST_SEARCH_PATHS
-            ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include
-            ${CMAKE_BINARY_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
-            ${CMAKE_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            # Default vcpkg installed location
+            C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            # Alternative vcpkg locations
+            C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include
+            # Relative to current directory
+            ${CMAKE_CURRENT_BINARY_DIR}/../../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            # Standard package location (for when using existing vcpkg installation)
+            C:/Tools/vcpkg/packages/boost-headers_x64-windows/include
+            C:/Tools/vcpkg/packages/boost-headers_x86-windows/include
         )
 
         find_path(Boost_INCLUDE_DIR
@@ -142,15 +173,17 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
         )
 
         if(Boost_INCLUDE_DIR)
-            message(STATUS "Found Boost include directory via custom search: ${Boost_INCLUDE_DIR}")
+            message(STATUS "Found Boost include directory via vcpkg custom search: ${Boost_INCLUDE_DIR}")
             include_directories(${Boost_INCLUDE_DIR})
 
-            # Поиск библиотек относительно include директории
+            # Library paths relative to found include
             set(BOOST_LIB_SEARCH_PATHS
                 ${Boost_INCLUDE_DIR}/../lib
-                ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
-                ${CMAKE_BINARY_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
-                ${CMAKE_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_CURRENT_BINARY_DIR}/../../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
             )
 
             find_library(BOOST_FILESYSTEM_LIBRARY
