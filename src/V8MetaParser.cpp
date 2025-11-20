@@ -135,17 +135,19 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
     while (std::getline(stream, line)) {
         if (line.find("--- ") == 0 && line.find(" ---") != std::string::npos) {
             // Process previous section if exists
-            if (!current_section.empty() && !current_data.empty()) {
+            if (!current_section.empty()) {
+                logger.log("Processing section: " + current_section + ", data size: " + std::to_string(current_data.size()));
                 // Check if this is the configuration file
                 if (current_section.find("root") != std::string::npos ||
                     current_section == "version" ||
                     current_section == "versions" ||
                     current_section == "metadata") {
+                    logger.log("Found config section: " + current_section);
+                    // For config sections, always save even if data is empty
 
                     // Save configuration files directly
                     std::string filename = current_section;
                     if (filename.find("root") != std::string::npos) filename = "root";
-                    filename += ".txt";
 
                     fs::path file_path = config_dir / filename;
                     std::ofstream out_file(file_path.string(), std::ios::binary);
@@ -255,11 +257,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 std::replace(filename.begin(), filename.end(), '}', '_');
 
                 // Add file extension
-                if (filename != current_section) { // If we cleaned something
-                    filename += ".txt";
-                } else {
-                    filename += ".txt";
-                }
 
                 // Create subdirectory path for this object
                 fs::path sub_dir = type_dir / current_section;
@@ -325,7 +322,7 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
     }
 
     // Save the last section
-    if (!current_section.empty() && !current_data.empty()) {
+    if (!current_section.empty()) {
         // Check if this is the configuration file
         if (current_section.find("root") != std::string::npos ||
             current_section == "version" ||
@@ -335,7 +332,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
             // Save configuration files directly
             std::string filename = current_section;
             if (filename.find("root") != std::string::npos) filename = "root";
-            filename += ".txt";
 
             fs::path file_path = config_dir / filename;
             std::ofstream out_file(file_path.string(), std::ios::binary);
@@ -396,7 +392,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 std::replace(filename.begin(), filename.end(), '|', '_');
                 std::replace(filename.begin(), filename.end(), '{', '_');
                 std::replace(filename.begin(), filename.end(), '}', '_');
-                filename += ".txt";
 
                 fs::path file_path = type_dir / filename;
                 std::ofstream out_file(file_path.string(), std::ios::binary);
@@ -412,6 +407,8 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
             }
         }
     }
+
+
 
     logger.log("ParseToStringWithFiles completed. Saved " + std::to_string(file_count) + " files.");
     cout << "ParseToStringWithFiles: Saved " << file_count << " files in organized structure by metadata types." << endl;

@@ -1,5 +1,7 @@
 #include "logger.h"
 
+Logger logger("v8unpack.log");
+
 void Logger::log(const std::string& message)
 {
 	std::time_t now = std::time(nullptr);

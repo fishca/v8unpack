@@ -1555,20 +1555,25 @@ static int recursive_unpack_to_string(basic_istream<char>& file, const vector<st
 			ReadBlockData<format>(file, header, source_data);
 
 			// Try to inflate if needed
-			if (boolInflate) {
-				vector<char> inflated_data = source_data;
-				if (try_inflate(inflated_data)) {
-					source_data = inflated_data;
-				}
-			}
+			//if (boolInflate) {
+			 	vector<char> inflated_data = source_data;
+			 	if (try_inflate(inflated_data)) {
+			 		source_data = inflated_data;
+			 	}
+			//}
+			
+			//auto ResultSmart = prepare_smart_source_to_string<format>(file, true);
+			//return string_to_wstring(ResultSmart);
 
 			// Add data to result
+			
 			result.append(source_data.begin(), source_data.end());
 			result += "\n";
 		}
 
 	} // for i = ..ElemsNum
 
+	logger.log("Данные файла: \r\n" + result);
 	return ret;
 }
 

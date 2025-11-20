@@ -781,14 +781,11 @@ int save_files(vector<string>& argv)
 		}
 	}
 
-	string config_string;
-	int ret = ParseToString(argv[0], filter, config_string);
-
-	if (ret != 0) {
-		return ret;
-	}
-
-	return ParseToStringWithFiles(config_string, argv[1]);
+	std::string result = "";
+	//return ParseToString(argv[0],filter, result);
+	//return ParseToStringWithFiles(argv[0], argv[1]);
+	auto ret = Parse(argv[0], argv[1], filter);
+	return ret;
 }
 
 handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_listfile)
@@ -832,12 +829,11 @@ handler_t get_run_mode(const vector<string>& args, int& arg_base, bool& allow_li
 		return parsetostring;
 	}
 
-if (cur_mode == "-save" || cur_mode == "-savefiles") {
+	if (cur_mode == "-save" || cur_mode == "-savefiles") {
 		return save_files;
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {
-
 		bool dont_pack = false;
 
 		while ((int)args.size() > arg_base) {
@@ -857,7 +853,6 @@ if (cur_mode == "-save" || cur_mode == "-savefiles") {
 	allow_listfile = false;
 	if (cur_mode == "-test" || cur_mode == "-t") {
 		return outtree;
-
 	}
 
 	allow_listfile = false;
@@ -905,10 +900,8 @@ void read_param_file(const char* filename, vector< vector<string> >& list)
 	}
 }
 
-
 int main(int argc, char* argv[])
 {
-
 	std::locale::global(std::locale(""));
 	std::wcout.imbue(std::locale(""));
 
@@ -959,8 +952,6 @@ int main(int argc, char* argv[])
 	int ret = handler(cli_args);
 	if (ret == V8UNPACK_SHOW_USAGE) {
 		usage(cli_args);
-		
 	}
 	return ret;
-
 }
