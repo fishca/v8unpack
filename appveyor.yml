@@ -45,9 +45,7 @@ for:
   - ps: choco install boost-msvc-14.2
   - cmd: appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip && 7z x zlib-1.2.11.zip && cd zlib-1.2.11 && md build && cd build && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5.0 -DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:MSVCRT -DCMAKE_C_FLAGS_RELEASE=/MT /O2 /Ob2 /D NDEBUG .. && cmake --build . --config Release --target zlibstatic && copy zconf.h ..
   build_script:
-  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release ..
-  - cmake --build . --config Release
-  - cd ..
+  - mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release && cd ..
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
