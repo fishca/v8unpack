@@ -121,17 +121,26 @@ set (Boost_USE_STATIC_RUNTIME OFF)
 message(STATUS "Starting custom Boost search...")
 
 # Проверка переменных окружения
-if(DEFINED ENV{BOOST_ROOT})
+if(NOT BOOST_ROOT AND DEFINED ENV{BOOST_ROOT})
     set(BOOST_ROOT $ENV{BOOST_ROOT})
     message(STATUS "BOOST_ROOT from environment: ${BOOST_ROOT}")
 endif()
-if(DEFINED ENV{BOOST_LIBRARYDIR})
+if(NOT BOOST_LIBRARYDIR AND DEFINED ENV{BOOST_LIBRARYDIR})
     set(BOOST_LIBRARYDIR $ENV{BOOST_LIBRARYDIR})
     message(STATUS "BOOST_LIBRARYDIR from environment: ${BOOST_LIBRARYDIR}")
 endif()
-if(DEFINED ENV{BOOST_INCLUDEDIR})
+if(NOT BOOST_INCLUDEDIR AND DEFINED ENV{BOOST_INCLUDEDIR})
     set(BOOST_INCLUDEDIR $ENV{BOOST_INCLUDEDIR})
     message(STATUS "BOOST_INCLUDEDIR from environment: ${BOOST_INCLUDEDIR}")
+endif()
+
+if(DEFINED ENV{VCPKG_ROOT})
+    set(VCPKG_ROOT $ENV{VCPKG_ROOT})
+    message(STATUS "VCPKG_ROOT from environment: ${VCPKG_ROOT}")
+endif()
+if(DEFINED ENV{VCPKG_DIR})
+    set(VCPKG_DIR $ENV{VCPKG_DIR})
+    message(STATUS "VCPKG_DIR from environment: ${VCPKG_DIR}")
 endif()
 
 # Пути поиска Boost
@@ -151,6 +160,8 @@ set(BOOST_SEARCH_PATHS
     C:/Libraries/boost_1_60_0
     ${VCPKG_ROOT}/installed/x64-windows/include
     ${VCPKG_ROOT}/installed/x86-windows/include
+    ${VCPKG_ROOT}/installed/x64-linux/include
+    ${VCPKG_DIR}/installed/x64-linux/include
 )
 
 # Поиск Boost headers
@@ -196,6 +207,8 @@ set(BOOST_LIB_SEARCH_PATHS
     C:/Libraries/boost_1_60_0/lib32-msvc-15.0
     ${VCPKG_ROOT}/installed/x64-windows/lib
     ${VCPKG_ROOT}/installed/x86-windows/lib
+    ${VCPKG_ROOT}/installed/x64-linux/lib
+    ${VCPKG_DIR}/installed/x64-linux/lib
 )
 
 # Поиск требуемых библиотек Boost
