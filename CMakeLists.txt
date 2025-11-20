@@ -234,19 +234,19 @@ set(BOOST_LIB_SEARCH_PATHS
 
 # Поиск требуемых библиотек Boost
 find_library(BOOST_FILESYSTEM_LIBRARY
-    NAMES boost_filesystem boost_filesystem-mt boost_filesystem-mgw9-mt boost_filesystem-mgw9
+    NAMES boost_filesystem boost_filesystem-mt boost_filesystem-vc142 boost_filesystem-vc142-mt boost_filesystem-mgw9-mt boost_filesystem-mgw9
     PATHS ${BOOST_LIB_SEARCH_PATHS}
     DOC "Boost filesystem library"
 )
 
 find_library(BOOST_SYSTEM_LIBRARY
-    NAMES boost_system boost_system-mt boost_system-mgw9-mt boost_system-mgw9
+    NAMES boost_system boost_system-mt boost_system-vc142 boost_system-vc142-mt boost_system-mgw9-mt boost_system-mgw9
     PATHS ${BOOST_LIB_SEARCH_PATHS}
     DOC "Boost system library"
 )
 
 find_library(BOOST_IOSTREAMS_LIBRARY
-    NAMES boost_iostreams boost_iostreams-mt boost_iostreams-mgw9-mt boost_iostreams-mgw9
+    NAMES boost_iostreams boost_iostreams-mt boost_iostreams-vc142 boost_iostreams-vc142-mt boost_iostreams-mgw9-mt boost_iostreams-mgw9
     PATHS ${BOOST_LIB_SEARCH_PATHS}
     DOC "Boost iostreams library"
 )
