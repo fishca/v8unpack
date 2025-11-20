@@ -57,10 +57,6 @@ for:
   - set BOOST_LIBRARYDIR=%BOOST_ROOT%\lib32-msvc-14.2
   - if "%ARCH%"=="x64" set BOOST_LIBRARYDIR=%BOOST_ROOT%\lib64-msvc-14.2
   - set PATH=%BOOST_LIBRARYDIR%;%PATH%
-  
-  # Создаем директорию для сборки
-  - mkdir build
-  - cd build
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
