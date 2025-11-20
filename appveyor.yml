@@ -33,15 +33,6 @@ for:
   - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
   - path: v8unpack*.deb
-  deploy:
-    - provider: GitHub
-      auth_token:
-        secure: 4f56e4a2-5c56-4b8a-9e8b-8b2f8e4b8f9e # Replace with actual encrypted token
-      artifact: /v8unpack-.*\.deb$/
-      draft: false
-      prerelease: false
-      on:
-        branch: master # Deploy on master branch for testing
 
 -
   matrix:
@@ -50,8 +41,17 @@ for:
   environment:
     VCDIR: C:\Program Files\Misc\VS\2019\BuildTools\VC\Auxiliary\Build
     DEPLOY_PLATFORM_ID: win
+    BOOST_ROOT: C:\local\boost_1_75_0
+    BOOST_LIBRARYDIR: C:\local\boost_1_75_0\lib64-msvc-14.2
+    BOOST_INCLUDEDIR: C:\local\boost_1_75_0
   install:
-  - cmd: >-
+  - ps: >-
+      appveyor DownloadFile "https://downloads.sourceforge.net/project/boost/boost-binaries/1.75.0/boost_1_75_0-msvc-14.2-64.exe" $env:TEMP\boost.exe
+
+      & $env:TEMP\boost.exe /NOICONS /DIR="C:\local\boost_1_75_0" /SP- /SUPPRESSMSGBOXES /VERYSILENT
+
+      if(!$LastExitCode -eq 0) { throw "Boost installation failed" }
+
       appveyor DownloadFile https://github.com/madler/zlib/archive/v1.2.11.zip -FileName zlib-1.2.11.zip
 
       7z x zlib-1.2.11.zip > NUL
