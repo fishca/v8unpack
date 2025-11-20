@@ -258,6 +258,23 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
             message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vcpkg.")
         endif()
     endif()
+
+    # ZLIB - also ensure it's found in vcpkg environments
+    find_package(ZLIB REQUIRED)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+    target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
+    message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES}")
+else()
+    # Поиск ZLIB - требуется для компрессии/декомпрессии
+    find_package(ZLIB REQUIRED)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+    target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
+    message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES}")
+endif()
+        else()
+            message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vcpkg.")
+        endif()
+    endif()
 else()
     # КАСТОМНЫЙ ПОИСК BOOST - Обход проблемы FindBoost.cmake
     # Настройки поиска Boost
@@ -416,8 +433,9 @@ target_link_libraries(v8unpack
 )
 endif()
 
-    # Поиск ZLIB
-    find_package (ZLIB REQUIRED)
-    include_directories (${ZLIB_INCLUDE_DIRS})
+    # Поиск ZLIB - требуется для компрессии/декомпрессии
+    find_package(ZLIB REQUIRED)
+    include_directories(${ZLIB_INCLUDE_DIRS})
     target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
+    message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES}")
 endif()
