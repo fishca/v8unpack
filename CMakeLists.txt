@@ -113,10 +113,78 @@ include_directories (src src/SystemClasses)
 
 # Поиск Boost
 if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
-    # Используем стандартный find_package когда используется vcpkg toolchain
-    find_package(Boost REQUIRED COMPONENTS filesystem system iostreams)
-    include_directories(${Boost_INCLUDE_DIRS})
-    target_link_libraries(v8unpack ${Boost_LIBRARIES})
+    # Для vcpkg сначала пробуем стандартный find_package
+    find_package(Boost COMPONENTS filesystem system iostreams CONFIG QUIET)
+    if(NOT Boost_FOUND)
+        # Если не нашли через CONFIG, пробуем через модуль FindBoost
+        find_package(Boost COMPONENTS filesystem system iostreams QUIET)
+    endif()
+
+    if(Boost_FOUND)
+        message(STATUS "Found Boost via vcpkg toolchain")
+        include_directories(${Boost_INCLUDE_DIRS})
+        target_link_libraries(v8unpack ${Boost_LIBRARIES})
+    else()
+        # Fallback: используем кастомный поиск для vcpkg
+        message(WARNING "Standard Boost search with vcpkg failed, using custom search")
+
+        # Customs Boost search logic for vcpkg fallback
+        set(BOOST_SEARCH_PATHS
+            ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_BINARY_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+        )
+
+        find_path(Boost_INCLUDE_DIR
+            NAMES boost/version.hpp
+            PATHS ${BOOST_SEARCH_PATHS}
+            DOC "Boost include directory from vcpkg"
+        )
+
+        if(Boost_INCLUDE_DIR)
+            message(STATUS "Found Boost include directory via custom search: ${Boost_INCLUDE_DIR}")
+            include_directories(${Boost_INCLUDE_DIR})
+
+            # Поиск библиотек относительно include директории
+            set(BOOST_LIB_SEARCH_PATHS
+                ${Boost_INCLUDE_DIR}/../lib
+                ${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_BINARY_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${CMAKE_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+            )
+
+            find_library(BOOST_FILESYSTEM_LIBRARY
+                NAMES boost_filesystem boost_filesystem-vc142-mt libboost_filesystem libboost_filesystem-vc142-mt
+                PATHS ${BOOST_LIB_SEARCH_PATHS}
+                DOC "Boost filesystem library from vcpkg"
+            )
+
+            find_library(BOOST_SYSTEM_LIBRARY
+                NAMES boost_system boost_system-vc142-mt libboost_system libboost_system-vc142-mt
+                PATHS ${BOOST_LIB_SEARCH_PATHS}
+                DOC "Boost system library from vcpkg"
+            )
+
+            find_library(BOOST_IOSTREAMS_LIBRARY
+                NAMES boost_iostreams boost_iostreams-vc142-mt libboost_iostreams libboost_iostreams-vc142-mt
+                PATHS ${BOOST_LIB_SEARCH_PATHS}
+                DOC "Boost iostreams library from vcpkg"
+            )
+
+            if(BOOST_FILESYSTEM_LIBRARY AND BOOST_SYSTEM_LIBRARY AND BOOST_IOSTREAMS_LIBRARY)
+                message(STATUS "Found Boost libraries via custom search")
+                target_link_libraries(v8unpack
+                    ${BOOST_FILESYSTEM_LIBRARY}
+                    ${BOOST_SYSTEM_LIBRARY}
+                    ${BOOST_IOSTREAMS_LIBRARY}
+                )
+            else()
+                message(FATAL_ERROR "Boost libraries not found via custom search. filesystem=${BOOST_FILESYSTEM_LIBRARY}, system=${BOOST_SYSTEM_LIBRARY}, iostreams=${BOOST_IOSTREAMS_LIBRARY}")
+            endif()
+        else()
+            message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vcpkg.")
+        endif()
+    endif()
 else()
     # КАСТОМНЫЙ ПОИСК BOOST - Обход проблемы FindBoost.cmake
     # Настройки поиска Boost
@@ -278,4 +346,5 @@ endif()
     # Поиск ZLIB
     find_package (ZLIB REQUIRED)
     include_directories (${ZLIB_INCLUDE_DIRS})
+    target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
 endif()
