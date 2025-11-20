@@ -34,6 +34,15 @@ for:
   - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
   - path: v8unpack*.deb
+  deploy:
+    - provider: GitHub
+      auth_token:
+        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P # Replace with actual encrypted token
+      artifact: /v8unpack-.*\.deb$/
+      draft: false
+      prerelease: false
+      on:
+        branch: master # Deploy on master branch for testing
 
 -
   matrix:
