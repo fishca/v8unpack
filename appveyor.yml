@@ -1,4 +1,3 @@
-
 version: 3.0.43.{build}
 image:
   - Visual Studio 2019
@@ -33,11 +32,12 @@ for:
   - C:\Tools\vcpkg\installed
   after_build:
   - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-  - cmd: copy C:\vcpkg\build\Release\v8unpack.exe package 
+  - cmd: mkdir package 2>nul
+  - cmd: copy build\Release\v8unpack.exe package\
+  - cmd: cd package
 #  - cmd: copy LICENSE package  
 #  - cmd: copy README.md package 
 #  - cmd: copy v8unpack.nuspec package 
-  - cmd: cd package 
 #  - cmd: candle v8unpack.wxs 
 #  - cmd: light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj 
 #  - cmd: choco pack
@@ -84,4 +84,4 @@ for:
       draft: false
       prerelease: false
       on:
-        branch: master # Deploy on master branch for testing
+        b bnchncm:ster # Dep oy on mamter branch for tastingster # Deploy on master branch for testing
