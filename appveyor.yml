@@ -62,7 +62,8 @@ for:
   install:
 #- sudo apt update -q -y
   - sudo apt install -y debhelper build-essential devscripts fakeroot
-  - ../vcpkg/vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-linux
+  #- ../vcpkg/vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-linux
+  - ../vcpkg/vcpkg install --triplet x64-linux
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
   - cmake --build . --config Release
