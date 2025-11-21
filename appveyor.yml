@@ -15,18 +15,14 @@ for:
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     matrix:
-    #- ARCH: x86
-    #  BUILD_PLATFORM: Win32
-    - ARCH: x64  
-      BUILD_PLATFORM: x64    
+    - ARCH: x64
+      BUILD_PLATFORM: x64
   install:
-  - cmd: if not exist "C:\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
-  - cmd: cd C:\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
-  #- cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
-  - cmd: cd C:\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
-
+  - cmd: if not exist "C:\Tools\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\Tools\vcpkg
+  - cmd: cd C:\Tools\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
+  - cmd: cd %VCPKG_ROOT% && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
   build_script:
-  - set VCPKG_ROOT=C:\vcpkg
+  - set VCPKG_ROOT=C:\Tools\vcpkg
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
   cache:
   - C:\Tools\vcpkg\installed
@@ -35,14 +31,13 @@ for:
   - cmd: mkdir package 2>nul
   - cmd: copy build\Release\v8unpack.exe package\
   - cmd: cd package
-#  - cmd: copy LICENSE package  
-#  - cmd: copy README.md package 
-#  - cmd: copy v8unpack.nuspec package 
-#  - cmd: candle v8unpack.wxs 
-#  - cmd: light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj 
+#  - cmd: copy LICENSE package
+#  - cmd: copy README.md package
+#  - cmd: copy v8unpack.nuspec package
+#  - cmd: candle v8unpack.wxs
+#  - cmd: light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
 #  - cmd: choco pack
   artifacts:
-    # v8unpack.vcxproj -> C:\projects\vcpkg\build\Release\v8unpack.exe
   - path: package/*.exe
     name: v8unpack.exe
 #  - path: package/v8unpack*.nupkg
@@ -62,13 +57,10 @@ for:
   - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
   - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
   install:
-#- sudo apt update -q -y
   - sudo apt install -y debhelper build-essential devscripts fakeroot
-  #- ../vcpkg/vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-linux
   - ../vcpkg/vcpkg install --triplet x64-linux
   build_script:
-  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
-  - cmake --build . --config Release
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release
   - cd ..
   cache:
   - ../vcpkg/installed
@@ -76,12 +68,12 @@ for:
   - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
   - path: v8unpack*.deb
-  deploy:
-    - provider: GitHub
-      auth_token:
-        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P # Replace with actual encrypted token
-      artifact: /v8unpack-.*\.deb$/
-      draft: false
-      prerelease: false
-      on:
-        b bnchncm:ster # Dep oy on mamter branch for tastingster # Deploy on master branch for testing
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
+    artifact: "/v8unpack-.*\\.deb$/"
+    draft: false
+    prerelease: false
+    on:
+deploy:
