@@ -16,15 +16,15 @@ for:
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     matrix:
-    - ARCH: x86
-      BUILD_PLATFORM: Win32
+    #- ARCH: x86
+    #  BUILD_PLATFORM: Win32
     - ARCH: x64  
       BUILD_PLATFORM: x64    
   install:
   - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
   - cmd: cd ..\vcpkg && if exist ".git\HEAD" git pull
   - cmd: cd ..\vcpkg && bootstrap-vcpkg.bat
-  - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
+  #- cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
   - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
 
   build_script:
