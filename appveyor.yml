@@ -20,10 +20,10 @@ for:
   - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
   - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
   - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
-  install:
-  #- sudo apt update -q -y
-  - sudo apt install -y debhelper build-essential devscripts fakeroot
-  - ../vcpkg/vcpkg install ${VCPKG_LIBS}
+install:
+#- sudo apt update -q -y
+- sudo apt install -y debhelper build-essential devscripts fakeroot
+- ../vcpkg/vcpkg install --triplet x64-linux
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
   - cmake --build . --config Release
