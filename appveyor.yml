@@ -22,13 +22,13 @@ for:
       BUILD_PLATFORM: x64    
   install:
   - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
-  - cmd: cd ..\vcpkg && if exist ".git\HEAD" git pull
-  - cmd: cd ..\vcpkg && bootstrap-vcpkg.bat
+  - cmd: cd ..\vcpkg && setlocal + enabledelayedexpansion && if exist ".git\HEAD" (git pull) && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
   #- cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
   - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
 
   build_script:
-  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%APPVEYOR_BUILD_FOLDER%/..\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
+  - set VCPKG_ROOT=%APPVEYOR_BUILD_FOLDER%/..\vcpkg
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
   cache:
   - ../vcpkg/installed
   after_build:
