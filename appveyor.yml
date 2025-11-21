@@ -43,7 +43,8 @@ for:
     - cmd: cd C:\Tools\vcpkg && bootstrap-vcpkg.bat
 
     # install dependencies (cached)
-    - cmd: cd C:\Tools\vcpkg && vcpkg install --clean-after-build
+    - cmd: set VCPKG_ROOT=C:\Tools\vcpkg
+    - cmd: cd %APPVEYOR_BUILD_FOLDER% && "%VCPKG_ROOT%/vcpkg.exe" install --clean-after-build
 
   build_script:
     - set VCPKG_ROOT=C:\Tools\vcpkg
