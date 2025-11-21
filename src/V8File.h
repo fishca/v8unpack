@@ -430,7 +430,7 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
  * @param result Выходная строка с данными
  * @return 0 - успех, отрицательно - ошибка
  */
-int ParseToString2(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
+//int ParseToString2(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
 
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)

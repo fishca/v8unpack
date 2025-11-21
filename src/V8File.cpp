@@ -22,26 +22,33 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <utility>
-extern Logger logger;
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
 #include <codecvt>
 #include <locale>
 
+extern Logger logger;
 namespace v8unpack {
 
 using namespace std;
 namespace fs = boost::filesystem;
 
+// Условный предел - распаковка всегда для -parse
+/*
+	Лучше всѣго сжимается текст
+	Берём степень сжатія текста в 99% (объём распакованных данных в 100 раз больше)
+	Берём примѣрный порог использованія памяти в 20МБ (в этот объём должы влезть распакованные данные)
+	Дѣлим 20МБ на 100 и получаем 200 КБ
+	Упакованные данные размѣром до 200 КБ можно спокойно обрабатывать в памяти
+
+	В дальнейшем этот показатель всё же будет вынесен в параметр командной строки
+*/
+const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
+const size_t SmartUnpackedLimit = 20 *1024*1024;
+
 Logger logger("Debug_app.log");
 
-int RecursiveUnpack(
-		const string                &directory,
-		      basic_istream<char>   &file,
-		const vector<string>        &filter,
-		      bool                   boolInflate,
-		      bool                   UnpackWhenNeed
-);
+int RecursiveUnpack( const string &directory, basic_istream<char> &file, const vector<string> &filter, bool boolInflate, bool UnpackWhenNeed);
 
 CV8File::CV8File()
 {
@@ -398,20 +405,6 @@ void CV8File::Dispose()
 	Elems.clear();
 }
 
-// Условный предел - распаковка всегда для -parse
-const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
-const size_t SmartUnpackedLimit = 20 *1024*1024;
-
-/*
-	Лучше всѣго сжимается текст
-	Берём степень сжатія текста в 99% (объём распакованных данных в 100 раз больше)
-	Берём примѣрный порог использованія памяти в 20МБ (в этот объём должы влезть распакованные данные)
-	Дѣлим 20МБ на 100 и получаем 200 КБ
-	Упакованные данные размѣром до 200 КБ можно спокойно обрабатывать в памяти
-
-	В дальнейшем этот показатель всё же будет вынесен в параметр командной строки
-*/
-
 class data_source_t
 {
 public:
@@ -549,8 +542,6 @@ String prepare_smart_source_to_string(basic_istream<char>& file, bool NeedUnpack
 
 	return "";
 }
-
-
 
 template<typename format>
 int SmartUnpack(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_path)
@@ -1006,9 +997,7 @@ std::wstring string_to_wstring(const std::string& str) {
     return converter.from_bytes(str);
 }
 
-
 // std::wstring (UTF-16) -> std::string (UTF-8)
-
 String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 {
 	int ret = 0;
@@ -1044,20 +1033,13 @@ String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 		{
 			if (pElemsAddrs[i].elem_data_addr != Format16::UNDEFINED_VALUE) {
 				file.seekg(pElemsAddrs[i].elem_data_addr + Format16::BASE_OFFSET, ios_base::beg);
-				//SmartUnpack<Format16>(file, boolInflate, elem_path);
-				//auto src = prepare_smart_source<Format16>(file, true, elem_path);
 				auto Result = prepare_smart_source_to_string<Format16>(file, true);
-				//auto unpack_result = RecursiveUnpack(elem_path.string(), src->stream(), {}, false, false);
 				return Result;
 			}
-			
+
 		}
 	}
-
-	
 }
-
-
 
 String getDataFromFile1C(const string& filename_in, const string& FileName)
 {
@@ -1108,9 +1090,8 @@ wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, co
 		}
 	}
 
-
+	return L"";
 }
-
 
 wstring wgetDataFromFile1C(const string& filename_in, const string& FileName, const string& DataFileName)
 {
@@ -1119,9 +1100,6 @@ wstring wgetDataFromFile1C(const string& filename_in, const string& FileName, co
 	return wGetDataFromFile1C(file_in, FileName, DataFileName);
 
 }
-
-
-
 
 int CV8File::LoadFileFromFolder(const string &dirname)
 {
@@ -1169,8 +1147,7 @@ int CV8File::LoadFileFromFolder(const string &dirname)
 static bool
 is_dot_file(const fs::path &path)
 {
-	return path.filename().string() == "."
-		|| path.filename().string() == "..";
+	return path.filename().string() == "." || path.filename().string() == "..";
 }
 
 template<typename format>
@@ -1591,108 +1568,5 @@ int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &fil
 	return recursive_unpack_to_string<Format15>(file, filter, boolInflate, result);
 }
 
-template<typename format>
-static int recursive_unpack_to_string2(
-	basic_istream<char>& file,
-	const std::string& current_path,
-	const std::vector<std::string>& filter,
-	std::string& result
-) {
-	typename format::file_header_t FileHeader;
-	file.seekg(format::BASE_OFFSET);
-	file.read(reinterpret_cast<char*>(&FileHeader), FileHeader.Size());
 
-	auto pElemsAddrs = ReadElementsAllocationTable<format>(file);
-	uint32_t ElemsNum = static_cast<uint32_t>(pElemsAddrs.size());
-
-	logger.log("RecursiveUnpackToString2. Путь: " + current_path + ", найдено " + std::to_string(ElemsNum) + " элементов");
-
-	for (uint32_t i = 0; i < ElemsNum; ++i) {
-		if (pElemsAddrs[i].fffffff != format::UNDEFINED_VALUE) {
-			break;
-		}
-
-		file.seekg(pElemsAddrs[i].elem_header_addr + format::BASE_OFFSET, std::ios_base::beg);
-
-		CV8Elem elem;
-		if (!SafeReadBlockData<format>(file, elem.header)) {
-			continue;
-		}
-		std::string ElemName = elem.GetName();
-
-		if (!NameInFilter(ElemName, filter)) {
-			continue;
-		}
-
-		std::string fullpath = current_path.empty() ? ElemName : current_path + "/" + ElemName;
-		result += "--- " + fullpath + " ---\n";
-
-		if (pElemsAddrs[i].elem_data_addr != format::UNDEFINED_VALUE) {
-			file.seekg(pElemsAddrs[i].elem_data_addr + format::BASE_OFFSET, std::ios_base::beg);
-
-			typename format::block_header_t data_header;
-			file.read(reinterpret_cast<char*>(&data_header), data_header.Size());
-
-			std::vector<char> raw_data;
-			ReadBlockData<format>(file, data_header, raw_data);
-
-			std::vector<char> unpacked_data = raw_data;
-			try_inflate(unpacked_data);
-
-			std::string unpacked_str(unpacked_data.begin(), unpacked_data.end());
-			std::istringstream elem_stream(unpacked_str);
-
-			bool is_v8_16 = IsV8File16(elem_stream);
-			if (is_v8_16) {
-				elem_stream.clear();
-				elem_stream.seekg(0);
-				recursive_unpack_to_string2<Format16>(elem_stream, fullpath, filter, result);
-			} else {
-				bool is_v8_15 = IsV8File(elem_stream);
-				if (is_v8_15) {
-					elem_stream.clear();
-					elem_stream.seekg(0);
-					recursive_unpack_to_string2<Format15>(elem_stream, fullpath, filter, result);
-				} else {
-					result.append(unpacked_str);
-				}
-			}
-		}
-		result += "\n";
-	}
-	return V8UNPACK_OK;
-}
-
-int ParseToString2(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result) {
-	result.clear();
-
-	boost::filesystem::ifstream file(filename_in, std::ios_base::binary);
-	if (!file) {
-		std::cerr << "ParseToString2. Файл не найден: " << filename_in << std::endl;
-		return V8UNPACK_SOURCE_DOES_NOT_EXIST;
-	}
-
-	file.seekg(0, std::ios_base::beg);
-	bool is16 = IsV8File16(file);
-	file.clear();
-	file.seekg(0, std::ios_base::beg);
-
-	if (!is16 && !IsV8File(file)) {
-		std::cerr << "ParseToString2. Не V8 файл: " << filename_in << std::endl;
-		return V8UNPACK_NOT_V8_FILE;
-	}
-
-	logger.log("Начало ParseToString2 для " + filename_in);
-
-	int ret;
-	if (is16) {
-		ret = recursive_unpack_to_string2<Format16>(file, "", filter, result);
-	} else {
-		ret = recursive_unpack_to_string2<Format15>(file, "", filter, result);
-	}
-
-	std::cout << "ParseToString2 '" << filename_in << "': ok" << std::endl;
-	logger.log("Окончание ParseToString2. Размер результата: " + std::to_string(result.size()));
-	return ret;
-}
-
+} // namespace v8unpack
