@@ -61,7 +61,7 @@ for:
   - cmd: if not exist "..\\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\\vcpkg
   - cmd: cd ..\\vcpkg && if not exist ".git\\HEAD" git pull && bootstrap-vcpkg.bat
 
-  - cmd: set PATH=%PATH%;..\vcpkg && vcpkg install --triplet x64-windows
+  # ZLIB is built manually above, skip vcpkg install to avoid manifest mode conflict
 
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="../vcpkg/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release && cd ..
