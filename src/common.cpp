@@ -3,7 +3,6 @@
 #include "binarydecimalnumber.h"
 //---------------------------------------------------------------------------
 #if !defined(_WIN32)
-#pragma package(smart_init)
 #endif
 
 using namespace System;

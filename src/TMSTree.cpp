@@ -6,7 +6,7 @@
 
 void TMSTree::ParseMetaDataStream(std::string aMetaDataStream, bool addLFCR)
 {
-	int i = 0;
+	size_t i = 0;
 	ParseLevel(aMetaDataStream, i, addNode(NULL, "ROOT"), addLFCR);
 	i++;
 	while (i < aMetaDataStream.size())
@@ -114,7 +114,7 @@ void TMSTree::ParseBaseDataStream2(std::string aMetaDataStream)
 	}
 }
 
-void TMSTree::ParseLevel(std::string aMetaDataStream, int index, EctoTreeNode* TreeParent, bool addLFCR)
+void TMSTree::ParseLevel(std::string aMetaDataStream, size_t index, EctoTreeNode* TreeParent, bool addLFCR)
 {
 	char CurChar = ' ';
 	std::string FieldStr = "";
@@ -206,18 +206,18 @@ void TMSTree::LoadTree(std::string PData, bool Mode, bool addLFCR)
 
 void TMSTree::UploadToFile(std::string FileName)
 {
-	//TODO: Реализовать void TMSTree::UploadToFile(std::string FileName)
+	//TODO: Р РµР°Р»РёР·РѕРІР°С‚СЊ void TMSTree::UploadToFile(std::string FileName)
 }
 
 void TMSTree::UploadToString(std::string OutData)
 {
-	OutData = "Пока не реализовано!";
-	//TODO: Реализовать void TMSTree::UploadToString(std::string OutData)
+	OutData = "РџРѕРєР° РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ!";
+	//TODO: Р РµР°Р»РёР·РѕРІР°С‚СЊ void TMSTree::UploadToString(std::string OutData)
 }
 
 EctoTreeNode* TMSTree::GetItemByName(std::string ItemName)
 {
-	for (size_t i = 0; i < nodeCount() - 1; i++)
+	for (int i = 0; i < nodeCount() - 1; i++)
 	{
 		if (nodes(i)->caption.empty())
 			continue;
@@ -232,10 +232,10 @@ EctoTreeNode* TMSTree::GetItemByName(std::string ItemName)
 
 void TMSTree::TranslateTree()
 {
-	//TODO: Реализовать void TMSTree::TranslateTree()
+	//TODO: Р РµР°Р»РёР·РѕРІР°С‚СЊ void TMSTree::TranslateTree()
 }
 
 void TMSTree::TranslateForm()
 {
-	//TODO: Реализовать void TMSTree::TranslateForm()
+	//TODO: Р РµР°Р»РёР·РѕРІР°С‚СЊ void TMSTree::TranslateForm()
 }

@@ -19,9 +19,12 @@ endif()
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-# Linux-specific definition
-if(UNIX)
+# Platform-specific settings
+if(MSVC)
+	add_compile_options(/W0)
+elseif(UNIX)
 	add_definitions(-D__LINUX)
+	add_compile_options(-Wno-unused-parameter -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-nonnull-compare)
 endif()
 
 set (V8UNPACK_SOURCES
