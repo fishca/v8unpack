@@ -43,7 +43,7 @@ for:
       choco pack
   artifacts:
     # v8unpack.vcxproj -> C:\projects\vcpkg\build\Release\v8unpack.exe
-  - path: ../vcpkg/build/Release/*.exe
+  - path: v8unpack.exe
     name: v8unpack.exe
   - path: package/v8unpack*.nupkg
     name: v8unpack.nupkg
