@@ -33,8 +33,8 @@ for:
   - C:\vcpkg\installed
   after_build:
   - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-  - cmd: copy C:\projects\vcpkg\build\Release\v8unpack.exe v8unpack.exe
-  - cmd: copy C:\projects\vcpkg\build\Release\v8unpack.exe package
+  - cmd: copy C:\vcpkg\build\Release\v8unpack.exe v8unpack.exe
+  - cmd: copy C:\vcpkg\build\Release\v8unpack.exe package
   - cmd: copy LICENSE package
   - cmd: copy README.md package
   - cmd: cd package && candle v8unpack.wxs
