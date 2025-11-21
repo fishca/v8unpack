@@ -21,20 +21,20 @@ for:
     - ARCH: x64  
       BUILD_PLATFORM: x64    
   install:
-  - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
-  - cmd: cd ..\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
+  - cmd: if not exist "C:\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+  - cmd: cd C:\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
   #- cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
-  - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
+  - cmd: cd C:\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
 
   build_script:
-  - set VCPKG_ROOT=%APPVEYOR_BUILD_FOLDER%/..\vcpkg
+  - set VCPKG_ROOT=C:\vcpkg
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
   cache:
-  - ../vcpkg/installed
+  - C:\vcpkg\installed
   after_build:
   - cmd: >-
       SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-      copy build\Release\v8unpack.exe package
+      copy C:\projects\vcpkg\build\Release\v8unpack.exe package
       copy LICENSE package
       copy README.md package
       cd package
@@ -42,7 +42,8 @@ for:
       light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
       choco pack
   artifacts:
-  - path: build/Release/v8unpack.exe
+    # v8unpack.vcxproj -> C:\projects\vcpkg\build\Release\v8unpack.exe
+  - path: C:/projects/vcpkg/build/Release/*.exe
     name: v8unpack.exe
   - path: package/v8unpack*.nupkg
     name: v8unpack.nupkg
