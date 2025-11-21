@@ -69,7 +69,14 @@ for:
   artifacts:
     - path: package/*.exe
       name: v8unpack.exe
-
+  deploy:
+    - provider: GitHub
+      auth_token:
+        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
+      draft: false
+      prerelease: false
+      on:
+        branch: master
 
 # ======================================================================
 # ============================ LINUX BUILD ==============================
@@ -126,4 +133,4 @@ deploy:
     draft: false
     prerelease: false
     on:
-      branch: main
+      branch: master
