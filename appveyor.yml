@@ -23,7 +23,7 @@ for:
   install:
   - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
   - cmd: cd ..\vcpkg && if not exist ".git\HEAD" git pull && bootstrap-vcpkg.bat
-  - cmd: cd ..\vcpkg && vcpkg install --triplet %PLATFORM%-windows
+  - cmd: cd ..\vcpkg && vcpkg install --triplet %ARCH%-windows
 
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%APPVEYOR_BUILD_FOLDER%/..\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
