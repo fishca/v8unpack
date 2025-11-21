@@ -422,6 +422,16 @@ int ParseToString(const std::string &filename_in, const std::vector<std::string>
  */
 int ParseToStringWithFiles(const std::string &config_string, const std::string &dirname);
 
+/**
+ * @brief Рекурсивная распаковка V8 файла (* .cf, .epf и т.д.) в строку с сохранением иерархии путей
+ * Аналог Parse(), но вместо папки выводит в строку с разделителями "--- path/to/elem ---" и рекурсивной обработкой вложенных V8.
+ * @param filename_in Входной файл V8
+ * @param filter Список имен элементов для распаковки (пустой - все)
+ * @param result Выходная строка с данными
+ * @return 0 - успех, отрицательно - ошибка
+ */
+int ParseToString2(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
+
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)
 {
