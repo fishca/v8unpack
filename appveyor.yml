@@ -1,73 +1,122 @@
-version: 3.0.43.{build}
+# Оптимизированный вариант ChatGPT
+version: 3.0.43.{build}  
+
 image:
   - Visual Studio 2019
   - Ubuntu2004
+
 pull_requests:
   do_not_increment_build_number: true
+
 clone_depth: 1
+
 for:
+
+# ======================================================================
+# ========================== WINDOWS BUILD ==============================
+# ======================================================================
 -
   matrix:
     only:
       - image: Visual Studio 2019
+
   environment:
-    VCDIR: C:\Program Files\Misc\VS\2019\BuildTools\VC\Auxiliary\Build
+    VCDIR: "C:\Program Files\Misc\VS\2019\BuildTools\VC\Auxiliary\Build"
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     matrix:
-    - ARCH: x64
-      BUILD_PLATFORM: x64
+      - ARCH: x64
+        BUILD_PLATFORM: x64
+
   install:
-  - cmd: if not exist "C:\Tools\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\Tools\vcpkg
-  - cmd: cd C:\Tools\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
-  - cmd: cd %VCPKG_ROOT% && vcpkg install --triplet x64-windows
+    # create binary cache
+    - cmd: mkdir C:\Tools\vcpkg-cache 2>nul
+    - cmd: set VCPKG_BINARY_SOURCES=clear;files,C:\Tools\vcpkg-cache,readwrite
+
+    # clone vcpkg if missing
+    - cmd: if not exist "C:\Tools\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\Tools\vcpkg
+
+    # fix version for reproducible builds
+    - cmd: cd C:\Tools\vcpkg && git checkout 2024.10.21
+
+    # bootstrap
+    - cmd: cd C:\Tools\vcpkg && bootstrap-vcpkg.bat
+
+    # install dependencies (cached)
+    - cmd: cd C:\Tools\vcpkg && vcpkg install --triplet x64-windows --clean-after-build
+
   build_script:
-  - set VCPKG_ROOT=C:\Tools\vcpkg
-  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
+    - set VCPKG_ROOT=C:\Tools\vcpkg
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%"
+    - cmake --build . --config Release
+    - cd ..
+
   cache:
-  - C:\Tools\vcpkg\installed
+    # binary cache — mandatory for speed
+    - C:\Tools\vcpkg-cache
+    # installed folder — optional, but harmless
+    - C:\Tools\vcpkg\installed
+
   after_build:
-  - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-  - cmd: mkdir package 2>nul
-  - cmd: copy build\Release\v8unpack.exe package\
-  - cmd: cd package
-#  - cmd: copy LICENSE package
-#  - cmd: copy README.md package
-#  - cmd: copy v8unpack.nuspec package
-#  - cmd: candle v8unpack.wxs
-#  - cmd: light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
-#  - cmd: choco pack
+    - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
+    - cmd: mkdir package 2>nul
+    - cmd: copy build\Release\v8unpack.exe package\
+    - cmd: cd package
+
   artifacts:
-  - path: package/*.exe
-    name: v8unpack.exe
-#  - path: package/v8unpack*.nupkg
-#    name: v8unpack.nupkg
-#  - path: package/v8unpack-*.msi
-#    name: v8unpack.msi
+    - path: package/*.exe
+      name: v8unpack.exe
+
+
+# ======================================================================
+# ============================ LINUX BUILD ==============================
+# ======================================================================
 -
   matrix:
     except:
       - image: Visual Studio 2019
+
   environment:
-    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     DEPLOY_PLATFORM_ID: ubuntu
+    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
+
   init:
-  - export CXX=g++-9 CC=gcc-9
-  - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
-  - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
-  - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
+    - export CXX=g++-9 CC=gcc-9
+
+    # binary cache
+    - mkdir -p $HOME/.cache/vcpkg
+    - export VCPKG_BINARY_SOURCES="clear;files,$HOME/.cache/vcpkg,readwrite"
+
+    # clone vcpkg
+    - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
+
+    # fix version for consistent caching
+    - (cd ../vcpkg && git checkout 2024.10.21 && ./bootstrap-vcpkg.sh)
+
+    - export VCPKG_DIR=$(dirname $(pwd)/../vcpkg/vcpkg)
+
   install:
-  - sudo apt install -y debhelper build-essential devscripts fakeroot
-  - ../vcpkg/vcpkg install --triplet x64-linux
+    - sudo apt install -y debhelper build-essential devscripts fakeroot
+    - ../vcpkg/vcpkg install --triplet x64-linux --clean-after-build
+
   build_script:
-  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release .. && cmake --build . --config Release
-  - cd ..
+    - mkdir build && cd build
+    - cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..
+    - cmake --build . --config Release
+    - cd ..
+
   cache:
-  - ../vcpkg/installed
+    - $HOME/.cache/vcpkg
+    - ../vcpkg/installed
+
   after_build:
-  - cd build && ../package/deb/builddeb.sh && cd ..
+    - cd build && ../package/deb/builddeb.sh && cd ..
+
   artifacts:
-  - path: v8unpack*.deb
+    - path: v8unpack*.deb
+
 deploy:
   - provider: GitHub
     auth_token:
