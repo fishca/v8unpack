@@ -1,24 +1,11 @@
+
 version: 3.0.43.{build}
 image:
   - Visual Studio 2019
   - Ubuntu2004
-
 pull_requests:
   do_not_increment_build_number: true
 clone_depth: 1
-
-# Общие настройки кэширования
-cache:
-  - ../vcpkg/installed -> appveyor.yml
-  - ../vcpkg/buildtrees
-  - ../vcpkg/packages
-  - C:\Users\appveyor\AppData\Local\vcpkg\archives
-  - ~/.cache/vcpkg/archives
-
-environment:
-  global:
-    VCPKG_BINARY_SOURCES: "clear;x-azurl,https://vcpkg-cache.azurewebsites.net/,readwrite"
-
 for:
 -
   matrix:
@@ -29,40 +16,38 @@ for:
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     matrix:
+    #- ARCH: x86
+    #  BUILD_PLATFORM: Win32
     - ARCH: x64  
       BUILD_PLATFORM: x64    
-  
   install:
-    - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
-    - cmd: cd ..\vcpkg && if exist ".git\HEAD" git pull
-    - cmd: cd ..\vcpkg && bootstrap-vcpkg.bat -disableMetrics
-    - cmd: cd ..\vcpkg && vcpkg integrate install
-    # Установка с бинарным кэшем и параллельной сборкой
-    - cmd: cd ..\vcpkg && vcpkg install %VCPKG_LIBS% --triplet x64-windows --binarysource=%VCPKG_BINARY_SOURCES% --x-wait-for-lock
+  - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
+  - cmd: cd ..\vcpkg && setlocal + enabledelayedexpansion && if exist ".git\HEAD" (git pull) && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
+  #- cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
+  - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
 
   build_script:
-    - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%APPVEYOR_BUILD_FOLDER%/..\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release --parallel 2 && cd ..
-
+  - set VCPKG_ROOT=%APPVEYOR_BUILD_FOLDER%/..\vcpkg
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
+  cache:
+  - ../vcpkg/installed
   after_build:
-    - cmd: >-
-        SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
-        if not exist package mkdir package
-        copy build\Release\v8unpack.exe package
-        copy LICENSE package
-        copy README.md package
-        cd package
-        candle v8unpack.wxs
-        light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
-        choco pack
-
+  - cmd: >-
+      SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
+      copy build\Release\v8unpack.exe package
+      copy LICENSE package
+      copy README.md package
+      cd package
+      candle v8unpack.wxs
+      light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
+      choco pack
   artifacts:
-    - path: build/Release/v8unpack.exe
-      name: v8unpack.exe
-    - path: package/v8unpack*.nupkg
-      name: v8unpack.nupkg
-    - path: package/v8unpack-*.msi
-      name: v8unpack.msi
-
+  - path: build/Release/v8unpack.exe
+    name: v8unpack.exe
+  - path: package/v8unpack*.nupkg
+    name: v8unpack.nupkg
+  - path: package/v8unpack-*.msi
+    name: v8unpack.msi
 -
   matrix:
     except:
@@ -70,35 +55,32 @@ for:
   environment:
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     DEPLOY_PLATFORM_ID: ubuntu
-  
   init:
-    - export CXX=g++-9 CC=gcc-9
-    - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
-    - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh -disableMetrics)"
-    - export VCPKG_DIR=`dirname $(pwd)`/vcpkg
-
+  - export CXX=g++-9 CC=gcc-9
+  - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
+  - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
+  - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
   install:
-    - sudo apt install -y debhelper build-essential devscripts fakeroot
-    # Установка с бинарным кэшем
-    - ../vcpkg/vcpkg install $VCPKG_LIBS --triplet x64-linux --binarysource=$VCPKG_BINARY_SOURCES --x-wait-for-lock
-
+#- sudo apt update -q -y
+  - sudo apt install -y debhelper build-essential devscripts fakeroot
+  #- ../vcpkg/vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-linux
+  - ../vcpkg/vcpkg install --triplet x64-linux
   build_script:
-    - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release ..
-    - cmake --build . --config Release --parallel 2
-    - cd ..
-
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
+  - cmake --build . --config Release
+  - cd ..
+  cache:
+  - ../vcpkg/installed
   after_build:
-    - cd build && ../package/deb/builddeb.sh && cd ..
-
+  - cd build && ../package/deb/builddeb.sh && cd ..
   artifacts:
-    - path: v8unpack*.deb
-
+  - path: v8unpack*.deb
   deploy:
     - provider: GitHub
       auth_token:
-        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
+        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P # Replace with actual encrypted token
       artifact: /v8unpack-.*\.deb$/
       draft: false
       prerelease: false
       on:
-        branch: master
+        branch: master # Deploy on master branch for testing
