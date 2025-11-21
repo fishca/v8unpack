@@ -14,17 +14,16 @@ for:
   environment:
     VCDIR: C:\Program Files\Misc\VS\2019\BuildTools\VC\Auxiliary\Build
     DEPLOY_PLATFORM_ID: win
+    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     matrix:
     - ARCH: x86
       BUILD_PLATFORM: Win32
     - ARCH: x64  
       BUILD_PLATFORM: x64    
   install:
-  - ps: choco install boost-msvc-14.2 -y --no-progress
   - cmd: if not exist "..\\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\\vcpkg
   - cmd: cd ..\\vcpkg && if not exist ".git\\HEAD" git pull && bootstrap-vcpkg.bat
-
-  # ZLIB is built manually above, skip vcpkg install to avoid manifest mode conflict
+  - cmd: ..\\vcpkg\\vcpkg install --triplet %PLATFORM%-windows
 
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%APPVEYOR_BUILD_FOLDER%/..\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..

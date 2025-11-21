@@ -781,11 +781,7 @@ int save_files(vector<string>& argv)
 		}
 	}
 
-	std::string result = "";
-	//return ParseToString(argv[0],filter, result);
-	//return ParseToStringWithFiles(argv[0], argv[1]);
-	//auto ret = Parse(argv[0], argv[1], filter);
-	auto ret = Parse(argv[0],filter, result);
+	auto ret = Parse(argv[0], argv[1], filter);
 	return ret;
 }
 
