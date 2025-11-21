@@ -41,7 +41,7 @@ for:
       light -out v8unpack-%APPVEYOR_BUILD_VERSION%.msi v8unpack.wixobj
       choco pack
   artifacts:
-  - path: build/Release/*.exe
+  - path: build/Release/v8unpack.exe
     name: v8unpack.exe
   - path: package/v8unpack*.nupkg
     name: v8unpack.nupkg
