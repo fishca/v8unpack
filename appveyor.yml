@@ -20,7 +20,7 @@ for:
   install:
   - cmd: if not exist "C:\Tools\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\Tools\vcpkg
   - cmd: cd C:\Tools\vcpkg && if exist ".git\HEAD" git pull && bootstrap-vcpkg.bat && set VCPKG_ROOT=%cd%
-  - cmd: cd %VCPKG_ROOT% && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
+  - cmd: cd %VCPKG_ROOT% && vcpkg install --triplet x64-windows
   build_script:
   - set VCPKG_ROOT=C:\Tools\vcpkg
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
@@ -77,4 +77,3 @@ deploy:
     prerelease: false
     on:
       branch: main
-      
