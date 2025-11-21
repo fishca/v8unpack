@@ -47,3 +47,38 @@ for:
     name: v8unpack.nupkg
   - path: package\v8unpack-*.msi
     name: v8unpack.msi
+-
+  matrix:
+    except:
+      - image: Visual Studio 2019
+  environment:
+    VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
+    DEPLOY_PLATFORM_ID: ubuntu
+  init:
+  - export CXX=g++-9 CC=gcc-9
+  - if [ ! -d ../vcpkg ]; then git clone https://github.com/microsoft/vcpkg.git ../vcpkg ; fi
+  - "(cd ../vcpkg && git pull && ./bootstrap-vcpkg.sh)"
+  - export VCPKG_DIR=`dirname $(pwd)/../vcpkg/vcpkg`
+  install:
+#- sudo apt update -q -y
+  - sudo apt install -y debhelper build-essential devscripts fakeroot
+  - ../vcpkg/vcpkg install --triplet x64-linux
+  build_script:
+  - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
+  - cmake --build . --config Release
+  - cd ..
+  cache:
+  - ../vcpkg/installed
+  after_build:
+  - cd build && ../package/deb/builddeb.sh && cd ..
+  artifacts:
+  - path: v8unpack*.deb
+  deploy:
+    - provider: GitHub
+      auth_token:
+        secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P # Replace with actual encrypted token
+      artifact: /v8unpack-.*\.deb$/
+      draft: false
+      prerelease: false
+      on:
+        branch: master # Deploy on master branch for testing
