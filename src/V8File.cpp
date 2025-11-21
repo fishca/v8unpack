@@ -1039,6 +1039,7 @@ String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 
 		}
 	}
+	return "";
 }
 
 String getDataFromFile1C(const string& filename_in, const string& FileName)
