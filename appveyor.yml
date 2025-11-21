@@ -23,8 +23,8 @@ for:
   install:
   - cmd: if not exist "..\vcpkg" git clone https://github.com/microsoft/vcpkg.git ..\vcpkg
   - cmd: cd ..\vcpkg && if not exist ".git\HEAD" git pull && bootstrap-vcpkg.bat
-  - cmd: cd ..\vcpkg && vcpkg install --triplet x64-windows
-  - cmd: cd ..\vcpkg && vcpkg install --triplet x86-windows
+  - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x86-windows
+  - cmd: cd ..\vcpkg && vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-windows
 
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="%APPVEYOR_BUILD_FOLDER%/..\vcpkg\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%" && cmake --build . --config Release && cd ..
@@ -62,7 +62,7 @@ for:
   install:
 #- sudo apt update -q -y
   - sudo apt install -y debhelper build-essential devscripts fakeroot
-  - ../vcpkg/vcpkg install --triplet x64-linux
+  - ../vcpkg/vcpkg install boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib --triplet x64-linux
   build_script:
   - mkdir build && cd build && cmake -DCMAKE_TOOLCHAIN_FILE="${VCPKG_DIR}/scripts/buildsystems/vcpkg.cmake" ..
   - cmake --build . --config Release
