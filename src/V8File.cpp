@@ -22,26 +22,33 @@ at http://mozilla.org/MPL/2.0/.
 #include <boost/iostreams/device/array.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <utility>
-extern Logger logger;
 #include <memory>
 #include <boost/filesystem/fstream.hpp>
 #include <codecvt>
 #include <locale>
 
+extern Logger logger;
 namespace v8unpack {
 
 using namespace std;
 namespace fs = boost::filesystem;
 
+// Условный предел - распаковка всегда для -parse
+/*
+	Лучше всѣго сжимается текст
+	Берём степень сжатія текста в 99% (объём распакованных данных в 100 раз больше)
+	Берём примѣрный порог использованія памяти в 20МБ (в этот объём должы влезть распакованные данные)
+	Дѣлим 20МБ на 100 и получаем 200 КБ
+	Упакованные данные размѣром до 200 КБ можно спокойно обрабатывать в памяти
+
+	В дальнейшем этот показатель всё же будет вынесен в параметр командной строки
+*/
+const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
+const size_t SmartUnpackedLimit = 20 *1024*1024;
+
 Logger logger("Debug_app.log");
 
-int RecursiveUnpack(
-		const string                &directory,
-		      basic_istream<char>   &file,
-		const vector<string>        &filter,
-		      bool                   boolInflate,
-		      bool                   UnpackWhenNeed
-);
+int RecursiveUnpack( const string &directory, basic_istream<char> &file, const vector<string> &filter, bool boolInflate, bool UnpackWhenNeed);
 
 CV8File::CV8File()
 {
@@ -398,20 +405,6 @@ void CV8File::Dispose()
 	Elems.clear();
 }
 
-// Условный предел - распаковка всегда для -parse
-const size_t SmartLimit = 200 * 1024 * 1024; // Большой лимит для всегда распаковки
-const size_t SmartUnpackedLimit = 20 *1024*1024;
-
-/*
-	Лучше всѣго сжимается текст
-	Берём степень сжатія текста в 99% (объём распакованных данных в 100 раз больше)
-	Берём примѣрный порог использованія памяти в 20МБ (в этот объём должы влезть распакованные данные)
-	Дѣлим 20МБ на 100 и получаем 200 КБ
-	Упакованные данные размѣром до 200 КБ можно спокойно обрабатывать в памяти
-
-	В дальнейшем этот показатель всё же будет вынесен в параметр командной строки
-*/
-
 class data_source_t
 {
 public:
@@ -549,8 +542,6 @@ String prepare_smart_source_to_string(basic_istream<char>& file, bool NeedUnpack
 
 	return "";
 }
-
-
 
 template<typename format>
 int SmartUnpack(basic_istream<char> &file, bool NeedUnpack, fs::path &elem_path)
@@ -1006,9 +997,7 @@ std::wstring string_to_wstring(const std::string& str) {
     return converter.from_bytes(str);
 }
 
-
 // std::wstring (UTF-16) -> std::string (UTF-8)
-
 String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 {
 	int ret = 0;
@@ -1044,20 +1033,14 @@ String GetDataFromFile1C(basic_istream<char>& file, const string& FileName)
 		{
 			if (pElemsAddrs[i].elem_data_addr != Format16::UNDEFINED_VALUE) {
 				file.seekg(pElemsAddrs[i].elem_data_addr + Format16::BASE_OFFSET, ios_base::beg);
-				//SmartUnpack<Format16>(file, boolInflate, elem_path);
-				//auto src = prepare_smart_source<Format16>(file, true, elem_path);
 				auto Result = prepare_smart_source_to_string<Format16>(file, true);
-				//auto unpack_result = RecursiveUnpack(elem_path.string(), src->stream(), {}, false, false);
 				return Result;
 			}
-			
+
 		}
 	}
-
-	
+	return "";
 }
-
-
 
 String getDataFromFile1C(const string& filename_in, const string& FileName)
 {
@@ -1108,9 +1091,8 @@ wstring wGetDataFromFile1C(basic_istream<char>& file, const string& FileName, co
 		}
 	}
 
-
+	return L"";
 }
-
 
 wstring wgetDataFromFile1C(const string& filename_in, const string& FileName, const string& DataFileName)
 {
@@ -1119,9 +1101,6 @@ wstring wgetDataFromFile1C(const string& filename_in, const string& FileName, co
 	return wGetDataFromFile1C(file_in, FileName, DataFileName);
 
 }
-
-
-
 
 int CV8File::LoadFileFromFolder(const string &dirname)
 {
@@ -1169,8 +1148,7 @@ int CV8File::LoadFileFromFolder(const string &dirname)
 static bool
 is_dot_file(const fs::path &path)
 {
-	return path.filename().string() == "."
-		|| path.filename().string() == "..";
+	return path.filename().string() == "." || path.filename().string() == "..";
 }
 
 template<typename format>
@@ -1590,5 +1568,6 @@ int RecursiveUnpackToString(basic_istream<char> &file, const vector<string> &fil
 
 	return recursive_unpack_to_string<Format15>(file, filter, boolInflate, result);
 }
+
 
 } // namespace v8unpack

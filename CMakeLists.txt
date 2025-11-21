@@ -19,9 +19,12 @@ endif()
 
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-# Linux-specific definition
-if(UNIX)
+# Platform-specific settings
+if(MSVC)
+	add_compile_options(/W0)
+elseif(UNIX)
 	add_definitions(-D__LINUX)
+	add_compile_options(-Wno-unused-parameter -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-nonnull-compare)
 endif()
 
 set (V8UNPACK_SOURCES
@@ -217,7 +220,7 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
                 message(FATAL_ERROR "Required Boost libraries not found. filesystem=${BOOST_FILESYSTEM_LIBRARY}, iostreams=${BOOST_IOSTREAMS_LIBRARY}")
             endif()
         else()
-            message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vpg.")
+            message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vpkg.")
         endif()
     else()
         # Standard Boost found
@@ -228,10 +231,60 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
     endif()
 
     # Find ZLIB in vcpkg environment
-    find_package(ZLIB REQUIRED)
-    include_directories(${ZLIB_INCLUDE_DIRS})
-    target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
-    message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES}")
+    find_package(ZLIB QUIET)
+    if(NOT ZLIB_FOUND)
+        message(WARNING "Standard ZLIB search failed, using custom search for vcpkg")
+
+        # Custom search for vcpkg ZLIB
+        set(ZLIB_SEARCH_PATHS
+            C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/../../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
+            C:/Tools/vcpkg/packages/zlib_${VCPKG_TARGET_TRIPLET}/include
+        )
+
+        find_path(ZLIB_INCLUDE_DIR
+            NAMES zlib.h
+            PATHS ${ZLIB_SEARCH_PATHS}
+            DOC "ZLIB include directory from vcpkg"
+        )
+
+        if(ZLIB_INCLUDE_DIR)
+            message(STATUS "Found ZLIB include directory via vcpkg custom search: ${ZLIB_INCLUDE_DIR}")
+            include_directories(${ZLIB_INCLUDE_DIR})
+
+            # Library paths for vcpkg ZLIB
+            set(ZLIB_LIB_SEARCH_PATHS
+                ${ZLIB_INCLUDE_DIR}/../lib
+                C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
+                ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/lib
+                C:/Tools/vcpkg/packages/zlib_${VCPKG_TARGET_TRIPLET}/lib
+            )
+
+            find_library(ZLIB_LIBRARY
+                NAMES zlib zlibstatic zdll libz libzlib
+                PATHS ${ZLIB_LIB_SEARCH_PATHS}
+                DOC "ZLIB library from vcpkg"
+            )
+
+            if(ZLIB_LIBRARY)
+                message(STATUS "Found ZLIB library via custom search: ${ZLIB_LIBRARY}")
+                target_link_libraries(v8unpack ${ZLIB_LIBRARY})
+                set(ZLIB_FOUND TRUE)
+            else()
+                message(FATAL_ERROR "ZLIB library not found in vcpkg paths. Please ensure zlib is installed via vcpkg: vcpkg install zlib")
+            endif()
+        else()
+            message(FATAL_ERROR "ZLIB include directory not found. Please ensure zlib is installed via vcpkg: vcpkg install zlib")
+        endif()
+    else()
+        include_directories(${ZLIB_INCLUDE_DIRS})
+        target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
+        message(STATUS "Found ZLIB via standard search: ${ZLIB_LIBRARIES}")
+    endif()
 
 else()
     # Custom Boost search for non-vpkg environments

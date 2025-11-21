@@ -29,7 +29,7 @@ private:
     void ParseMetaDataStream(std::string aMetaDataStream, bool addLFCR = false);
     void ParseBaseDataStream(std::string aMetaDataStream);
     void ParseBaseDataStream2(std::string aMetaDataStream);
-    void ParseLevel(std::string aMetaDataStream, int index, EctoTreeNode* TreeParent, bool addLFCR = false);
+    void ParseLevel(std::string aMetaDataStream, size_t index, EctoTreeNode* TreeParent, bool addLFCR = false);
 public:
     void LoadTree(std::string PData, bool Mode, bool addLFCR = false);
     void UploadToFile(std::string FileName);

@@ -1,0 +1,8 @@
+{
+  "name": "v8unpack",
+  "version-string": "3.0.0",
+  "description": "A tool for unpacking 1C:Enterprise configuration files",
+  "dependencies": [
+    "zlib"
+  ]
+}
