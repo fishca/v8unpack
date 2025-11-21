@@ -43,7 +43,7 @@ for:
     - cmd: cd C:\Tools\vcpkg && bootstrap-vcpkg.bat
 
     # install dependencies (cached)
-    - cmd: cd C:\Tools\vcpkg && vcpkg install --triplet x64-windows --clean-after-build
+    - cmd: cd C:\Tools\vcpkg && vcpkg install --clean-after-build
 
   build_script:
     - set VCPKG_ROOT=C:\Tools\vcpkg
@@ -99,7 +99,7 @@ for:
 
   install:
     - sudo apt install -y debhelper build-essential devscripts fakeroot
-    - ../vcpkg/vcpkg install --triplet x64-linux --clean-after-build
+    - ../vcpkg/vcpkg install --clean-after-build
 
   build_script:
     - mkdir build && cd build
