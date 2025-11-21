@@ -76,4 +76,5 @@ deploy:
     draft: false
     prerelease: false
     on:
-deploy:
+      branch: main
+      
