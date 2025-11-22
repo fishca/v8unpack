@@ -25,7 +25,7 @@ for:
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     VCPKG_ROOT: "%APPVEYOR_BUILD_FOLDER%\\tools\\vcpkg"
-    CACHE_DIR: %APPVEYOR_BUILD_FOLDER%\\cache\\vcpkg
+    CACHE_DIR: "%APPVEYOR_BUILD_FOLDER%\\cache\\vcpkg"
     matrix:
       - ARCH: x64
         BUILD_PLATFORM: x64
