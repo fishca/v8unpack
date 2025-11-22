@@ -70,7 +70,8 @@ for:
     - path: package/*.exe
       name: v8unpack.exe
   deploy:
-    - provider: GitHub
+      description: 'v8Unpack (x64), GCC edition'
+      provider: GitHub
       auth_token:
         secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
       draft: false
@@ -126,7 +127,8 @@ for:
     - path: v8unpack*.deb
 
 deploy:
-  - provider: GitHub
+    description: 'v8Unpack (x64), GCC edition'
+    provider: GitHub
     auth_token:
       secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
     artifact: "/v8unpack-.*\\.deb$/"
