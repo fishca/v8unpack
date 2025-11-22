@@ -56,9 +56,9 @@ for:
 
   cache:
     # binary cache — mandatory for speed
-    - %CACHE_DIR%
+    - "%CACHE_DIR%"
     # installed folder — optional, but harmless
-    - %VCPKG_ROOT%\installed
+    - "%VCPKG_ROOT%\\installed"
 
   after_build:
     - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
