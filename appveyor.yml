@@ -25,14 +25,14 @@ for:
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
     VCPKG_ROOT: "%APPVEYOR_BUILD_FOLDER%\\tools\\vcpkg"
-    CACHE_DIR: "%APPVEYOR_BUILD_FOLDER%\\cache\\vcpkg"
+    CACHE_DIR: %APPVEYOR_BUILD_FOLDER%\\cache\\vcpkg
     matrix:
       - ARCH: x64
         BUILD_PLATFORM: x64
 
   install:
     # create binary cache
-    - cmd: mkdir %CACHE_DIR% 2>nul
+    - cmd: if not exist "%CACHE_DIR%" mkdir "%CACHE_DIR%"
     - cmd: set VCPKG_BINARY_SOURCES=clear;files,%CACHE_DIR%,readwrite
 
     # clone vcpkg if missing
