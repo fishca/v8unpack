@@ -24,30 +24,30 @@ for:
     VCDIR: "C:\\Program Files\\Misc\\VS\\2019\\BuildTools\\VC\\Auxiliary\\Build"
     DEPLOY_PLATFORM_ID: win
     VCPKG_LIBS: boost-iostreams boost-filesystem boost-system boost-property-tree boost-locale zlib
+    VCPKG_ROOT: "%APPVEYOR_BUILD_FOLDER%\\tools\\vcpkg"
+    CACHE_DIR: "%APPVEYOR_BUILD_FOLDER%\\cache\\vcpkg"
     matrix:
       - ARCH: x64
         BUILD_PLATFORM: x64
 
   install:
     # create binary cache
-    - cmd: mkdir C:\Tools\vcpkg-cache 2>nul
-    - cmd: set VCPKG_BINARY_SOURCES=clear;files,C:\Tools\vcpkg-cache,readwrite
+    - cmd: mkdir %CACHE_DIR% 2>nul
+    - cmd: set VCPKG_BINARY_SOURCES=clear;files,%CACHE_DIR%,readwrite
 
     # clone vcpkg if missing
-    - cmd: if not exist "C:\Tools\vcpkg" git clone https://github.com/microsoft/vcpkg.git C:\Tools\vcpkg
+    - cmd: if not exist "%VCPKG_ROOT%" git clone https://github.com/microsoft/vcpkg.git "%VCPKG_ROOT%"
 
     # fix version for reproducible builds
-    - cmd: cd C:\Tools\vcpkg && git checkout 2024.10.21
+    - cmd: cd "%VCPKG_ROOT%" && git checkout 2024.10.21
 
     # bootstrap
-    - cmd: cd C:\Tools\vcpkg && bootstrap-vcpkg.bat
+    - cmd: cd "%VCPKG_ROOT%" && bootstrap-vcpkg.bat
 
     # install dependencies (cached)
-    - cmd: set VCPKG_ROOT=C:\Tools\vcpkg
-    - cmd: cd %APPVEYOR_BUILD_FOLDER% && "%VCPKG_ROOT%/vcpkg.exe" install --clean-after-build
+    - cmd: cd %APPVEYOR_BUILD_FOLDER% && "%VCPKG_ROOT%\vcpkg.exe" install --clean-after-build
 
   build_script:
-    - set VCPKG_ROOT=C:\Tools\vcpkg
     - mkdir build
     - cd build
     - cmake -DCMAKE_TOOLCHAIN_FILE="%VCPKG_ROOT%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=Release "%APPVEYOR_BUILD_FOLDER%"
@@ -56,9 +56,9 @@ for:
 
   cache:
     # binary cache — mandatory for speed
-    - C:\Tools\vcpkg-cache
+    - "%CACHE_DIR%"
     # installed folder — optional, but harmless
-    - C:\Tools\vcpkg\installed
+    - "%VCPKG_ROOT%\\installed"
 
   after_build:
     - cmd: SET PATH=%PATH%;"C:/Program Files (x86)/WiX Toolset v3.11/bin"
@@ -70,7 +70,8 @@ for:
     - path: package/*.exe
       name: v8unpack.exe
   deploy:
-    - provider: GitHub
+      description: 'v8Unpack (x64), GCC edition'
+      provider: GitHub
       auth_token:
         secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
       draft: false
@@ -126,7 +127,8 @@ for:
     - path: v8unpack*.deb
 
 deploy:
-  - provider: GitHub
+    description: 'v8Unpack (x64), GCC edition'
+    provider: GitHub
     auth_token:
       secure: M4AKfJ+7WFZy9EWrSbiY+eganFrT1sQ2a1ZWK5RtV6Id84ZCZYu6jfhKuT26AM8P
     artifact: "/v8unpack-.*\\.deb$/"
