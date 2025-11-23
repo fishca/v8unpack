@@ -117,38 +117,18 @@ include_directories (src src/SystemClasses)
 
 # Поиск Boost и ZLIB
 if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
-    # Для статической линковки на Windows при использовании vcpkg
+    # Для статической линковки на Windows при использовании vcpkg - меняем triplet
     if(WIN32)
+        set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "VCPKG triplet для статической линковки")
         set(Boost_USE_STATIC_LIBS ON)
         set(Boost_USE_STATIC_RUNTIME ON)
-        message(STATUS "Принудительно включаем статическую линковку Boost для Windows")
+        message(STATUS "Используем статический triplet vcpkg: ${VCPKG_TARGET_TRIPLET}")
     endif()
 
-    # Для vcpkg сначала пробуем стандартный find_package
-    find_package(Boost COMPONENTS filesystem system iostreams CONFIG QUIET)
-    if(NOT Boost_FOUND)
-        message(WARNING "Standard Boost search with vcpkg failed, using custom search")
-
+    message(STATUS "Принудительно используем custom search для Boost (static libraries only)")
         # Custom search for vcpkg Boost
         if(DEFINED ENV{VCPKG_ROOT})
             set(VCPKG_ROOT $ENV{VCPKG_ROOT})
-        endif()
-
-        # Determine target triplet
-        if(NOT VCPKG_TARGET_TRIPLET)
-            if(WIN32)
-                if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-                    set(VCPKG_TARGET_TRIPLET "x64-windows")
-                else()
-                    set(VCPKG_TARGET_TRIPLET "x86-windows")
-                endif()
-            else()
-                if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-                    set(VCPKG_TARGET_TRIPLET "x64-linux")
-                else()
-                    set(VCPKG_TARGET_TRIPLET "x86-linux")
-                endif()
-            endif()
         endif()
 
         # Find Boost headers
@@ -185,43 +165,63 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
 
             message(STATUS "Searching for Boost libraries in: ${BOOST_LIB_SEARCH_PATHS}")
 
-            # Find Boost libraries with proper naming (prefer static versions)
-            find_library(BOOST_FILESYSTEM_LIBRARY
-                NAMES libboost_filesystem.lib boost_filesystem-vc142-mt-x64-1_89 boost_filesystem-vc142-mt boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
-                PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost filesystem library from vcpkg (static preferred)"
-            )
-
-            find_library(BOOST_SYSTEM_LIBRARY
-                NAMES libboost_system.lib boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
-                PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost system library from vcpkg (static preferred)"
-                NO_DEFAULT_PATH
-            )
-
-            find_library(BOOST_IOSTREAMS_LIBRARY
-                NAMES libboost_iostreams.lib boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
-                PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost iostreams library from vcpkg (static preferred)"
-            )
+            # Find Boost libraries with proper naming (ONLY static versions for Windows)
+            if(WIN32)
+                find_library(BOOST_FILESYSTEM_LIBRARY
+                    NAMES libboost_filesystem.lib
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost filesystem STATIC library from vcpkg"
+                )
+                find_library(BOOST_SYSTEM_LIBRARY
+                    NAMES libboost_system.lib
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost system STATIC library from vcpkg"
+                    NO_DEFAULT_PATH
+                )
+                find_library(BOOST_IOSTREAMS_LIBRARY
+                    NAMES libboost_iostreams.lib
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost iostreams STATIC library from vcpkg"
+                )
+            else()
+                find_library(BOOST_FILESYSTEM_LIBRARY
+                    NAMES libboost_filesystem.a
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost filesystem library from vpkg"
+                )
+                find_library(BOOST_SYSTEM_LIBRARY
+                    NAMES libboost_system.a
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost system library from vpkg"
+                    NO_DEFAULT_PATH
+                )
+                find_library(BOOST_IOSTREAMS_LIBRARY
+                    NAMES libboost_iostreams.a
+                    PATHS ${BOOST_LIB_SEARCH_PATHS}
+                    DOC "Boost iostreams library from vpkg"
+                )
+            endif()
 
             # Check which libraries were found
             set(FOUND_BOOST_LIBS "")
             if(BOOST_FILESYSTEM_LIBRARY)
                 list(APPEND FOUND_BOOST_LIBS ${BOOST_FILESYSTEM_LIBRARY})
+                message(STATUS "Found Boost Filesystem: ${BOOST_FILESYSTEM_LIBRARY}")
             endif()
             if(BOOST_SYSTEM_LIBRARY)
                 list(APPEND FOUND_BOOST_LIBS ${BOOST_SYSTEM_LIBRARY})
+                message(STATUS "Found Boost System: ${BOOST_SYSTEM_LIBRARY}")
             else()
                 message(WARNING "Boost system library not found - this may be expected in newer Boost versions where it's header-only")
             endif()
             if(BOOST_IOSTREAMS_LIBRARY)
                 list(APPEND FOUND_BOOST_LIBS ${BOOST_IOSTREAMS_LIBRARY})
+                message(STATUS "Found Boost IOStreams: ${BOOST_IOSTREAMS_LIBRARY}")
             endif()
 
             # Link Boost libraries
             if(BOOST_FILESYSTEM_LIBRARY AND BOOST_IOSTREAMS_LIBRARY)
-                message(STATUS "Found Boost libraries via custom search: ${FOUND_BOOST_LIBS}")
+                message(STATUS "Linking static Boost libraries: ${FOUND_BOOST_LIBS}")
                 target_link_libraries(v8unpack ${FOUND_BOOST_LIBS})
                 set(BOOST_FOUND TRUE)
             else()
@@ -230,13 +230,6 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
         else()
             message(FATAL_ERROR "Boost include directory not found. Please ensure Boost is properly installed via vpkg.")
         endif()
-    else()
-        # Standard Boost found
-        message(STATUS "Found Boost via vpkg toolchain")
-        include_directories(${Boost_INCLUDE_DIRS})
-        target_link_libraries(v8unpack ${Boost_LIBRARIES})
-        set(BOOST_FOUND TRUE)
-    endif()
 
     # Find ZLIB in vcpkg environment
     find_package(ZLIB QUIET)
