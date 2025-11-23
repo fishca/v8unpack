@@ -133,6 +133,9 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
 
         # Find Boost headers
         set(BOOST_SEARCH_PATHS
+            # Сначала local winlib директорий
+            ${CMAKE_SOURCE_DIR}/winlib
+            ${CMAKE_CURRENT_SOURCE_DIR}/winlib
             C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
             C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include
             ${VCPKG_ROOT}/installed/${VCPKG_TARGET_TRIPLET}/include
@@ -152,8 +155,10 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
             message(STATUS "Found Boost include directory via vcpkg custom search: ${Boost_INCLUDE_DIR}")
             include_directories(${Boost_INCLUDE_DIR})
 
-            # Library paths
+            # Library paths - сначала winlib директория!
             set(BOOST_LIB_SEARCH_PATHS
+                ${CMAKE_SOURCE_DIR}/winlib
+                ${CMAKE_CURRENT_SOURCE_DIR}/winlib
                 ${Boost_INCLUDE_DIR}/../lib
                 C:/Tools/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
                 C:/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/lib
