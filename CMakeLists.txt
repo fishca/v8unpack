@@ -109,6 +109,7 @@ if((MSVC) AND (NOT DISABLE_SINGLE_FILE))
 endif()
 
 set(CMAKE_CXX_STANDARD 14)
+
 add_executable (v8unpack ${V8UNPACK_SOURCES} ${V8UNPACK_HEADERS} ${RC_FILE})
 
 # Include directories for source files
@@ -284,15 +285,16 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
         include_directories(${ZLIB_INCLUDE_DIRS})
         target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
         message(STATUS "Found ZLIB via standard search: ${ZLIB_LIBRARIES}")
+        set(ZLIB_FOUND TRUE)
     endif()
 
 else()
     # Custom Boost search for non-vpkg environments
-    set (Boost_USE_STATIC_LIBS OFF)
+    set (Boost_USE_STATIC_LIBS ON)
     set (Boost_USE_MULTITHREADED ON)
     set (Boost_USE_STATIC_RUNTIME OFF)
 
-    message(STATUS "Starting custom Boost search...")
+    message(STATUS "Starting custom Boost search (static libraries)...")
 
     # Check environment variables
     if(NOT BOOST_ROOT AND DEFINED ENV{BOOST_ROOT})
@@ -361,23 +363,23 @@ else()
             C:/Libraries/boost_1_60_0/lib32-msvc-15.0
         )
 
-        # Find required libraries
+        # Find required libraries (prefer static versions)
         find_library(BOOST_FILESYSTEM_LIBRARY
-            NAMES boost_filesystem boost_filesystem-mt boost_filesystem-vc142 boost_filesystem-vc142-mt libboost_filesystem libboost_filesystem-mt libboost_filesystem-vc142 libboost_filesystem-vc142-mt boost_filesystem-mgw9-mt boost_filesystem-mgw9
+            NAMES libboost_filesystem.a boost_filesystem boost_filesystem-mt boost_filesystem-vc142 boost_filesystem-vc142-mt libboost_filesystem libboost_filesystem-mt libboost_filesystem-vc142 libboost_filesystem-vc142-mt boost_filesystem-mgw9-mt boost_filesystem-mgw9
             PATHS ${BOOST_LIB_SEARCH_PATHS}
-            DOC "Boost filesystem library"
+            DOC "Boost filesystem library (static preferred)"
         )
 
         find_library(BOOST_SYSTEM_LIBRARY
-            NAMES boost_system boost_system-mt boost_system-vc142 boost_system-vc142-mt libboost_system libboost_system-mt libboost_system-vc142 libboost_system-vc142-mt boost_system-mgw9-mt boost_system-mgw9
+            NAMES libboost_system.a boost_system boost_system-mt boost_system-vc142 boost_system-vc142-mt libboost_system libboost_system-mt libboost_system-vc142 libboost_system-vc142-mt boost_system-mgw9-mt boost_system-mgw9
             PATHS ${BOOST_LIB_SEARCH_PATHS}
-            DOC "Boost system library"
+            DOC "Boost system library (static preferred)"
         )
 
         find_library(BOOST_IOSTREAMS_LIBRARY
-            NAMES boost_iostreams boost_iostreams-mt boost_iostreams-vc142 boost_iostreams-vc142-mt libboost_iostreams libboost_iostreams-mt libboost_iostreams-vc142 libboost_iostreams-vc142-mt boost_iostreams-mgw9-mt boost_iostreams-mgw9
+            NAMES libboost_iostreams.a boost_iostreams boost_iostreams-mt boost_iostreams-vc142 boost_iostreams-vc142-mt libboost_iostreams libboost_iostreams-mt libboost_iostreams-vc142 libboost_iostreams-vc142-mt boost_iostreams-mgw9-mt boost_iostreams-mgw9
             PATHS ${BOOST_LIB_SEARCH_PATHS}
-            DOC "Boost iostreams library"
+            DOC "Boost iostreams library (static preferred)"
         )
 
         # Check required libraries
@@ -420,11 +422,11 @@ else()
         endif()
     endif()
 
-    # Find ZLIB
+    # Find ZLIB (prefer static version)
+    set(ZLIB_USE_STATIC_LIBS ON)
     find_package(ZLIB REQUIRED)
     include_directories(${ZLIB_INCLUDE_DIRS})
     target_link_libraries(v8unpack ${ZLIB_LIBRARIES})
-    message(STATUS "Found ZLIB: ${ZLIB_LIBRARIES}")
 
 endif()
 
