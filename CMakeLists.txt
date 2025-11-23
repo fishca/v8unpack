@@ -178,24 +178,24 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
 
             message(STATUS "Searching for Boost libraries in: ${BOOST_LIB_SEARCH_PATHS}")
 
-            # Find Boost libraries with proper naming
+            # Find Boost libraries with proper naming (prefer static versions)
             find_library(BOOST_FILESYSTEM_LIBRARY
-                NAMES boost_filesystem-vc142-mt-x64-1_89 boost_filesystem-vc142-mt boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
+                NAMES libboost_filesystem.lib boost_filesystem-vc142-mt-x64-1_89 boost_filesystem-vc142-mt boost_filesystem boost_filesystem-vc142-mt-gd-x64-1_89 libboost_filesystem libboost_filesystem-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost filesystem library from vcpkg"
+                DOC "Boost filesystem library from vcpkg (static preferred)"
             )
 
             find_library(BOOST_SYSTEM_LIBRARY
-                NAMES boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
+                NAMES libboost_system.lib boost_system-vc142-mt-x64-1_89 boost_system-vc142-mt boost_system-vc142-mt-gd-x64-1_89 boost_system libboost_system libboost_system-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost system library from vcpkg"
+                DOC "Boost system library from vcpkg (static preferred)"
                 NO_DEFAULT_PATH
             )
 
             find_library(BOOST_IOSTREAMS_LIBRARY
-                NAMES boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
+                NAMES libboost_iostreams.lib boost_iostreams-vc142-mt-x64-1_89 boost_iostreams-vc142-mt boost_iostreams-vc142-mt-gd-x64-1_89 boost_iostreams libboost_iostreams libboost_iostreams-vc142-mt
                 PATHS ${BOOST_LIB_SEARCH_PATHS}
-                DOC "Boost iostreams library from vcpkg"
+                DOC "Boost iostreams library from vcpkg (static preferred)"
             )
 
             # Check which libraries were found
@@ -266,9 +266,9 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
             )
 
             find_library(ZLIB_LIBRARY
-                NAMES zlib zlibstatic zdll libz libzlib
+                NAMES zlibstatic.lib zlib.lib zlib zdll libz libzlib zlibstatic
                 PATHS ${ZLIB_LIB_SEARCH_PATHS}
-                DOC "ZLIB library from vcpkg"
+                DOC "ZLIB library from vcpkg (static preferred)"
             )
 
             if(ZLIB_LIBRARY)
