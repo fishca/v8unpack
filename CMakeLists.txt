@@ -117,6 +117,13 @@ include_directories (src src/SystemClasses)
 
 # Поиск Boost и ZLIB
 if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
+    # Для статической линковки на Windows при использовании vcpkg
+    if(WIN32)
+        set(Boost_USE_STATIC_LIBS ON)
+        set(Boost_USE_STATIC_RUNTIME ON)
+        message(STATUS "Принудительно включаем статическую линковку Boost для Windows")
+    endif()
+
     # Для vcpkg сначала пробуем стандартный find_package
     find_package(Boost COMPONENTS filesystem system iostreams CONFIG QUIET)
     if(NOT Boost_FOUND)
