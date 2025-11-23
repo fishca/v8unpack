@@ -170,23 +170,23 @@ if(CMAKE_TOOLCHAIN_FILE MATCHES "vcpkg")
 
             message(STATUS "Searching for Boost libraries in: ${BOOST_LIB_SEARCH_PATHS}")
 
-            # Find Boost libraries with proper naming (ONLY static versions for Windows)
+            # Find Boost libraries with actual file names from winlib (Windows)
             if(WIN32)
                 find_library(BOOST_FILESYSTEM_LIBRARY
-                    NAMES libboost_filesystem.lib
+                    NAMES boost_filesystem-vc142-mt-x64-1_86.lib
                     PATHS ${BOOST_LIB_SEARCH_PATHS}
-                    DOC "Boost filesystem STATIC library from vcpkg"
+                    DOC "Boost filesystem STATIC library from winlib"
                 )
                 find_library(BOOST_SYSTEM_LIBRARY
-                    NAMES libboost_system.lib
+                    NAMES boost_system-vc142-mt-x64-1_86.lib
                     PATHS ${BOOST_LIB_SEARCH_PATHS}
-                    DOC "Boost system STATIC library from vcpkg"
+                    DOC "Boost system STATIC library from winlib"
                     NO_DEFAULT_PATH
                 )
                 find_library(BOOST_IOSTREAMS_LIBRARY
-                    NAMES libboost_iostreams.lib
+                    NAMES boost_iostreams-vc142-mt-x64-1_86.lib
                     PATHS ${BOOST_LIB_SEARCH_PATHS}
-                    DOC "Boost iostreams STATIC library from vcpkg"
+                    DOC "Boost iostreams STATIC library from winlib"
                 )
             else()
                 find_library(BOOST_FILESYSTEM_LIBRARY
