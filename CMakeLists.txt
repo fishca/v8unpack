@@ -51,6 +51,20 @@ set (V8UNPACK_SOURCES
 	src/utils.cpp
 	src/V8File.cpp
 	src/VersionFile.cpp
+	# Command pattern files
+	src/commands/Command.cpp
+	src/commands/CommandRegistry.cpp
+	src/commands/CommandFactory.cpp
+	src/commands/ConsoleMessageRegistrator.cpp
+	src/commands/concrete/UnpackCommand.cpp
+	src/commands/concrete/PackCommand.cpp
+	src/commands/concrete/ParseCommand.cpp
+	src/commands/concrete/BuildCommand.cpp
+	src/commands/concrete/VersionCommand.cpp
+	src/commands/concrete/HelpCommand.cpp
+	src/commands/concrete/ListCommand.cpp
+	src/commands/concrete/ExampleCommand.cpp
+	src/commands/concrete/BatCommand.cpp
 	# SystemClasses files
 	src/SystemClasses/String.cpp
 	src/SystemClasses/System.Classes.cpp
@@ -63,8 +77,6 @@ set (V8UNPACK_SOURCES
 	src/SystemClasses/TStreamReader.cpp
 	src/SystemClasses/TStreamWriter.cpp
 	src/SystemClasses/GetTickCount.cpp
-	)
-set (V8UNPACK_HEADERS
 	src/binarydecimalnumber.h
 	src/common.h
 	src/EctoSoftTree.h

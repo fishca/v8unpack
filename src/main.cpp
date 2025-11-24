@@ -67,6 +67,9 @@ at http://mozilla.org/MPL/2.0/.
  //
 
 #include "V8File.h"
+#include "commands/CommandFactory.h"
+#include "commands/ConsoleMessageRegistrator.h"
+#include "commands/concrete/HelpCommand.h"
 #include "version.h"
 #include "tree.h"
 

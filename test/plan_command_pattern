@@ -1,0 +1,298 @@
+# План реализации паттерна Command для обработки CLI команд в v8unpack
+
+## Цель:
+Реорганизовать обработку команд в main.cpp с использованием паттерна Command для улучшения модульности, тестируемости и расширяемости кода.
+
+## Текущая ситуация:
+- Все команды обрабатываются в функции get_run_mode() и соответствующих handler функциях
+- Длинные switch-case конструкции в main.cpp
+- Смешивание логики парсинга аргументов и выполнения команд
+- Трудно добавлять новые команды и тестировать существующие
+
+## План реализации:
+
+### 1. Создание базовой инфраструктуры Command паттерна
+
+#### 1.1 Создать базовый класс Command
+```cpp
+// src/commands/Command.h
+class Command {
+protected:
+    std::shared_ptr<MessageRegistrator> logger_;
+
+public:
+    explicit Command(std::shared_ptr<MessageRegistrator> logger = nullptr)
+        : logger_(logger) {}
+    virtual ~Command() = default;
+
+    virtual int execute(const std::vector<std::string>& args) = 0;
+    virtual std::string getName() const = 0;
+    virtual std::string getDescription() const = 0;
+    virtual void showUsage() const = 0;
+};
+```
+
+#### 1.2 Создать CommandRegistry для управления командами
+```cpp
+// src/commands/CommandRegistry.h
+class CommandRegistry {
+private:
+    std::map<std::string, std::unique_ptr<Command>> commands_;
+
+public:
+    void registerCommand(std::unique_ptr<Command> command);
+    Command* getCommand(const std::string& name) const;
+    std::vector<std::string> getAvailableCommands() const;
+    void showHelp() const;
+};
+```
+
+#### 1.3 Создать CommandFactory для создания команд
+```cpp
+// src/commands/CommandFactory.h
+class CommandFactory {
+private:
+    std::shared_ptr<MessageRegistrator> logger_;
+
+public:
+    explicit CommandFactory(std::shared_ptr<MessageRegistrator> logger = nullptr)
+        : logger_(logger) {}
+
+    std::unique_ptr<CommandRegistry> createRegistry();
+};
+```
+
+### 2. Реализация конкретных команд
+
+#### 2.1 Создать базовую структуру для команд
+```
+src/commands/
+├── base/
+│   ├── Command.h
+│   ├── CommandRegistry.h
+│   └── CommandFactory.h
+├── concrete/
+│   ├── UnpackCommand.h/.cpp
+│   ├── PackCommand.h/.cpp
+│   ├── ParseCommand.h/.cpp
+│   ├── BuildCommand.h/.cpp
+│   ├── ListCommand.h/.cpp
+│   ├── VersionCommand.h/.cpp
+│   └── HelpCommand.h/.cpp
+└── CMakeLists.txt (добавление в основной CMakeLists.txt)
+```
+
+#### 2.2 Реализовать UnpackCommand
+```cpp
+class UnpackCommand : public Command {
+public:
+    int execute(const std::vector<std::string>& args) override;
+    std::string getName() const override { return "unpack"; }
+    std::string getDescription() const override { return "Распаковать V8 файл"; }
+    void showUsage() const override;
+};
+```
+
+#### 2.3 Реализовать остальные команды аналогично
+- PackCommand
+- ParseCommand
+- BuildCommand
+- ListCommand
+- VersionCommand
+- HelpCommand
+
+### 3. Модификация main.cpp
+
+#### 3.1 Добавить инициализацию Command системы
+```cpp
+#include "commands/CommandFactory.h"
+
+int main(int argc, char* argv[]) {
+    // Инициализация локали
+    std::locale::global(std::locale(""));
+    std::wcout.imbue(std::locale(""));
+
+    // Создание фабрики команд
+    auto logger = std::make_shared<ConsoleLogger>();
+    CommandFactory factory(logger);
+    auto registry = factory.createRegistry();
+
+    // ... остальной код
+}
+```
+
+#### 3.2 Заменить старую логику обработки команд
+```cpp
+// Заменить весь блок с get_run_mode на:
+std::vector<std::string> args;
+for (int i = 1; i < argc; i++) {
+    args.emplace_back(argv[i]);
+}
+
+if (args.empty()) {
+    registry->showHelp();
+    return 1;
+}
+
+auto command = registry->getCommand(args[0]);
+if (!command) {
+    std::cerr << "Неизвестная команда: " << args[0] << std::endl;
+    registry->showHelp();
+    return 1;
+}
+
+args.erase(args.begin()); // Удалить имя команды из аргументов
+return command->execute(args);
+```
+
+### 4. Обработка специальных случаев
+
+#### 4.1 Команды с флагами (-list, -version и т.д.)
+Некоторые команды имеют префиксы. Обработать в CommandRegistry:
+```cpp
+Command* getCommand(std::string name) const {
+    // Удалить префиксы
+    if (name[0] == '-') {
+        name = name.substr(1);
+    }
+
+    // Обработать короткие имена
+    static const std::map<std::string, std::string> aliases = {
+        {"u", "unpack"},
+        {"unp", "unpack"},
+        {"pa", "pack"},
+        {"p", "parse"},
+        {"b", "build"},
+        {"l", "list"},
+        {"lf", "listfiles"},
+        {"v", "version"},
+        {"e", "example"},
+        {"bat", "bat"}
+    };
+
+    auto it = aliases.find(name);
+    if (it != aliases.end()) {
+        name = it->second;
+    }
+
+    return getCommandInternal(name);
+}
+```
+
+#### 4.2 Обработка команд с модификаторами (-nopack)
+Добавить в базовый класс Command методы для обработки модификаторов:
+```cpp
+virtual bool supportsModifier(const std::string& modifier) const { return false; }
+virtual void setModifier(const std::string& modifier, bool value) {}
+```
+
+### 5. Интеграция с существующей системой сообщений
+
+#### 5.1 Адаптер для MessageRegistrator
+```cpp
+class MessageRegistratorAdapter : public MessageRegistrator {
+    // Адаптация для совместимости с существующей системой
+};
+```
+
+#### 5.2 Обновление команд для использования логгера
+Все команды должны принимать logger в конструкторе и использовать его для вывода сообщений.
+
+### 6. Тестирование
+
+#### 6.1 Модульные тесты для команд
+```cpp
+// test/commands/
+├── TestUnpackCommand.cpp
+├── TestPackCommand.cpp
+└── TestCommandRegistry.cpp
+```
+
+#### 6.2 Интеграционные тесты
+- Тесты через CLI интерфейс
+- Тесты с реальными файлами
+
+### 7. Документация и примеры
+
+#### 7.1 Обновить README.md
+Добавить описание новой архитектуры команд.
+
+#### 7.2 Создать примеры использования
+```cpp
+// examples/command_usage.cpp
+void demonstrateCommandPattern() {
+    auto factory = CommandFactory();
+    auto registry = factory.createRegistry();
+
+    // Пример использования
+    std::vector<std::string> args = {"unpack", "config.cf", "output_dir"};
+    auto command = registry->getCommand("unpack");
+    command->execute(args);
+}
+```
+
+## План отката изменений (Rollback Plan):
+
+### Фаза 1: Подготовка к откату
+1. Создать резервную копию main.cpp: `cp main.cpp main.cpp.backup`
+2. Создать резервную копию CMakeLists.txt: `cp CMakeLists.txt CMakeLists.txt.backup`
+
+### Фаза 2: Удаление новых файлов
+```bash
+# Удалить созданные файлы команд
+rm -rf src/commands/
+
+# Удалить тесты команд
+rm -rf test/commands/
+
+# Удалить изменения в CMakeLists.txt
+git checkout HEAD -- CMakeLists.txt
+```
+
+### Фаза 3: Восстановление main.cpp
+```bash
+# Восстановить оригинальный main.cpp
+cp main.cpp.backup main.cpp
+
+# Или через git
+git checkout HEAD -- main.cpp
+```
+
+### Фаза 4: Очистка зависимостей
+1. Удалить новые include директивы из CMakeLists.txt
+2. Удалить новые зависимости из vcpkg.json (если добавлялись)
+3. Очистить build директорию: `rm -rf build/ && mkdir build && cd build && cmake ..`
+
+### Фаза 5: Проверка компиляции
+```bash
+cd build
+make clean && make
+./v8unpack --version  # Проверка работоспособности
+```
+
+### Фаза 6: Восстановление документации
+```bash
+# Восстановить оригинальный README.md
+git checkout HEAD -- README.md
+
+# Удалить созданные примеры
+rm -rf examples/
+```
+
+## Критерии успешности:
+- Код компилируется без ошибок
+- Все существующие тесты проходят
+- CLI интерфейс работает идентично оригиналу
+- Команды можно вызывать как раньше: `./v8unpack -unpack file.cf output/`
+
+## Риски и меры предосторожности:
+1. **Риск потери функциональности**: Тщательное тестирование всех команд
+2. **Риск регрессии**: Сохранять оригинальный main.cpp до полной проверки
+3. **Риск нарушения ABI**: Не менять публичные интерфейсы существующих функций
+4. **Риск проблем с CMake**: Тестировать сборку на всех платформах
+
+## Временная шкала:
+- День 1-2: Создание базовой инфраструктуры Command паттерна
+- День 3-5: Реализация конкретных команд
+- День 6-7: Интеграция с main.cpp и тестирование
+- День 8: Финальное тестирование и документация
