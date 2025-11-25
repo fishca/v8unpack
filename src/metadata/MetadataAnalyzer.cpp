@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 #include <algorithm>
 #include <boost/filesystem.hpp>
 
