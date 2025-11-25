@@ -269,6 +269,20 @@ int Application::executeLegacyCommand(const ParsedArgs& args) {
         return EXIT_SUCCESS;
     }
 
+    if (args.command == "lf" || args.command == "listfiles") {
+        if (args.args.size() < 1) {
+            std::cerr << "Error: listfiles command requires 1 argument: input_file" << std::endl;
+            return EXIT_FAILURE;
+        }
+        std::string filename = args.args[0];
+        int result = ListFiles(filename);
+        if (result != 0) {
+            std::cerr << "ListFiles failed with code: " << result << std::endl;
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
+
     // Для других команд - показываем что получили команду
     if (logger_) {
         std::ostringstream oss;

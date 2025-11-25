@@ -585,6 +585,54 @@ src/VersionFile.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/VersionFile.cpp.s
 .PHONY : src/VersionFile.cpp.s
 
+src/app/Application.o: src/app/Application.cpp.o
+.PHONY : src/app/Application.o
+
+# target to build an object file
+src/app/Application.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/Application.cpp.o
+.PHONY : src/app/Application.cpp.o
+
+src/app/Application.i: src/app/Application.cpp.i
+.PHONY : src/app/Application.i
+
+# target to preprocess a source file
+src/app/Application.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/Application.cpp.i
+.PHONY : src/app/Application.cpp.i
+
+src/app/Application.s: src/app/Application.cpp.s
+.PHONY : src/app/Application.s
+
+# target to generate assembly for a file
+src/app/Application.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/Application.cpp.s
+.PHONY : src/app/Application.cpp.s
+
+src/app/ArgumentParser.o: src/app/ArgumentParser.cpp.o
+.PHONY : src/app/ArgumentParser.o
+
+# target to build an object file
+src/app/ArgumentParser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/ArgumentParser.cpp.o
+.PHONY : src/app/ArgumentParser.cpp.o
+
+src/app/ArgumentParser.i: src/app/ArgumentParser.cpp.i
+.PHONY : src/app/ArgumentParser.i
+
+# target to preprocess a source file
+src/app/ArgumentParser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/ArgumentParser.cpp.i
+.PHONY : src/app/ArgumentParser.cpp.i
+
+src/app/ArgumentParser.s: src/app/ArgumentParser.cpp.s
+.PHONY : src/app/ArgumentParser.s
+
+# target to generate assembly for a file
+src/app/ArgumentParser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/app/ArgumentParser.cpp.s
+.PHONY : src/app/ArgumentParser.cpp.s
+
 src/binarydecimalnumber.o: src/binarydecimalnumber.cpp.o
 .PHONY : src/binarydecimalnumber.o
 
@@ -608,6 +656,318 @@ src/binarydecimalnumber.s: src/binarydecimalnumber.cpp.s
 src/binarydecimalnumber.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/binarydecimalnumber.cpp.s
 .PHONY : src/binarydecimalnumber.cpp.s
+
+src/commands/Command.o: src/commands/Command.cpp.o
+.PHONY : src/commands/Command.o
+
+# target to build an object file
+src/commands/Command.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/Command.cpp.o
+.PHONY : src/commands/Command.cpp.o
+
+src/commands/Command.i: src/commands/Command.cpp.i
+.PHONY : src/commands/Command.i
+
+# target to preprocess a source file
+src/commands/Command.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/Command.cpp.i
+.PHONY : src/commands/Command.cpp.i
+
+src/commands/Command.s: src/commands/Command.cpp.s
+.PHONY : src/commands/Command.s
+
+# target to generate assembly for a file
+src/commands/Command.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/Command.cpp.s
+.PHONY : src/commands/Command.cpp.s
+
+src/commands/CommandFactory.o: src/commands/CommandFactory.cpp.o
+.PHONY : src/commands/CommandFactory.o
+
+# target to build an object file
+src/commands/CommandFactory.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandFactory.cpp.o
+.PHONY : src/commands/CommandFactory.cpp.o
+
+src/commands/CommandFactory.i: src/commands/CommandFactory.cpp.i
+.PHONY : src/commands/CommandFactory.i
+
+# target to preprocess a source file
+src/commands/CommandFactory.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandFactory.cpp.i
+.PHONY : src/commands/CommandFactory.cpp.i
+
+src/commands/CommandFactory.s: src/commands/CommandFactory.cpp.s
+.PHONY : src/commands/CommandFactory.s
+
+# target to generate assembly for a file
+src/commands/CommandFactory.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandFactory.cpp.s
+.PHONY : src/commands/CommandFactory.cpp.s
+
+src/commands/CommandRegistry.o: src/commands/CommandRegistry.cpp.o
+.PHONY : src/commands/CommandRegistry.o
+
+# target to build an object file
+src/commands/CommandRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandRegistry.cpp.o
+.PHONY : src/commands/CommandRegistry.cpp.o
+
+src/commands/CommandRegistry.i: src/commands/CommandRegistry.cpp.i
+.PHONY : src/commands/CommandRegistry.i
+
+# target to preprocess a source file
+src/commands/CommandRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandRegistry.cpp.i
+.PHONY : src/commands/CommandRegistry.cpp.i
+
+src/commands/CommandRegistry.s: src/commands/CommandRegistry.cpp.s
+.PHONY : src/commands/CommandRegistry.s
+
+# target to generate assembly for a file
+src/commands/CommandRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/CommandRegistry.cpp.s
+.PHONY : src/commands/CommandRegistry.cpp.s
+
+src/commands/ConsoleMessageRegistrator.o: src/commands/ConsoleMessageRegistrator.cpp.o
+.PHONY : src/commands/ConsoleMessageRegistrator.o
+
+# target to build an object file
+src/commands/ConsoleMessageRegistrator.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/ConsoleMessageRegistrator.cpp.o
+.PHONY : src/commands/ConsoleMessageRegistrator.cpp.o
+
+src/commands/ConsoleMessageRegistrator.i: src/commands/ConsoleMessageRegistrator.cpp.i
+.PHONY : src/commands/ConsoleMessageRegistrator.i
+
+# target to preprocess a source file
+src/commands/ConsoleMessageRegistrator.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/ConsoleMessageRegistrator.cpp.i
+.PHONY : src/commands/ConsoleMessageRegistrator.cpp.i
+
+src/commands/ConsoleMessageRegistrator.s: src/commands/ConsoleMessageRegistrator.cpp.s
+.PHONY : src/commands/ConsoleMessageRegistrator.s
+
+# target to generate assembly for a file
+src/commands/ConsoleMessageRegistrator.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/ConsoleMessageRegistrator.cpp.s
+.PHONY : src/commands/ConsoleMessageRegistrator.cpp.s
+
+src/commands/concrete/BatCommand.o: src/commands/concrete/BatCommand.cpp.o
+.PHONY : src/commands/concrete/BatCommand.o
+
+# target to build an object file
+src/commands/concrete/BatCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BatCommand.cpp.o
+.PHONY : src/commands/concrete/BatCommand.cpp.o
+
+src/commands/concrete/BatCommand.i: src/commands/concrete/BatCommand.cpp.i
+.PHONY : src/commands/concrete/BatCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/BatCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BatCommand.cpp.i
+.PHONY : src/commands/concrete/BatCommand.cpp.i
+
+src/commands/concrete/BatCommand.s: src/commands/concrete/BatCommand.cpp.s
+.PHONY : src/commands/concrete/BatCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/BatCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BatCommand.cpp.s
+.PHONY : src/commands/concrete/BatCommand.cpp.s
+
+src/commands/concrete/BuildCommand.o: src/commands/concrete/BuildCommand.cpp.o
+.PHONY : src/commands/concrete/BuildCommand.o
+
+# target to build an object file
+src/commands/concrete/BuildCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BuildCommand.cpp.o
+.PHONY : src/commands/concrete/BuildCommand.cpp.o
+
+src/commands/concrete/BuildCommand.i: src/commands/concrete/BuildCommand.cpp.i
+.PHONY : src/commands/concrete/BuildCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/BuildCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BuildCommand.cpp.i
+.PHONY : src/commands/concrete/BuildCommand.cpp.i
+
+src/commands/concrete/BuildCommand.s: src/commands/concrete/BuildCommand.cpp.s
+.PHONY : src/commands/concrete/BuildCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/BuildCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BuildCommand.cpp.s
+.PHONY : src/commands/concrete/BuildCommand.cpp.s
+
+src/commands/concrete/ExampleCommand.o: src/commands/concrete/ExampleCommand.cpp.o
+.PHONY : src/commands/concrete/ExampleCommand.o
+
+# target to build an object file
+src/commands/concrete/ExampleCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ExampleCommand.cpp.o
+.PHONY : src/commands/concrete/ExampleCommand.cpp.o
+
+src/commands/concrete/ExampleCommand.i: src/commands/concrete/ExampleCommand.cpp.i
+.PHONY : src/commands/concrete/ExampleCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/ExampleCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ExampleCommand.cpp.i
+.PHONY : src/commands/concrete/ExampleCommand.cpp.i
+
+src/commands/concrete/ExampleCommand.s: src/commands/concrete/ExampleCommand.cpp.s
+.PHONY : src/commands/concrete/ExampleCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/ExampleCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ExampleCommand.cpp.s
+.PHONY : src/commands/concrete/ExampleCommand.cpp.s
+
+src/commands/concrete/HelpCommand.o: src/commands/concrete/HelpCommand.cpp.o
+.PHONY : src/commands/concrete/HelpCommand.o
+
+# target to build an object file
+src/commands/concrete/HelpCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/HelpCommand.cpp.o
+.PHONY : src/commands/concrete/HelpCommand.cpp.o
+
+src/commands/concrete/HelpCommand.i: src/commands/concrete/HelpCommand.cpp.i
+.PHONY : src/commands/concrete/HelpCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/HelpCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/HelpCommand.cpp.i
+.PHONY : src/commands/concrete/HelpCommand.cpp.i
+
+src/commands/concrete/HelpCommand.s: src/commands/concrete/HelpCommand.cpp.s
+.PHONY : src/commands/concrete/HelpCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/HelpCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/HelpCommand.cpp.s
+.PHONY : src/commands/concrete/HelpCommand.cpp.s
+
+src/commands/concrete/ListCommand.o: src/commands/concrete/ListCommand.cpp.o
+.PHONY : src/commands/concrete/ListCommand.o
+
+# target to build an object file
+src/commands/concrete/ListCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ListCommand.cpp.o
+.PHONY : src/commands/concrete/ListCommand.cpp.o
+
+src/commands/concrete/ListCommand.i: src/commands/concrete/ListCommand.cpp.i
+.PHONY : src/commands/concrete/ListCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/ListCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ListCommand.cpp.i
+.PHONY : src/commands/concrete/ListCommand.cpp.i
+
+src/commands/concrete/ListCommand.s: src/commands/concrete/ListCommand.cpp.s
+.PHONY : src/commands/concrete/ListCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/ListCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ListCommand.cpp.s
+.PHONY : src/commands/concrete/ListCommand.cpp.s
+
+src/commands/concrete/PackCommand.o: src/commands/concrete/PackCommand.cpp.o
+.PHONY : src/commands/concrete/PackCommand.o
+
+# target to build an object file
+src/commands/concrete/PackCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/PackCommand.cpp.o
+.PHONY : src/commands/concrete/PackCommand.cpp.o
+
+src/commands/concrete/PackCommand.i: src/commands/concrete/PackCommand.cpp.i
+.PHONY : src/commands/concrete/PackCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/PackCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/PackCommand.cpp.i
+.PHONY : src/commands/concrete/PackCommand.cpp.i
+
+src/commands/concrete/PackCommand.s: src/commands/concrete/PackCommand.cpp.s
+.PHONY : src/commands/concrete/PackCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/PackCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/PackCommand.cpp.s
+.PHONY : src/commands/concrete/PackCommand.cpp.s
+
+src/commands/concrete/ParseCommand.o: src/commands/concrete/ParseCommand.cpp.o
+.PHONY : src/commands/concrete/ParseCommand.o
+
+# target to build an object file
+src/commands/concrete/ParseCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseCommand.cpp.o
+.PHONY : src/commands/concrete/ParseCommand.cpp.o
+
+src/commands/concrete/ParseCommand.i: src/commands/concrete/ParseCommand.cpp.i
+.PHONY : src/commands/concrete/ParseCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/ParseCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseCommand.cpp.i
+.PHONY : src/commands/concrete/ParseCommand.cpp.i
+
+src/commands/concrete/ParseCommand.s: src/commands/concrete/ParseCommand.cpp.s
+.PHONY : src/commands/concrete/ParseCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/ParseCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseCommand.cpp.s
+.PHONY : src/commands/concrete/ParseCommand.cpp.s
+
+src/commands/concrete/UnpackCommand.o: src/commands/concrete/UnpackCommand.cpp.o
+.PHONY : src/commands/concrete/UnpackCommand.o
+
+# target to build an object file
+src/commands/concrete/UnpackCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/UnpackCommand.cpp.o
+.PHONY : src/commands/concrete/UnpackCommand.cpp.o
+
+src/commands/concrete/UnpackCommand.i: src/commands/concrete/UnpackCommand.cpp.i
+.PHONY : src/commands/concrete/UnpackCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/UnpackCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/UnpackCommand.cpp.i
+.PHONY : src/commands/concrete/UnpackCommand.cpp.i
+
+src/commands/concrete/UnpackCommand.s: src/commands/concrete/UnpackCommand.cpp.s
+.PHONY : src/commands/concrete/UnpackCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/UnpackCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/UnpackCommand.cpp.s
+.PHONY : src/commands/concrete/UnpackCommand.cpp.s
+
+src/commands/concrete/VersionCommand.o: src/commands/concrete/VersionCommand.cpp.o
+.PHONY : src/commands/concrete/VersionCommand.o
+
+# target to build an object file
+src/commands/concrete/VersionCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/VersionCommand.cpp.o
+.PHONY : src/commands/concrete/VersionCommand.cpp.o
+
+src/commands/concrete/VersionCommand.i: src/commands/concrete/VersionCommand.cpp.i
+.PHONY : src/commands/concrete/VersionCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/VersionCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/VersionCommand.cpp.i
+.PHONY : src/commands/concrete/VersionCommand.cpp.i
+
+src/commands/concrete/VersionCommand.s: src/commands/concrete/VersionCommand.cpp.s
+.PHONY : src/commands/concrete/VersionCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/VersionCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/VersionCommand.cpp.s
+.PHONY : src/commands/concrete/VersionCommand.cpp.s
 
 src/common.o: src/common.cpp.o
 .PHONY : src/common.o
@@ -825,6 +1185,54 @@ src/messageregistration.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/messageregistration.cpp.s
 .PHONY : src/messageregistration.cpp.s
 
+src/metadata/MetadataAnalyzer.o: src/metadata/MetadataAnalyzer.cpp.o
+.PHONY : src/metadata/MetadataAnalyzer.o
+
+# target to build an object file
+src/metadata/MetadataAnalyzer.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/MetadataAnalyzer.cpp.o
+.PHONY : src/metadata/MetadataAnalyzer.cpp.o
+
+src/metadata/MetadataAnalyzer.i: src/metadata/MetadataAnalyzer.cpp.i
+.PHONY : src/metadata/MetadataAnalyzer.i
+
+# target to preprocess a source file
+src/metadata/MetadataAnalyzer.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/MetadataAnalyzer.cpp.i
+.PHONY : src/metadata/MetadataAnalyzer.cpp.i
+
+src/metadata/MetadataAnalyzer.s: src/metadata/MetadataAnalyzer.cpp.s
+.PHONY : src/metadata/MetadataAnalyzer.s
+
+# target to generate assembly for a file
+src/metadata/MetadataAnalyzer.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/MetadataAnalyzer.cpp.s
+.PHONY : src/metadata/MetadataAnalyzer.cpp.s
+
+src/metadata/RegexRegistry.o: src/metadata/RegexRegistry.cpp.o
+.PHONY : src/metadata/RegexRegistry.o
+
+# target to build an object file
+src/metadata/RegexRegistry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/RegexRegistry.cpp.o
+.PHONY : src/metadata/RegexRegistry.cpp.o
+
+src/metadata/RegexRegistry.i: src/metadata/RegexRegistry.cpp.i
+.PHONY : src/metadata/RegexRegistry.i
+
+# target to preprocess a source file
+src/metadata/RegexRegistry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/RegexRegistry.cpp.i
+.PHONY : src/metadata/RegexRegistry.cpp.i
+
+src/metadata/RegexRegistry.s: src/metadata/RegexRegistry.cpp.s
+.PHONY : src/metadata/RegexRegistry.s
+
+# target to generate assembly for a file
+src/metadata/RegexRegistry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/metadata/RegexRegistry.cpp.s
+.PHONY : src/metadata/RegexRegistry.cpp.s
+
 src/parse_tree.o: src/parse_tree.cpp.o
 .PHONY : src/parse_tree.o
 
@@ -945,6 +1353,30 @@ src/utils.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/utils.cpp.s
 .PHONY : src/utils.cpp.s
 
+src/utils/ErrorCodes.o: src/utils/ErrorCodes.cpp.o
+.PHONY : src/utils/ErrorCodes.o
+
+# target to build an object file
+src/utils/ErrorCodes.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/utils/ErrorCodes.cpp.o
+.PHONY : src/utils/ErrorCodes.cpp.o
+
+src/utils/ErrorCodes.i: src/utils/ErrorCodes.cpp.i
+.PHONY : src/utils/ErrorCodes.i
+
+# target to preprocess a source file
+src/utils/ErrorCodes.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/utils/ErrorCodes.cpp.i
+.PHONY : src/utils/ErrorCodes.cpp.i
+
+src/utils/ErrorCodes.s: src/utils/ErrorCodes.cpp.s
+.PHONY : src/utils/ErrorCodes.s
+
+# target to generate assembly for a file
+src/utils/ErrorCodes.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/utils/ErrorCodes.cpp.s
+.PHONY : src/utils/ErrorCodes.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -1011,9 +1443,54 @@ help:
 	@echo "... src/VersionFile.o"
 	@echo "... src/VersionFile.i"
 	@echo "... src/VersionFile.s"
+	@echo "... src/app/Application.o"
+	@echo "... src/app/Application.i"
+	@echo "... src/app/Application.s"
+	@echo "... src/app/ArgumentParser.o"
+	@echo "... src/app/ArgumentParser.i"
+	@echo "... src/app/ArgumentParser.s"
 	@echo "... src/binarydecimalnumber.o"
 	@echo "... src/binarydecimalnumber.i"
 	@echo "... src/binarydecimalnumber.s"
+	@echo "... src/commands/Command.o"
+	@echo "... src/commands/Command.i"
+	@echo "... src/commands/Command.s"
+	@echo "... src/commands/CommandFactory.o"
+	@echo "... src/commands/CommandFactory.i"
+	@echo "... src/commands/CommandFactory.s"
+	@echo "... src/commands/CommandRegistry.o"
+	@echo "... src/commands/CommandRegistry.i"
+	@echo "... src/commands/CommandRegistry.s"
+	@echo "... src/commands/ConsoleMessageRegistrator.o"
+	@echo "... src/commands/ConsoleMessageRegistrator.i"
+	@echo "... src/commands/ConsoleMessageRegistrator.s"
+	@echo "... src/commands/concrete/BatCommand.o"
+	@echo "... src/commands/concrete/BatCommand.i"
+	@echo "... src/commands/concrete/BatCommand.s"
+	@echo "... src/commands/concrete/BuildCommand.o"
+	@echo "... src/commands/concrete/BuildCommand.i"
+	@echo "... src/commands/concrete/BuildCommand.s"
+	@echo "... src/commands/concrete/ExampleCommand.o"
+	@echo "... src/commands/concrete/ExampleCommand.i"
+	@echo "... src/commands/concrete/ExampleCommand.s"
+	@echo "... src/commands/concrete/HelpCommand.o"
+	@echo "... src/commands/concrete/HelpCommand.i"
+	@echo "... src/commands/concrete/HelpCommand.s"
+	@echo "... src/commands/concrete/ListCommand.o"
+	@echo "... src/commands/concrete/ListCommand.i"
+	@echo "... src/commands/concrete/ListCommand.s"
+	@echo "... src/commands/concrete/PackCommand.o"
+	@echo "... src/commands/concrete/PackCommand.i"
+	@echo "... src/commands/concrete/PackCommand.s"
+	@echo "... src/commands/concrete/ParseCommand.o"
+	@echo "... src/commands/concrete/ParseCommand.i"
+	@echo "... src/commands/concrete/ParseCommand.s"
+	@echo "... src/commands/concrete/UnpackCommand.o"
+	@echo "... src/commands/concrete/UnpackCommand.i"
+	@echo "... src/commands/concrete/UnpackCommand.s"
+	@echo "... src/commands/concrete/VersionCommand.o"
+	@echo "... src/commands/concrete/VersionCommand.i"
+	@echo "... src/commands/concrete/VersionCommand.s"
 	@echo "... src/common.o"
 	@echo "... src/common.i"
 	@echo "... src/common.s"
@@ -1041,6 +1518,12 @@ help:
 	@echo "... src/messageregistration.o"
 	@echo "... src/messageregistration.i"
 	@echo "... src/messageregistration.s"
+	@echo "... src/metadata/MetadataAnalyzer.o"
+	@echo "... src/metadata/MetadataAnalyzer.i"
+	@echo "... src/metadata/MetadataAnalyzer.s"
+	@echo "... src/metadata/RegexRegistry.o"
+	@echo "... src/metadata/RegexRegistry.i"
+	@echo "... src/metadata/RegexRegistry.s"
 	@echo "... src/parse_tree.o"
 	@echo "... src/parse_tree.i"
 	@echo "... src/parse_tree.s"
@@ -1056,6 +1539,9 @@ help:
 	@echo "... src/utils.o"
 	@echo "... src/utils.i"
 	@echo "... src/utils.s"
+	@echo "... src/utils/ErrorCodes.o"
+	@echo "... src/utils/ErrorCodes.i"
+	@echo "... src/utils/ErrorCodes.s"
 .PHONY : help
 
 
