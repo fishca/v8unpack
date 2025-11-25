@@ -253,6 +253,22 @@ int Application::executeLegacyCommand(const ParsedArgs& args) {
         return EXIT_SUCCESS;
     }
 
+    if (args.command == "build") {
+        if (args.args.size() < 2) {
+            std::cerr << "Error: build command requires at least 2 arguments: input_dir output_file" << std::endl;
+            return EXIT_FAILURE;
+        }
+        std::string dirname = args.args[0];
+        std::string filename = args.args[1];
+        bool dont_deflate = args.hasOption("nopack");
+        int result = BuildCfFile(dirname, filename, !dont_deflate);
+        if (result != 0) {
+            std::cerr << "Build failed with code: " << result << std::endl;
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
+
     // Для других команд - показываем что получили команду
     if (logger_) {
         std::ostringstream oss;
