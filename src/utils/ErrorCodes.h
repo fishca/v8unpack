@@ -23,6 +23,7 @@ enum class ErrorCode {
     FILE_NOT_FOUND = 4,
     DIRECTORY_NOT_FOUND = 5,
     INVALID_FILE_PATH = 6,
+    VALIDATION_ERROR = 7,
 
     // Ошибки файловых операций = 100-199
     FILE_READ_ERROR = 100,
@@ -52,6 +53,7 @@ enum class ErrorCode {
     COMMAND_EXECUTION_FAILED = 500,
     COMMAND_TIMEOUT = 501,
     COMMAND_CANCELLED = 502,
+    OPERATION_FAILED = 503,
 
     // Системные ошибки = 600-699
     OUT_OF_MEMORY = 600,

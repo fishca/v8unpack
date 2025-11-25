@@ -65,6 +65,9 @@ set (V8UNPACK_SOURCES
 	src/commands/concrete/ListCommand.cpp
 	src/commands/concrete/ExampleCommand.cpp
 	src/commands/concrete/BatCommand.cpp
+	# Application layer (new enterprise architecture)
+	src/app/Application.cpp
+	src/app/ArgumentParser.cpp
 	# SystemClasses files
 	src/SystemClasses/String.cpp
 	src/SystemClasses/System.Classes.cpp
@@ -77,7 +80,10 @@ set (V8UNPACK_SOURCES
 	src/SystemClasses/TStreamReader.cpp
 	src/SystemClasses/TStreamWriter.cpp
 	src/SystemClasses/GetTickCount.cpp
-	src/binarydecimalnumber.h
+	# Metadata processing layer
+	src/metadata/RegexRegistry.cpp
+	src/metadata/MetadataAnalyzer.cpp
+	src/utils/ErrorCodes.cpp
 	src/common.h
 	src/EctoSoftTree.h
 	src/guids.h
@@ -100,6 +106,14 @@ set (V8UNPACK_SOURCES
 	src/VersionFile.h
 	src/ExactStructureBuilder.hpp
 	src/treeparser.hpp
+	# Application layer headers
+	src/app/Application.h
+	src/app/ArgumentParser.h
+	src/app/LegacyFunctions.h
+	# Metadata layer headers
+	src/metadata/RegexRegistry.h
+	src/metadata/MetadataAnalyzer.h
+	src/utils/ErrorCodes.h
 	)
 
 if((MSVC) AND (NOT DISABLE_SINGLE_FILE))

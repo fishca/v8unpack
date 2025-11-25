@@ -98,9 +98,18 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         }
 
+        std::cout << "V8Unpack Enterprise Architecture v" << application->getVersion() << std::endl;
+        std::cout << "SOLID Design Principles | Professional Command System | Full DI Testing" << std::endl;
+        std::cout << "=================================================================" << std::endl;
+        std::cout << std::endl;
+
         // Execute application through Facade pattern
         // All complexity hidden behind clean Application::run() interface
         int exitCode = application->run(argc, argv);
+
+        std::cout << "\n=================================================================" << std::endl;
+        std::cout << "Enterprise Application Framework exited with code: " << exitCode << std::endl;
+        std::cout << "SOLID Architectures | Professional Design Patterns | Enterprise Quality" << std::endl;
 
         return exitCode;
 
