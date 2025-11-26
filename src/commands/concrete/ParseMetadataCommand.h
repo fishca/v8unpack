@@ -78,6 +78,16 @@ private:
     void initializeCategoryMappings();
 
     /**
+     * Извлечь GUID из имени файла (убрать расширения типа .0, .1c)
+     */
+    std::string extractGuidFromFilename(const std::string& filename);
+
+    /**
+     * Проверить, является ли содержимое файла описанием языка
+     */
+    bool isLanguageFile(const std::string& content);
+
+    /**
      * Извлечь GUID из файла root
      */
     std::string extractRootFileGuid(const boost::filesystem::path& rootFilePath);
@@ -85,13 +95,25 @@ private:
     /**
      * Обработать корневой файл конфигурации
      */
-    bool processRootConfigurationFile(const std::string& inputDir,
-                                     const std::string& outputDir,
-                                     const std::string& rootGuid);
+    std::string processRootConfigurationFile(const std::string& inputDir,
+                                             const std::string& outputDir);
+
+    /**
+     * Парсит корневой файл конфигурации и извлекает GUID'ы файлов для каждой категории
+     */
+    void parseRootConfigForFileGuids(const boost::filesystem::path& rootConfigFilePath);
+
+    /**
+     * Рекурсивный обход дерева для поиска GUID'ов файлов в категориях
+     */
+    void traverseTreeForCategoryFileGuids(tree* node);
 
 private:
     std::shared_ptr<MetadataAnalyzer> metadataAnalyzer_;
     std::map<std::string, std::string> guidToCategoryMap_;
+
+    // Мапа GUID файлов -> категория из корневого файла конфигурации
+    std::map<std::string, std::string> fileGuidToCategoryMap_;
 
     // Статистика классификации
     std::map<std::string, std::vector<std::string>> categoryFiles_;

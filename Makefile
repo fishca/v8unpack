@@ -129,6 +129,30 @@ v8unpack/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/build
 .PHONY : v8unpack/fast
 
+src/ConfigStructureParser.o: src/ConfigStructureParser.cpp.o
+.PHONY : src/ConfigStructureParser.o
+
+# target to build an object file
+src/ConfigStructureParser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/ConfigStructureParser.cpp.o
+.PHONY : src/ConfigStructureParser.cpp.o
+
+src/ConfigStructureParser.i: src/ConfigStructureParser.cpp.i
+.PHONY : src/ConfigStructureParser.i
+
+# target to preprocess a source file
+src/ConfigStructureParser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/ConfigStructureParser.cpp.i
+.PHONY : src/ConfigStructureParser.cpp.i
+
+src/ConfigStructureParser.s: src/ConfigStructureParser.cpp.s
+.PHONY : src/ConfigStructureParser.s
+
+# target to generate assembly for a file
+src/ConfigStructureParser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/ConfigStructureParser.cpp.s
+.PHONY : src/ConfigStructureParser.cpp.s
+
 src/EctoSoftTree.o: src/EctoSoftTree.cpp.o
 .PHONY : src/EctoSoftTree.o
 
@@ -1410,6 +1434,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... v8unpack"
+	@echo "... src/ConfigStructureParser.o"
+	@echo "... src/ConfigStructureParser.i"
+	@echo "... src/ConfigStructureParser.s"
 	@echo "... src/EctoSoftTree.o"
 	@echo "... src/EctoSoftTree.i"
 	@echo "... src/EctoSoftTree.s"

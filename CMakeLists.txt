@@ -29,6 +29,7 @@ endif()
 
 set (V8UNPACK_SOURCES
 	src/main.cpp
+	src/ConfigStructureParser.cpp
 	src/binarydecimalnumber.cpp
 	src/common.cpp
 	src/EctoSoftTree.cpp

@@ -3,11 +3,11 @@
 #include "../../parse_tree.h"
 #include "../../common.h"
 #include "../../guids.h"
+#include "../../ConfigStructureParser.h"
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include <algorithm>
-#include <regex>
 
 namespace fs = boost::filesystem;
 
@@ -43,43 +43,16 @@ int ParseMetadataCommand::execute(const std::vector<std::string>& args) {
 
         std::cout << "Найдено " << files.size() << " файлов для классификации" << std::endl;
 
-        // Создаём структуру каталогов в CFSRC
-        if (!createDirectoryStructure(outputDir)) {
-            std::cerr << "Не удалось создать структуру каталогов в '" << outputDir << "'" << std::endl;
-            return 1;
-        }
-
-        // Шаг 1: Ищем и обрабатываем файл root
-        fs::path rootFilePath;
-        bool rootFileFound = false;
-
-        for (const auto& filePath : files) {
-            if (filePath.filename().string() == "root") {
-                rootFilePath = filePath;
-                rootFileFound = true;
-                break;
-            }
-        }
-
-        if (!rootFileFound) {
-            std::cerr << "Файл 'root' не найден в каталоге '" << inputDir << "'" << std::endl;
-            return 1;
-        }
-
-        // Извлекаем GUID из файла root
-        std::string rootGuid = extractRootFileGuid(rootFilePath);
+        // Обрабатываем корневой файл конфигурации и извлекаем GUID конфигурации
+        std::string rootGuid = processRootConfigurationFile(inputDir, outputDir);
         if (rootGuid.empty()) {
-            std::cerr << "Не удалось извлечь GUID из файла root" << std::endl;
-            return 1;
-        }
-
-        std::cout << "Найден GUID корневого файла конфигурации: " << rootGuid << std::endl;
-
-        // Обрабатываем корневой файл конфигурации
-        if (!processRootConfigurationFile(inputDir, outputDir, rootGuid)) {
             std::cerr << "Ошибка обработки корневого файла конфигурации" << std::endl;
             return 1;
         }
+
+        // Парсим корневой файл конфигурации для извлечения GUID'ов файлов
+        fs::path rootConfigFilePath = fs::path(outputDir) / "Конфигурация" / rootGuid;
+        parseRootConfigForFileGuids(rootConfigFilePath);
 
         // Шаг 2: Обрабатываем остальные файлы
         std::cout << "Обрабатываем остальные файлы..." << std::endl;
@@ -87,8 +60,8 @@ int ParseMetadataCommand::execute(const std::vector<std::string>& args) {
         for (const auto& filePath : files) {
             std::string filename = filePath.filename().string();
 
-            // Пропускаем файл root и корневой файл конфигурации (они уже обработаны)
-            if (filename == "root" || filename == rootGuid) {
+            // Пропускаем корневой файл конфигурации (он уже обработан)
+            if (filename == rootGuid) {
                 continue;
             }
 
@@ -185,15 +158,26 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
         return specialCategory;
     }
 
+    // Извлекаем GUID из имени файла (убираем расширения типа .0, .1c и т.д.)
+    std::string filename = filePath.filename().string();
+    std::string guid = extractGuidFromFilename(filename);
+
+    // Проверяем, есть ли GUID файла в мапе из корневого файла конфигурации
+    auto fileGuidIt = fileGuidToCategoryMap_.find(guid);
+    if (fileGuidIt != fileGuidToCategoryMap_.end() && fileGuidIt->second != std::string((const char*)md_Languages)) {
+        return fileGuidIt->second;
+    }
+
     // Читаем и парсим содержимое файла
+    std::string content;
     try {
         std::ifstream file(filePath.string(), std::ios::binary);
         if (!file.is_open()) {
             return "";
         }
 
-        std::string content((std::istreambuf_iterator<char>(file)),
-                           std::istreambuf_iterator<char>());
+        content.assign((std::istreambuf_iterator<char>(file)),
+                       std::istreambuf_iterator<char>());
         file.close();
 
         if (content.empty()) {
@@ -203,6 +187,10 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
         // Парсим как скобочную структуру 1C
         tree* parsedTree = parse_1Ctext(content, filePath.string());
         if (!parsedTree) {
+            // Если не удалось распарсить, проверить на язык
+            if (isLanguageFile(content)) {
+                return std::string((const char*)md_Languages);
+            }
             return "";
         }
 
@@ -213,6 +201,10 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
         delete parsedTree;
 
         if (guids.empty()) {
+            // Если GUID'ы не найдены, проверить на язык
+            if (isLanguageFile(content)) {
+                return std::string((const char*)md_Languages);
+            }
             return "";
         }
 
@@ -226,6 +218,11 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
 
     } catch (const std::exception&) {
         // Игнорируем ошибки парсинга отдельных файлов
+    }
+
+    // Если не найдено по GUID, проверить на язык по содержимому
+    if (isLanguageFile(content)) {
+        return std::string((const char*)md_Languages);
     }
 
     return ""; // Не удалось классифицировать
@@ -355,6 +352,42 @@ void ParseMetadataCommand::printClassificationReport(const std::map<std::string,
     std::cout << std::endl;
 }
 
+std::string ParseMetadataCommand::extractGuidFromFilename(const std::string& filename) {
+    // Найти первую точку и взять часть до неё
+    size_t dotPos = filename.find('.');
+    if (dotPos != std::string::npos) {
+        return filename.substr(0, dotPos);
+    }
+    return filename;
+}
+
+bool ParseMetadataCommand::isLanguageFile(const std::string& content) {
+    // Файлы языков содержат названия языков в кавычках
+    // Примеры: "Русский", "English", "Deutsch" и т.д.
+    std::vector<std::string> languageNames = {
+        "\"Русский\"", "\"English\"", "\"Deutsch\"", "\"Français\"",
+        "\"Español\"", "\"Italiano\"", "\"Português\"", "\"中文\"",
+        "\"日本語\"", "\"한국어\"", "\"Türkçe\"", "\"العربية\"",
+        "\"हिन्दी\"", "\"বাংলা\"", "\"தமிழ்\"", "\"اردو\""
+    };
+
+    for (const auto& langName : languageNames) {
+        if (content.find(langName) != std::string::npos) {
+            return true;
+        }
+    }
+
+    // Также проверить на структуру файла языка: {1,{0,{2,{1,0,guid},"язык",
+    if (content.find("{1,") != std::string::npos &&
+        content.find("{0,") != std::string::npos &&
+        content.find("{2,") != std::string::npos &&
+        content.find("\"язык\"") != std::string::npos) {
+        return true;
+    }
+
+    return false;
+}
+
 std::string ParseMetadataCommand::extractRootFileGuid(const boost::filesystem::path& rootFilePath) {
     try {
         std::ifstream file(rootFilePath.string(), std::ios::binary);
@@ -385,8 +418,10 @@ std::string ParseMetadataCommand::extractRootFileGuid(const boost::filesystem::p
         // Извлекаем GUID после первой запятой
         std::string guid = content.substr(firstComma + 1, secondComma - firstComma - 1);
 
-        // Удаляем пробелы
-        guid.erase(std::remove_if(guid.begin(), guid.end(), ::isspace), guid.end());
+        // Удаляем пробелы и фигурные скобки
+        guid.erase(std::remove_if(guid.begin(), guid.end(), [](char c) {
+            return std::isspace(c) || c == '{' || c == '}';
+        }), guid.end());
 
         return guid;
 
@@ -395,39 +430,158 @@ std::string ParseMetadataCommand::extractRootFileGuid(const boost::filesystem::p
     }
 }
 
-bool ParseMetadataCommand::processRootConfigurationFile(const std::string& inputDir,
-                                                       const std::string& outputDir,
-                                                       const std::string& rootGuid) {
+std::string ParseMetadataCommand::processRootConfigurationFile(const std::string& inputDir,
+                                                              const std::string& outputDir) {
     try {
-        // Ищем файл с именем rootGuid в исходном каталоге
+        // Ищем файл root в исходном каталоге
+        fs::path rootFilePath = fs::path(inputDir) / "root";
+
+        if (!fs::exists(rootFilePath)) {
+            std::cerr << "Файл 'root' не найден в каталоге '" << inputDir << "'" << std::endl;
+            return "";
+        }
+
+        if (!fs::is_regular_file(rootFilePath)) {
+            std::cerr << "'root' не является файлом" << std::endl;
+            return "";
+        }
+
+        // Извлекаем GUID из файла root
+        std::string rootGuid = extractRootFileGuid(rootFilePath);
+        if (rootGuid.empty()) {
+            std::cerr << "Не удалось извлечь GUID из файла root" << std::endl;
+            return "";
+        }
+
+        // Копируем файл root в каталог Конфигурация
+        bool success = copyFileToCategory(rootFilePath, "Конфигурация", outputDir, inputDir);
+
+        if (!success) {
+            std::cout << "✗ Ошибка копирования файла root" << std::endl;
+            return "";
+        }
+
+        categoryFiles_["Конфигурация"].push_back("root");
+        std::cout << "✓ Корневой файл root → Конфигурация" << std::endl;
+
+        // Ищем файл с GUID конфигурации в исходном каталоге
         fs::path configFilePath = fs::path(inputDir) / rootGuid;
 
         if (!fs::exists(configFilePath)) {
             std::cerr << "Корневой файл конфигурации '" << rootGuid << "' не найден в каталоге '" << inputDir << "'" << std::endl;
-            return false;
+            return "";
         }
 
         if (!fs::is_regular_file(configFilePath)) {
             std::cerr << "'" << configFilePath.string() << "' не является файлом" << std::endl;
-            return false;
+            return "";
         }
 
-        // Копируем файл в каталог Конфигурация
-        bool success = copyFileToCategory(configFilePath, "Конфигурация", outputDir, inputDir);
+        // Копируем корневой файл конфигурации в каталог Конфигурация
+        success = copyFileToCategory(configFilePath, "Конфигурация", outputDir, inputDir);
 
         if (success) {
             categoryFiles_["Конфигурация"].push_back(configFilePath.filename().string());
             std::cout << "✓ Корневой файл конфигурации: " << configFilePath.filename().string() << " → Конфигурация" << std::endl;
+            return rootGuid;
         } else {
             std::cout << "✗ Ошибка копирования корневого файла конфигурации: " << configFilePath.filename().string() << std::endl;
-            return false;
+            return "";
         }
-
-        return true;
 
     } catch (const fs::filesystem_error& ex) {
         std::cerr << "Ошибка обработки корневого файла конфигурации: " << ex.what() << std::endl;
-        return false;
+        return "";
+    }
+}
+
+void ParseMetadataCommand::parseRootConfigForFileGuids(const boost::filesystem::path& rootConfigFilePath) {
+    try {
+        std::ifstream file(rootConfigFilePath.string(), std::ios::binary);
+        if (!file.is_open()) {
+            return;
+        }
+
+        std::string content((std::istreambuf_iterator<char>(file)),
+                           std::istreambuf_iterator<char>());
+        file.close();
+
+        if (content.empty()) {
+            return;
+        }
+
+        // Try to parse using ConfigStructureParser first for better accuracy
+        ConfigStructureParser configParser;
+        if (configParser.loadFromString(content) && configParser.parse()) {
+            // Use parsed catalogs
+            const auto& catalogs = configParser.getCatalogs();
+            for (const auto& catalog : catalogs) {
+                std::string catalog_guid = catalog->guid;
+                std::transform(catalog_guid.begin(), catalog_guid.end(), catalog_guid.begin(), ::tolower);
+                fileGuidToCategoryMap_[catalog_guid] = std::string((const char*)md_Catalogs);
+                std::cout << "Mapped catalog from ConfigStructureParser: " << catalog_guid << " → Справочники" << std::endl;
+            }
+
+            // Use parsed languages
+            const auto& languages = configParser.getLanguages();
+            for (const auto& lang : languages) {
+                std::string lang_guid = lang->guid;
+                std::transform(lang_guid.begin(), lang_guid.end(), lang_guid.begin(), ::tolower);
+                fileGuidToCategoryMap_[lang_guid] = std::string((const char*)md_Languages);
+                std::cout << "Mapped language from ConfigStructureParser: " << lang_guid << " → Языки" << std::endl;
+            }
+        } else {
+            // Fallback to tree-based parsing
+            std::cout << "ConfigStructureParser failed, falling back to tree parsing" << std::endl;
+            tree* parsedTree = parse_1Ctext(content, rootConfigFilePath.string());
+            if (!parsedTree) {
+                return;
+            }
+
+            // Рекурсивно обходим дерево и ищем структуры {GUID_категории, ...}
+            traverseTreeForCategoryFileGuids(parsedTree);
+
+            // Освобождаем память
+            delete parsedTree;
+        }
+
+    } catch (const std::exception&) {
+        // Игнорируем ошибки парсинга
+    }
+}
+
+void ParseMetadataCommand::traverseTreeForCategoryFileGuids(tree* node) {
+    if (!node) return;
+
+    // Ищем узлы типа списка (кортежи)
+    if (node->get_type() == node_type::nd_list && node->get_num_subnode() >= 3) {
+        tree* firstChild = node->get_subnode(0);
+        if (firstChild && firstChild->get_type() == node_type::nd_guid) {
+            std::string categoryGuid = firstChild->get_value().c_str();
+
+            // Проверяем, является ли это GUID категории
+            auto categoryIt = guidToCategoryMap_.find(categoryGuid);
+            if (categoryIt != guidToCategoryMap_.end()) {
+                std::string categoryName = categoryIt->second;
+
+                // Извлекаем GUID'ы файлов начиная с третьего элемента (после count)
+                for (int i = 2; i < node->get_num_subnode(); ++i) {
+                    tree* guidNode = node->get_subnode(i);
+                    if (guidNode && guidNode->get_type() == node_type::nd_guid) {
+                        std::string fileGuid = guidNode->get_value().c_str();
+                        if (!fileGuid.empty()) {
+                            fileGuidToCategoryMap_[fileGuid] = categoryName;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Рекурсивно обходим дочерние узлы
+    for (int i = 0; i < node->get_num_subnode(); ++i) {
+        tree* child = node->get_subnode(i);
+        traverseTreeForCategoryFileGuids(child);
     }
 }
 

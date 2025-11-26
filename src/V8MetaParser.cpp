@@ -1,5 +1,6 @@
 #include "V8MetaParser.h"
 #include "V8File.h"  // For logger and related functions
+#include "ConfigStructureParser.h"
 #include "logger.h"  // For Logger extern declaration
 #include <regex>
 #include <algorithm>
@@ -7,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <set>
 
 namespace v8unpack {
 
@@ -132,6 +134,8 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
     std::regex metadata_section_regex(metadata_section_pattern);
     std::string config_guid;
 
+
+
     while (std::getline(stream, line)) {
         if (line.find("--- ") == 0 && line.find(" ---") != std::string::npos) {
             // Process previous section if exists
@@ -172,27 +176,51 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
 
                     // Analyze metadata file to find object type mappings
                     if (current_section == config_guid && !config_guid.empty()) {
-                        std::smatch match;
-                        auto search_start = current_data.cbegin();
-                        while (std::regex_search(search_start, current_data.cend(), match, metadata_section_regex)) {
-                            std::string metadata_guid = match[1].str();
-                            std::transform(metadata_guid.begin(), metadata_guid.end(), metadata_guid.begin(), ::tolower);
-
-                            auto type_it = guid_to_type.find(metadata_guid);
-                            if (type_it != guid_to_type.end()) {
-                                std::string metadata_objects = match[3].str();
-                                // Extract object GUIDs from the section
-                                std::regex object_guid_regex(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
-                                std::sregex_iterator obj_it(metadata_objects.begin(), metadata_objects.end(), object_guid_regex);
-                                std::sregex_iterator obj_end;
-                                for (; obj_it != obj_end; ++obj_it) {
-                                    std::string obj_guid = obj_it->str();
-                                    std::transform(obj_guid.begin(), obj_guid.end(), obj_guid.begin(), ::tolower);
-                                    type_to_objects[type_it->second].push_back(obj_guid);
-                                    logger.log("Mapped object " + obj_guid + " to type " + type_it->second);
-                                }
+                        // Try to parse using ConfigStructureParser first for better accuracy
+                        ConfigStructureParser configParser;
+                        if (configParser.loadFromString(current_data) && configParser.parse()) {
+                            // Use parsed catalogs
+                            const auto& catalogs = configParser.getCatalogs();
+                            for (const auto& catalog : catalogs) {
+                                std::string catalog_guid = catalog->guid;
+                                std::transform(catalog_guid.begin(), catalog_guid.end(), catalog_guid.begin(), ::tolower);
+                                type_to_objects["Справочники"].push_back(catalog_guid);
+                                logger.log("Mapped catalog " + catalog_guid + " to type Справочники");
                             }
-                            search_start = match.suffix().first;
+
+                            // Use parsed languages
+                            const auto& languages = configParser.getLanguages();
+                            for (const auto& lang : languages) {
+                                std::string lang_guid = lang->guid;
+                                std::transform(lang_guid.begin(), lang_guid.end(), lang_guid.begin(), ::tolower);
+                                type_to_objects["Языки"].push_back(lang_guid);
+                                logger.log("Mapped language " + lang_guid + " to type Языки");
+                            }
+                        } else {
+                            // Fallback to regex-based parsing
+                            logger.log("ConfigStructureParser failed, falling back to regex parsing");
+                            std::smatch match;
+                            auto search_start = current_data.cbegin();
+                            while (std::regex_search(search_start, current_data.cend(), match, metadata_section_regex)) {
+                                std::string metadata_guid = match[1].str();
+                                std::transform(metadata_guid.begin(), metadata_guid.end(), metadata_guid.begin(), ::tolower);
+
+                                auto type_it = guid_to_type.find(metadata_guid);
+                                if (type_it != guid_to_type.end()) {
+                                    std::string metadata_objects = match[3].str();
+                                    // Extract object GUIDs from the section
+                                    std::regex object_guid_regex(R"([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})");
+                                    std::sregex_iterator obj_it(metadata_objects.begin(), metadata_objects.end(), object_guid_regex);
+                                    std::sregex_iterator obj_end;
+                                    for (; obj_it != obj_end; ++obj_it) {
+                                        std::string obj_guid = obj_it->str();
+                                        std::transform(obj_guid.begin(), obj_guid.end(), obj_guid.begin(), ::tolower);
+                                        type_to_objects[type_it->second].push_back(obj_guid);
+                                        logger.log("Mapped object " + obj_guid + " to type " + type_it->second);
+                                    }
+                                }
+                                search_start = match.suffix().first;
+                            }
                         }
                     }
 
@@ -234,13 +262,6 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                     }
                 }
 
-                // Create subdirectory for metadata type
-                fs::path type_dir = base_dir / metadata_type;
-                if (!ensure_directory(type_dir)) {
-                    std::cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << std::endl;
-                    continue;
-                }
-
                 // Create filename based on section name (clean it up)
                 std::string filename = current_section;
                 // Remove illegal filename characters
@@ -256,14 +277,15 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 std::replace(filename.begin(), filename.end(), '{', '_');
                 std::replace(filename.begin(), filename.end(), '}', '_');
 
-                // Add file extension
-
-                // Create subdirectory path for this object
-                fs::path sub_dir = type_dir / current_section;
+                // Prepare paths
+                fs::path type_dir = base_dir / metadata_type;
 
                 // Check if the data is a V8 container that needs to be unpacked
                 std::istringstream data_stream(current_data);
                 if (IsV8File(data_stream)) {
+                    // Create subdirectory path for this object
+                    fs::path sub_dir = type_dir / current_section;
+
                     // Create subdirectory and unpack
                     if (!ensure_directory(sub_dir)) {
                         std::cerr << "ParseToStringWithFiles: Failed to create subdirectory: " << sub_dir.string() << std::endl;
@@ -273,15 +295,19 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                         int unpack_result = RecursiveUnpack(sub_dir.string(), data_stream, {}, true, false);
                         if (unpack_result != V8UNPACK_OK) {
                             // Fallback to saving as file
-                            fs::path file_path = type_dir / filename;
-                            std::ofstream out_file(file_path.string(), std::ios::binary);
-                            if (out_file) {
-                                out_file.write(current_data.c_str(), current_data.size());
-                                out_file.close();
-                                file_count++;
-                                logger.log("Saved file (fallback): " + file_path.string() + " (type: " + metadata_type + ")");
+                            if (!ensure_directory(type_dir)) {
+                                std::cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << std::endl;
                             } else {
-                                std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                                fs::path file_path = type_dir / filename;
+                                std::ofstream out_file(file_path.string(), std::ios::binary);
+                                if (out_file) {
+                                    out_file.write(current_data.c_str(), current_data.size());
+                                    out_file.close();
+                                    file_count++;
+                                    logger.log("Saved file (fallback): " + file_path.string() + " (type: " + metadata_type + ")");
+                                } else {
+                                    std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                                }
                             }
                         } else {
                             file_count++;
@@ -289,16 +315,20 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                         }
                     }
                 } else {
-                    // Save as regular file
-                    fs::path file_path = type_dir / filename;
-                    std::ofstream out_file(file_path.string(), std::ios::binary);
-                    if (out_file) {
-                        out_file.write(current_data.c_str(), current_data.size());
-                        out_file.close();
-                        file_count++;
-                        logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+                    // Save as regular file - create type directory only when saving
+                    if (!ensure_directory(type_dir)) {
+                        std::cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << std::endl;
                     } else {
-                        std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                        fs::path file_path = type_dir / filename;
+                        std::ofstream out_file(file_path.string(), std::ios::binary);
+                        if (out_file) {
+                            out_file.write(current_data.c_str(), current_data.size());
+                            out_file.close();
+                            file_count++;
+                            logger.log("Saved file: " + file_path.string() + " (type: " + metadata_type + ")");
+                        } else {
+                            std::cerr << "ParseToStringWithFiles: Failed to create file: " << file_path.string() << std::endl;
+                        }
                     }
                 }
             }
@@ -375,24 +405,27 @@ int ParseToStringWithFiles(const std::string &config_string, const std::string &
                 }
             }
 
-            // Create directory and save file
+            // Create filename based on section name (clean it up)
+            std::string filename = current_section;
+            std::replace(filename.begin(), filename.end(), '"', '_');
+            std::replace(filename.begin(), filename.end(), '/', '_');
+            std::replace(filename.begin(), filename.end(), '\\', '_');
+            std::replace(filename.begin(), filename.end(), ':', '_');
+            std::replace(filename.begin(), filename.end(), '*', '_');
+            std::replace(filename.begin(), filename.end(), '?', '_');
+            std::replace(filename.begin(), filename.end(), '<', '_');
+            std::replace(filename.begin(), filename.end(), '>', '_');
+            std::replace(filename.begin(), filename.end(), '|', '_');
+            std::replace(filename.begin(), filename.end(), '{', '_');
+            std::replace(filename.begin(), filename.end(), '}', '_');
+
+            // Prepare paths
             fs::path type_dir = base_dir / metadata_type;
+
+            // Save as regular file - create type directory only when saving
             if (!ensure_directory(type_dir)) {
                 std::cerr << "ParseToStringWithFiles: Failed to create type directory: " << type_dir.string() << std::endl;
             } else {
-                std::string filename = current_section;
-                std::replace(filename.begin(), filename.end(), '"', '_');
-                std::replace(filename.begin(), filename.end(), '/', '_');
-                std::replace(filename.begin(), filename.end(), '\\', '_');
-                std::replace(filename.begin(), filename.end(), ':', '_');
-                std::replace(filename.begin(), filename.end(), '*', '_');
-                std::replace(filename.begin(), filename.end(), '?', '_');
-                std::replace(filename.begin(), filename.end(), '<', '_');
-                std::replace(filename.begin(), filename.end(), '>', '_');
-                std::replace(filename.begin(), filename.end(), '|', '_');
-                std::replace(filename.begin(), filename.end(), '{', '_');
-                std::replace(filename.begin(), filename.end(), '}', '_');
-
                 fs::path file_path = type_dir / filename;
                 std::ofstream out_file(file_path.string(), std::ios::binary);
                 if (out_file) {
