@@ -52,54 +52,54 @@ fcd3404e-1523-48ce-9bc0-ecdb822684a1 // Бизнес процессы
 */
 
 // Метаданные 1С
-constexpr auto md_Config                      = L"Конфигурация";
-constexpr auto md_Common                      = L"Общие";
-constexpr auto md_AccumulationRegisters       = L"Регистры накопления";
-constexpr auto md_AccountingRegisters         = L"Регистры бухгалтерии";
-constexpr auto md_CalculationRegisters        = L"Регистры расчета";
-constexpr auto md_BusinessProcesses           = L"Бизнес-процессы";
-constexpr auto md_Catalogs                    = L"Справочники";
-constexpr auto md_ChartsOfCharacteristicTypes = L"Планы видов характеристик";
-constexpr auto md_CommandGroups               = L"Группы команд";
-constexpr auto md_CommonAttributes            = L"Общие реквизиты";
-constexpr auto md_CommonCommands              = L"Общие команды";
-constexpr auto md_CommonForms                 = L"Общие формы";
-constexpr auto md_CommonModules               = L"Общие модули";
-constexpr auto md_CommonPictures              = L"Общие картинки";
-constexpr auto md_CommonTemplates             = L"Общие макеты";
-constexpr auto md_Constants                   = L"Константы";
-constexpr auto md_DataProcessors              = L"Обработки";
-constexpr auto md_DefinedTypes                = L"Определяемые типы";
-constexpr auto md_DocumentJournals            = L"Журналы документов";
-constexpr auto md_DocumentNumerators          = L"Нумераторы";
-constexpr auto md_Documents                   = L"Документы";
-constexpr auto md_Enums                       = L"Перечисления";
-constexpr auto md_EventSubscriptions          = L"Подписки на события";
-constexpr auto md_ExchangePlans               = L"Планы обмена";
-constexpr auto md_ChartOfAccounts             = L"Планы счетов";
-constexpr auto md_ChartOfCalculationTypes     = L"Планы видов расчета";
-constexpr auto md_ExternalDataSources         = L"Внешние источники данных";
-constexpr auto md_FilterCriteria              = L"Критерии отбора";
-constexpr auto md_FunctionalOptions           = L"Функциональные опции";
-constexpr auto md_FunctionalOptionsParameters = L"Параметры функциональных опций";
-constexpr auto md_HTTPServices                = L"HTTP-сервисы";
-constexpr auto md_InformationRegisters        = L"Регистры сведений";
-constexpr auto md_Interfaces                  = L"Интерфейсы";
-constexpr auto md_Languages                   = L"Языки";
-constexpr auto md_Reports                     = L"Отчеты";
-constexpr auto md_Roles                       = L"Роли";
-constexpr auto md_Bots                        = L"Боты";
-constexpr auto md_ScheduledJobs               = L"Регламентные задания";
-constexpr auto md_SessionParameters           = L"Параметры сеанса";
-constexpr auto md_SettingsStorages            = L"Хранилища настроек";
-constexpr auto md_StyleItems                  = L"Элементы стиля";
-constexpr auto md_Styles                      = L"Стили";
-constexpr auto md_Subsystems                  = L"Подсистемы";
-constexpr auto md_Tasks                       = L"Задачи";
-constexpr auto md_WebServices                 = L"Web-сервисы";
-constexpr auto md_WSReferences                = L"WS-ссылки";
-constexpr auto md_XDTOPackages                = L"XDTO-пакеты";
-constexpr auto md_IntegrationServices         = L"Сервисы интеграции";
+constexpr auto md_Config                      = "Конфигурация";
+constexpr auto md_Common                      = "Общие";
+constexpr auto md_AccumulationRegisters       = "Регистры накопления";
+constexpr auto md_AccountingRegisters         = "Регистры бухгалтерии";
+constexpr auto md_CalculationRegisters        = "Регистры расчета";
+constexpr auto md_BusinessProcesses           = "Бизнес-процессы";
+constexpr auto md_Catalogs                    = "Справочники";
+constexpr auto md_ChartsOfCharacteristicTypes = "Планы видов характеристик";
+constexpr auto md_CommandGroups               = "Группы команд";
+constexpr auto md_CommonAttributes            = "Общие реквизиты";
+constexpr auto md_CommonCommands              = "Общие команды";
+constexpr auto md_CommonForms                 = "Общие формы";
+constexpr auto md_CommonModules               = "Общие модули";
+constexpr auto md_CommonPictures              = "Общие картинки";
+constexpr auto md_CommonTemplates             = "Общие макеты";
+constexpr auto md_Constants                   = "Константы";
+constexpr auto md_DataProcessors              = "Обработки";
+constexpr auto md_DefinedTypes                = "Определяемые типы";
+constexpr auto md_DocumentJournals            = "Журналы документов";
+constexpr auto md_DocumentNumerators          = "Нумераторы";
+constexpr auto md_Documents                   = "Документы";
+constexpr auto md_Enums                       = "Перечисления";
+constexpr auto md_EventSubscriptions          = "Подписки на события";
+constexpr auto md_ExchangePlans               = "Планы обмена";
+constexpr auto md_ChartOfAccounts             = "Планы счетов";
+constexpr auto md_ChartOfCalculationTypes     = "Планы видов расчета";
+constexpr auto md_ExternalDataSources         = "Внешние источники данных";
+constexpr auto md_FilterCriteria              = "Критерии отбора";
+constexpr auto md_FunctionalOptions           = "Функциональные опции";
+constexpr auto md_FunctionalOptionsParameters = "Параметры функциональных опций";
+constexpr auto md_HTTPServices                = "HTTP-сервисы";
+constexpr auto md_InformationRegisters        = "Регистры сведений";
+constexpr auto md_Interfaces                  = "Интерфейсы";
+constexpr auto md_Languages                   = "Языки";
+constexpr auto md_Reports                     = "Отчеты";
+constexpr auto md_Roles                       = "Роли";
+constexpr auto md_Bots                        = "Боты";
+constexpr auto md_ScheduledJobs               = "Регламентные задания";
+constexpr auto md_SessionParameters           = "Параметры сеанса";
+constexpr auto md_SettingsStorages            = "Хранилища настроек";
+constexpr auto md_StyleItems                  = "Элементы стиля";
+constexpr auto md_Styles                      = "Стили";
+constexpr auto md_Subsystems                  = "Подсистемы";
+constexpr auto md_Tasks                       = "Задачи";
+constexpr auto md_WebServices                 = "Web-сервисы";
+constexpr auto md_WSReferences                = "WS-ссылки";
+constexpr auto md_XDTOPackages                = "XDTO-пакеты";
+constexpr auto md_IntegrationServices         = "Сервисы интеграции";
 
 
 
@@ -1817,4 +1817,3 @@ constexpr const char* _conf_root_83_ =
 "}\n"
 "}";
 #endif
-

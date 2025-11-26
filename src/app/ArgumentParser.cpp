@@ -166,7 +166,7 @@ std::vector<std::string> ArgumentParser::getValidCommands() const {
         "deflate", "inflate", "und", "undeflate",
 
         // Парсинг
-        "parse", "parsestring", "save", "savefiles", "listfiles", "lf",
+        "parse", "parsestring", "parsemetadata", "save", "savefiles", "listfiles", "lf",
 
         // Сборка
         "build",

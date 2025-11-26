@@ -12,6 +12,7 @@
 #include "concrete/HelpCommand.h"
 #include "concrete/ExampleCommand.h"
 #include "concrete/BatCommand.h"
+#include "concrete/ParseMetadataCommand.h"
 
 #include "../messageregistration.h"
 
@@ -28,6 +29,7 @@ std::shared_ptr<CommandRegistry> CommandFactory::createRegistry() {
     registry->registerCommand(createUnpackCommand());
     registry->registerCommand(createPackCommand());
     registry->registerCommand(createParseCommand());
+    registry->registerCommand(createParseMetadataCommand());
     registry->registerCommand(createBuildCommand());
     // registry->registerCommand(createDeflateCommand());
     // registry->registerCommand(createInflateCommand());
@@ -50,6 +52,10 @@ std::unique_ptr<Command> CommandFactory::createPackCommand() {
 
 std::unique_ptr<Command> CommandFactory::createParseCommand() {
     return std::make_unique<ParseCommand>(logger_);
+}
+
+std::unique_ptr<Command> CommandFactory::createParseMetadataCommand() {
+    return std::make_unique<ParseMetadataCommand>(logger_);
 }
 
 std::unique_ptr<Command> CommandFactory::createBuildCommand() {

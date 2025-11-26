@@ -119,4 +119,28 @@ size_t CommandRegistry::getCommandCount() const {
     return commands_.size();
 }
 
+int CommandRegistry::executeCommand(const std::string& commandName, const std::vector<std::string>& args) {
+    Command* command = getCommand(commandName);
+    if (!command) {
+        if (logger_) {
+            logger_->AddError("Command not found", "executeCommand", "Command '" + commandName + "' is not registered");
+        }
+        return -1; // Command not found
+    }
+
+    try {
+        return command->execute(args);
+    } catch (const std::exception& e) {
+        if (logger_) {
+            logger_->AddError("Command execution failed", "executeCommand", std::string("Command '") + commandName + "' failed: " + e.what());
+        }
+        return -2; // Execution failed
+    } catch (...) {
+        if (logger_) {
+            logger_->AddError("Command execution failed", "executeCommand", std::string("Command '") + commandName + "' failed with unknown error");
+        }
+        return -2; // Execution failed
+    }
+}
+
 } // namespace v8unpack

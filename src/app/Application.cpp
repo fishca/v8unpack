@@ -191,8 +191,10 @@ int Application::handleSpecialCases(const ParsedArgs& args) {
 
 int Application::executeViaCommandSystem(const std::string& commandName,
                                        const std::vector<std::string>& args) {
-    // TODO: Реализовать выполнение через систему команд
-    // Пока всегда возвращаем "не найдено"
+    if (commandRegistry_) {
+        return commandRegistry_->executeCommand(commandName, args);
+    }
+    // Если registry не инициализирован - возвращаем "не найдено"
     return -1;
 }
 

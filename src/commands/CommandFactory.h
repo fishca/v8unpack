@@ -73,6 +73,12 @@ private:
     std::unique_ptr<Command> createParseCommand();
 
     /**
+     * @brief Создать команду классификации метаданных
+     * @return Уникальный указатель на команду
+     */
+    std::unique_ptr<Command> createParseMetadataCommand();
+
+    /**
      * @brief Создать команду сборки
      * @return Уникальный указатель на команду
      */

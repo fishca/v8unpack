@@ -72,6 +72,15 @@ public:
     bool hasCommand(const std::string& name) const;
 
     /**
+     * @brief Выполнить команду с указанными аргументами
+     *
+     * @param commandName Имя команды
+     * @param args Аргументы команды
+     * @return Код возврата (0 - успех)
+     */
+    int executeCommand(const std::string& commandName, const std::vector<std::string>& args);
+
+    /**
      * @brief Показать общую справку по всем командам
      */
     void showHelp() const;

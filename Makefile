@@ -921,6 +921,30 @@ src/commands/concrete/ParseCommand.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseCommand.cpp.s
 .PHONY : src/commands/concrete/ParseCommand.cpp.s
 
+src/commands/concrete/ParseMetadataCommand.o: src/commands/concrete/ParseMetadataCommand.cpp.o
+.PHONY : src/commands/concrete/ParseMetadataCommand.o
+
+# target to build an object file
+src/commands/concrete/ParseMetadataCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseMetadataCommand.cpp.o
+.PHONY : src/commands/concrete/ParseMetadataCommand.cpp.o
+
+src/commands/concrete/ParseMetadataCommand.i: src/commands/concrete/ParseMetadataCommand.cpp.i
+.PHONY : src/commands/concrete/ParseMetadataCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/ParseMetadataCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseMetadataCommand.cpp.i
+.PHONY : src/commands/concrete/ParseMetadataCommand.cpp.i
+
+src/commands/concrete/ParseMetadataCommand.s: src/commands/concrete/ParseMetadataCommand.cpp.s
+.PHONY : src/commands/concrete/ParseMetadataCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/ParseMetadataCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/ParseMetadataCommand.cpp.s
+.PHONY : src/commands/concrete/ParseMetadataCommand.cpp.s
+
 src/commands/concrete/UnpackCommand.o: src/commands/concrete/UnpackCommand.cpp.o
 .PHONY : src/commands/concrete/UnpackCommand.o
 
@@ -1485,6 +1509,9 @@ help:
 	@echo "... src/commands/concrete/ParseCommand.o"
 	@echo "... src/commands/concrete/ParseCommand.i"
 	@echo "... src/commands/concrete/ParseCommand.s"
+	@echo "... src/commands/concrete/ParseMetadataCommand.o"
+	@echo "... src/commands/concrete/ParseMetadataCommand.i"
+	@echo "... src/commands/concrete/ParseMetadataCommand.s"
 	@echo "... src/commands/concrete/UnpackCommand.o"
 	@echo "... src/commands/concrete/UnpackCommand.i"
 	@echo "... src/commands/concrete/UnpackCommand.s"
