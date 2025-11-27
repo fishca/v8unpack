@@ -108,12 +108,50 @@ private:
      */
     void traverseTreeForCategoryFileGuids(tree* node);
 
+    /**
+     * Найти категорию родительского справочника для команды
+     */
+    std::string findParentCatalogCategory(const boost::filesystem::path& filePath, const std::string& commandGuid);
+
+    /**
+     * Проверить, содержит ли справочник команду с указанным GUID
+     */
+    bool isCatalogContainsCommand(const std::string& catalogGuid, const std::string& commandGuid, const std::string& inputDir);
+
+    /**
+     * Получить имя справочника по его GUID
+     */
+    std::string getCatalogNameByGuid(const std::string& catalogGuid);
+
+    /**
+     * Извлечь команды из файлов справочников
+     */
+    void extractCommandsFromCatalogFiles(const std::string& inputDir);
+
+    /**
+     * Извлечь GUID'ы команд из секции команд справочников
+     */
+    void extractCommandGuidsFromCatalogCommandsSection(tree* commandsSectionNode);
+
+    /**
+     * Рекурсивный обход дерева для поиска GUID'ов команд
+     */
+    void traverseTreeForCommandGuids(tree* node);
+
+    /**
+     * Проверить, является ли файл командой справочника
+     */
+    bool isLikelyCatalogCommand(const boost::filesystem::path& filePath, const std::string& content);
+
 private:
     std::shared_ptr<MetadataAnalyzer> metadataAnalyzer_;
     std::map<std::string, std::string> guidToCategoryMap_;
 
     // Мапа GUID файлов -> категория из корневого файла конфигурации
     std::map<std::string, std::string> fileGuidToCategoryMap_;
+
+    // Мапа GUID справочников -> имена справочников
+    std::map<std::string, std::string> catalogGuidToNameMap_;
 
     // Статистика классификации
     std::map<std::string, std::vector<std::string>> categoryFiles_;

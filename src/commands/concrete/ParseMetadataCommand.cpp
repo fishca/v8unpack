@@ -54,6 +54,14 @@ int ParseMetadataCommand::execute(const std::vector<std::string>& args) {
         fs::path rootConfigFilePath = fs::path(outputDir) / "Конфигурация" / rootGuid;
         parseRootConfigForFileGuids(rootConfigFilePath);
 
+        // Извлекаем команды из файлов справочников
+        extractCommandsFromCatalogFiles(inputDir);
+
+        std::cout << "DEBUG: fileGuidToCategoryMap_ contains:" << std::endl;
+        for (const auto& pair : fileGuidToCategoryMap_) {
+            std::cout << "  " << pair.first << " -> " << pair.second << std::endl;
+        }
+
         // Шаг 2: Обрабатываем остальные файлы
         std::cout << "Обрабатываем остальные файлы..." << std::endl;
 
@@ -152,9 +160,12 @@ std::vector<fs::path> ParseMetadataCommand::scanDirectory(const std::string& inp
 }
 
 std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
+    std::cout << "DEBUG: Classifying file: " << filePath.string() << std::endl;
+
     // Сначала проверяем специальные файлы
     std::string specialCategory = getSpecialFileCategory(filePath);
     if (!specialCategory.empty()) {
+        std::cout << "DEBUG: Special category: " << specialCategory << std::endl;
         return specialCategory;
     }
 
@@ -162,17 +173,33 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
     std::string filename = filePath.filename().string();
     std::string guid = extractGuidFromFilename(filename);
 
+    std::cout << "DEBUG: Initial guid from filename: " << guid << std::endl;
+
+    // Для файлов в подкаталогах команд (типа GUID.2/text) используем GUID из имени каталога
+    if (filePath.parent_path() != filePath.root_path() && filePath.parent_path().filename() != ".") {
+        std::string parentDirName = filePath.parent_path().filename().string();
+        std::string parentGuid = extractGuidFromFilename(parentDirName);
+        if (!parentGuid.empty() && parentGuid != filename) {
+            guid = parentGuid;
+            std::cout << "DEBUG: Using parent directory GUID: " << guid << " for file: " << filename << std::endl;
+        }
+    }
+
     // Проверяем, есть ли GUID файла в мапе из корневого файла конфигурации
     auto fileGuidIt = fileGuidToCategoryMap_.find(guid);
     if (fileGuidIt != fileGuidToCategoryMap_.end() && fileGuidIt->second != std::string((const char*)md_Languages)) {
+        std::cout << "DEBUG: Found in fileGuidToCategoryMap_: " << fileGuidIt->second << std::endl;
         return fileGuidIt->second;
     }
 
-    // Читаем и парсим содержимое файла
+    std::cout << "DEBUG: Not found in fileGuidToCategoryMap_, checking if catalog command" << std::endl;
+
+    // Читаем содержимое файла для проверки на команду справочника
     std::string content;
     try {
         std::ifstream file(filePath.string(), std::ios::binary);
         if (!file.is_open()) {
+            std::cout << "DEBUG: Cannot open file for reading" << std::endl;
             return "";
         }
 
@@ -181,38 +208,57 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
         file.close();
 
         if (content.empty()) {
+            std::cout << "DEBUG: File content is empty" << std::endl;
             return "";
         }
 
+        // Дополнительная логика: проверяем, может ли файл быть командой справочника
+        // по структуре каталога или по содержимому
+        std::cout << "DEBUG: Checking file: " << filePath.string() << ", guid: " << guid << std::endl;
+        bool isLikelyCommand = isLikelyCatalogCommand(filePath, content);
+        std::cout << "DEBUG: isLikelyCatalogCommand result: " << (isLikelyCommand ? "true" : "false") << std::endl;
+        if (isLikelyCommand) {
+            std::cout << "DEBUG: Detected likely catalog command: " << filePath.filename().string() << std::endl;
+            // Для команд справочников сразу ищем родительский справочник
+            std::string parentCategory = findParentCatalogCategory(filePath, guid);
+            if (!parentCategory.empty()) {
+                std::cout << "DEBUG: Found parent category: " << parentCategory << " for command " << filePath.filename().string() << std::endl;
+                return parentCategory + "/Команды";
+            }
+            std::cout << "DEBUG: No parent category found for command " << filePath.filename().string() << ", using default" << std::endl;
+            return "Справочники/Команды";
+        }
+
+        std::cout << "DEBUG: Not a catalog command, proceeding to parsing" << std::endl;
+    } catch (const std::exception&) {
+        std::cout << "DEBUG: Exception reading file content" << std::endl;
+        return "";
+    }
+
+    // Попробуем распарсить файл для извлечения GUID'ов
+    try {
         // Парсим как скобочную структуру 1C
         tree* parsedTree = parse_1Ctext(content, filePath.string());
-        if (!parsedTree) {
-            // Если не удалось распарсить, проверить на язык
-            if (isLanguageFile(content)) {
-                return std::string((const char*)md_Languages);
-            }
-            return "";
-        }
+        if (parsedTree) {
+            // Извлекаем GUID'ы из дерева
+            std::vector<std::string> guids = extractGuidsFromTree(parsedTree);
 
-        // Извлекаем GUID'ы из дерева
-        std::vector<std::string> guids = extractGuidsFromTree(parsedTree);
+            // Освобождаем память
+            delete parsedTree;
 
-        // Освобождаем память
-        delete parsedTree;
-
-        if (guids.empty()) {
-            // Если GUID'ы не найдены, проверить на язык
-            if (isLanguageFile(content)) {
-                return std::string((const char*)md_Languages);
-            }
-            return "";
-        }
-
-        // Ищем основной GUID файла (обычно первый в списке)
-        for (const auto& guid : guids) {
-            std::string category = guidToCategoryName(guid);
-            if (!category.empty()) {
-                return category;
+            // Ищем основной GUID файла (обычно первый в списке)
+            for (const auto& guid : guids) {
+                std::string category = guidToCategoryName(guid);
+                if (!category.empty()) {
+                    // Если это команда справочника, ищем, к какому именно справочнику она принадлежит
+                    if (category == "Команды справочников") {
+                        std::string parentCategory = findParentCatalogCategory(filePath, guid);
+                        if (!parentCategory.empty()) {
+                            return parentCategory + "/Команды";
+                        }
+                    }
+                    return category;
+                }
             }
         }
 
@@ -220,8 +266,9 @@ std::string ParseMetadataCommand::classifyFile(const fs::path& filePath) {
         // Игнорируем ошибки парсинга отдельных файлов
     }
 
-    // Если не найдено по GUID, проверить на язык по содержимому
+    // Если не удалось распарсить или не найдены GUID'ы, проверить на язык по содержимому
     if (isLanguageFile(content)) {
+        std::cout << "DEBUG: Detected language file" << std::endl;
         return std::string((const char*)md_Languages);
     }
 
@@ -368,7 +415,7 @@ bool ParseMetadataCommand::isLanguageFile(const std::string& content) {
         "\"Русский\"", "\"English\"", "\"Deutsch\"", "\"Français\"",
         "\"Español\"", "\"Italiano\"", "\"Português\"", "\"中文\"",
         "\"日本語\"", "\"한국어\"", "\"Türkçe\"", "\"العربية\"",
-        "\"हिन्दी\"", "\"বাংলা\"", "\"தமிழ்\"", "\"اردو\""
+        "\"हिन्दी\"", "\"বাংলা\"", "\"தமிழ்\"", "\"ардо\""
     };
 
     for (const auto& langName : languageNames) {
@@ -513,14 +560,15 @@ void ParseMetadataCommand::parseRootConfigForFileGuids(const boost::filesystem::
         // Try to parse using ConfigStructureParser first for better accuracy
         ConfigStructureParser configParser;
         if (configParser.loadFromString(content) && configParser.parse()) {
-            // Use parsed catalogs
-            const auto& catalogs = configParser.getCatalogs();
-            for (const auto& catalog : catalogs) {
-                std::string catalog_guid = catalog->guid;
-                std::transform(catalog_guid.begin(), catalog_guid.end(), catalog_guid.begin(), ::tolower);
-                fileGuidToCategoryMap_[catalog_guid] = std::string((const char*)md_Catalogs);
-                std::cout << "Mapped catalog from ConfigStructureParser: " << catalog_guid << " → Справочники" << std::endl;
-            }
+        // Use parsed catalogs
+        const auto& catalogs = configParser.getCatalogs();
+        for (const auto& catalog : catalogs) {
+            std::string catalog_guid = catalog->guid;
+            std::transform(catalog_guid.begin(), catalog_guid.end(), catalog_guid.begin(), ::tolower);
+            fileGuidToCategoryMap_[catalog_guid] = std::string((const char*)md_Catalogs);
+            catalogGuidToNameMap_[catalog_guid] = catalog->name;
+            std::cout << "Mapped catalog from ConfigStructureParser: " << catalog_guid << " → Справочники (" << catalog->name << ")" << std::endl;
+        }
 
             // Use parsed languages
             const auto& languages = configParser.getLanguages();
@@ -574,6 +622,12 @@ void ParseMetadataCommand::traverseTreeForCategoryFileGuids(tree* node) {
                         }
                     }
                 }
+            }
+
+            // Специальная обработка для секции команд справочников
+            if (categoryGuid == "4fe87c89-9ad4-43f6-9fdb-9dc83b3879c6") {
+                // Это секция команд справочников
+                extractCommandGuidsFromCatalogCommandsSection(node);
             }
         }
     }
@@ -634,6 +688,250 @@ void ParseMetadataCommand::initializeCategoryMappings() {
     guidToCategoryMap_[std::string(GUID_BusinessProcesses)] = std::string((const char*)md_BusinessProcesses);
     guidToCategoryMap_[std::string(GUID_Tasks)] = std::string((const char*)md_Tasks);
     guidToCategoryMap_[std::string(GUID_ExternalDataSources)] = std::string((const char*)md_ExternalDataSources);
+    
+    // Специальные GUID'ы для команд внутри объектов метаданных
+    guidToCategoryMap_[std::string(GUID_RefCommands)] = "Команды справочников";
+    guidToCategoryMap_[std::string(GUID_SelCritCommands)] = "Команды критериев отбора";
+    guidToCategoryMap_[std::string(GUID_TasksCommands)] = "Команды задач";
+    guidToCategoryMap_[std::string(GUID_BPCommands)] = "Команды бизнес-процессов";
+    guidToCategoryMap_[std::string(GUID_ProcessingCommand)] = "Команды обработок";
+    guidToCategoryMap_[std::string(GUID_InfoRegCommand)] = "Команды регистров сведений";
+    guidToCategoryMap_[std::string(GUID_AccRegCommand)] = "Команды регистров бухгалтерии";
+    guidToCategoryMap_[std::string(GUID_DocCommand)] = "Команды документов";
+    guidToCategoryMap_[std::string(GUID_ExchPlanCommand)] = "Команды планов обмена";
+    guidToCategoryMap_[std::string(GUID_DocJrnlCommand)] = "Команды журналов документов";
+    guidToCategoryMap_[std::string(GUID_AccPlnCommand)] = "Команды планов счетов";
+    guidToCategoryMap_[std::string(GUID_RegAcmCommand)] = "Команды регистров накопления";
+    guidToCategoryMap_[std::string(GUID_BsnPrcCommand)] = "Команды бизнес-процессов";
+}
+
+std::string ParseMetadataCommand::findParentCatalogCategory(const fs::path& filePath, const std::string& commandGuid) {
+    // Для определения принадлежности команды к конкретному справочнику,
+    // анализируем структуру файлов справочников в исходном каталоге
+
+    std::string inputDir = filePath.parent_path().parent_path().string();
+
+    // Перебираем все GUID'ы справочников из мапы catalogGuidToNameMap_
+    for (const auto& pair : catalogGuidToNameMap_) {
+        const std::string& catalogGuid = pair.first;
+        const std::string& catalogName = pair.second;
+
+        // Проверяем, содержит ли справочник данную команду
+        if (isCatalogContainsCommand(catalogGuid, commandGuid, inputDir)) {
+            std::cout << "DEBUG: Command " << commandGuid << " belongs to catalog " << catalogName << " (" << catalogGuid << ")" << std::endl;
+            return "Справочники/" + catalogName;
+        }
+    }
+
+    // Если не нашли принадлежность, возвращаем общую категорию
+    std::cout << "DEBUG: Command " << commandGuid << " not found in any catalog, using default category" << std::endl;
+    return "Справочники";
+}
+
+bool ParseMetadataCommand::isCatalogContainsCommand(const std::string& catalogGuid, const std::string& commandGuid, const std::string& inputDir) {
+    try {
+        // Ищем файл структуры справочника
+        fs::path catalogFilePath = fs::path(inputDir) / catalogGuid;
+
+        if (!fs::exists(catalogFilePath) || !fs::is_regular_file(catalogFilePath)) {
+            std::cout << "DEBUG: Catalog file not found: " << catalogFilePath.string() << std::endl;
+            return false;
+        }
+
+        // Читаем содержимое файла структуры справочника
+        std::ifstream file(catalogFilePath.string(), std::ios::binary);
+        if (!file.is_open()) {
+            std::cout << "DEBUG: Cannot open catalog file: " << catalogFilePath.string() << std::endl;
+            return false;
+        }
+
+        std::string content((std::istreambuf_iterator<char>(file)),
+                           std::istreambuf_iterator<char>());
+        file.close();
+
+        if (content.empty()) {
+            std::cout << "DEBUG: Catalog file is empty: " << catalogFilePath.string() << std::endl;
+            return false;
+        }
+
+        std::cout << "DEBUG: Checking catalog " << catalogGuid << " for command " << commandGuid << std::endl;
+
+        // Ищем секцию команд с GUID 4fe87c89-9ad4-43f6-9fdb-9dc83b3879c6
+        std::string commandSectionGuid = "4fe87c89-9ad4-43f6-9fdb-9dc83b3879c6";
+        size_t commandSectionPos = content.find(commandSectionGuid);
+        if (commandSectionPos == std::string::npos) {
+            std::cout << "DEBUG: Command section not found in catalog " << catalogGuid << std::endl;
+            return false;
+        }
+
+        std::cout << "DEBUG: Command section found at position " << commandSectionPos << " in catalog " << catalogGuid << std::endl;
+
+        // Ищем команду с заданным GUID в секции команд
+        size_t commandPos = content.find(commandGuid, commandSectionPos);
+        if (commandPos == std::string::npos) {
+            std::cout << "DEBUG: Command " << commandGuid << " not found in catalog " << catalogGuid << std::endl;
+            return false;
+        }
+
+        std::cout << "DEBUG: Command " << commandGuid << " found at position " << commandPos << " in catalog " << catalogGuid << std::endl;
+
+        // Проверяем, что команда находится внутри секции команд
+        return commandPos > commandSectionPos;
+
+    } catch (const std::exception& ex) {
+        std::cout << "DEBUG: Exception in isCatalogContainsCommand: " << ex.what() << std::endl;
+        return false;
+    }
+}
+
+void ParseMetadataCommand::extractCommandGuidsFromCatalogCommandsSection(tree* commandsSectionNode) {
+    if (!commandsSectionNode || commandsSectionNode->get_type() != node_type::nd_list) {
+        return;
+    }
+
+    // Рекурсивно обходим секцию команд и ищем GUID'ы команд
+    traverseTreeForCommandGuids(commandsSectionNode);
+}
+
+void ParseMetadataCommand::traverseTreeForCommandGuids(tree* node) {
+    if (!node) return;
+
+    // Ищем GUID'ы команд (они находятся в структурах типа {2, guid_command, ...})
+    if (node->get_type() == node_type::nd_list && node->get_num_subnode() >= 2) {
+        tree* firstChild = node->get_subnode(0);
+        if (firstChild && firstChild->get_type() == node_type::nd_number) {
+            std::string numberValue = firstChild->get_value().c_str();
+            if (numberValue == "2") {  // Структура команды начинается с числа 2
+                tree* guidNode = node->get_subnode(1);
+                if (guidNode && guidNode->get_type() == node_type::nd_guid) {
+                    std::string commandGuid = guidNode->get_value().c_str();
+                    if (!commandGuid.empty()) {
+                        std::transform(commandGuid.begin(), commandGuid.end(), commandGuid.begin(), ::tolower);
+                        fileGuidToCategoryMap_[commandGuid] = "Команды справочников";
+                        std::cout << "DEBUG: Found catalog command GUID: " << commandGuid << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
+    // Рекурсивно обходим дочерние узлы
+    for (int i = 0; i < node->get_num_subnode(); ++i) {
+        tree* child = node->get_subnode(i);
+        traverseTreeForCommandGuids(child);
+    }
+}
+
+void ParseMetadataCommand::extractCommandsFromCatalogFiles(const std::string& inputDir) {
+    std::cout << "DEBUG: Extracting commands from catalog files..." << std::endl;
+
+    // Проходим по всем справочникам из catalogGuidToNameMap_
+    for (const auto& pair : catalogGuidToNameMap_) {
+        const std::string& catalogGuid = pair.first;
+        const std::string& catalogName = pair.second;
+
+        // Ищем файл справочника
+        fs::path catalogFilePath = fs::path(inputDir) / catalogGuid;
+
+        if (!fs::exists(catalogFilePath) || !fs::is_regular_file(catalogFilePath)) {
+            std::cout << "DEBUG: Catalog file not found: " << catalogFilePath.string() << std::endl;
+            continue;
+        }
+
+        // Парсим файл справочника и извлекаем команды
+        try {
+            std::ifstream file(catalogFilePath.string(), std::ios::binary);
+            if (!file.is_open()) {
+                std::cout << "DEBUG: Cannot open catalog file: " << catalogFilePath.string() << std::endl;
+                continue;
+            }
+
+            std::string content((std::istreambuf_iterator<char>(file)),
+                               std::istreambuf_iterator<char>());
+            file.close();
+
+            if (content.empty()) {
+                continue;
+            }
+
+            // Парсим файл справочника
+            tree* catalogTree = parse_1Ctext(content, catalogFilePath.string());
+            if (catalogTree) {
+                // Ищем секцию команд и извлекаем GUID'ы команд
+                traverseTreeForCategoryFileGuids(catalogTree);
+                delete catalogTree;
+            } else {
+                std::cout << "DEBUG: Failed to parse catalog file: " << catalogFilePath.string() << std::endl;
+            }
+
+        } catch (const std::exception& ex) {
+            std::cout << "DEBUG: Error parsing catalog file " << catalogFilePath.string() << ": " << ex.what() << std::endl;
+        }
+    }
+
+    std::cout << "DEBUG: Finished extracting commands from catalog files" << std::endl;
+}
+
+std::string ParseMetadataCommand::getCatalogNameByGuid(const std::string& catalogGuid) {
+    // Простая реализация - возвращаем общий путь "Справочники"
+    return "Справочники";
+}
+
+bool ParseMetadataCommand::isLikelyCatalogCommand(const boost::filesystem::path& filePath, const std::string& content) {
+    // Проверяем, является ли файл командой справочника по расположению в подкаталоге
+    // с именем GUID команды и по содержимому (для файлов text/module)
+
+    std::cout << "DEBUG: Checking if file is catalog command: " << filePath.string() << std::endl;
+
+    // Проверяем, находится ли файл в подкаталоге (команда справочника)
+    if (filePath.parent_path() != filePath.root_path() && filePath.parent_path().filename() != ".") {
+        std::string parentDirName = filePath.parent_path().filename().string();
+        std::string filename = filePath.filename().string();
+
+        std::cout << "DEBUG: Parent dir: " << parentDirName << ", filename: " << filename << std::endl;
+
+        // Проверяем, является ли имя родительского каталога GUID'ом с расширением вида .2
+        size_t dotPos = parentDirName.find('.');
+        if (dotPos != std::string::npos) {
+            std::string guidPart = parentDirName.substr(0, dotPos);
+            std::string extPart = parentDirName.substr(dotPos + 1);
+
+            std::cout << "DEBUG: guidPart: " << guidPart << ", extPart: " << extPart << std::endl;
+
+            // Проверяем, что GUID часть выглядит как настоящий GUID (36 символов с дефисами на нужных местах)
+            if (guidPart.length() == 36 &&
+                guidPart[8] == '-' && guidPart[13] == '-' && guidPart[18] == '-' && guidPart[23] == '-' &&
+                (extPart == "0" || extPart == "1" || extPart == "2" || extPart == "3" || extPart == "4" || extPart == "5")) {
+
+                std::cout << "DEBUG: GUID format is valid" << std::endl;
+
+                // Если это основной файл команды (text или module), проверяем содержимое
+                if (filename == "text" || filename == "module") {
+                    bool hasCommandHandler = content.find("ОбработкаКоманды") != std::string::npos ||
+                        content.find("Procedure") != std::string::npos ||
+                        content.find("Процедура") != std::string::npos ||
+                        content.find("&НаКлиенте") != std::string::npos;
+                    std::cout << "DEBUG: Has command handler: " << (hasCommandHandler ? "true" : "false") << std::endl;
+                    if (hasCommandHandler) {
+                        return true;
+                    }
+                } else {
+                    // Для других файлов в том же каталоге (info, form и т.д.) - тоже считаем командами
+                    std::cout << "DEBUG: Non-text file in command directory, treating as command" << std::endl;
+                    return true;
+                }
+            } else {
+                std::cout << "DEBUG: GUID format is invalid" << std::endl;
+            }
+        } else {
+            std::cout << "DEBUG: No dot in parent dir name" << std::endl;
+        }
+    } else {
+        std::cout << "DEBUG: File not in subdirectory" << std::endl;
+    }
+
+    std::cout << "DEBUG: File is not a catalog command" << std::endl;
+    return false;
 }
 
 } // namespace v8unpack

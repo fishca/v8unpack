@@ -825,6 +825,30 @@ src/commands/concrete/BuildCommand.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/BuildCommand.cpp.s
 .PHONY : src/commands/concrete/BuildCommand.cpp.s
 
+src/commands/concrete/DeflateCommand.o: src/commands/concrete/DeflateCommand.cpp.o
+.PHONY : src/commands/concrete/DeflateCommand.o
+
+# target to build an object file
+src/commands/concrete/DeflateCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/DeflateCommand.cpp.o
+.PHONY : src/commands/concrete/DeflateCommand.cpp.o
+
+src/commands/concrete/DeflateCommand.i: src/commands/concrete/DeflateCommand.cpp.i
+.PHONY : src/commands/concrete/DeflateCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/DeflateCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/DeflateCommand.cpp.i
+.PHONY : src/commands/concrete/DeflateCommand.cpp.i
+
+src/commands/concrete/DeflateCommand.s: src/commands/concrete/DeflateCommand.cpp.s
+.PHONY : src/commands/concrete/DeflateCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/DeflateCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/DeflateCommand.cpp.s
+.PHONY : src/commands/concrete/DeflateCommand.cpp.s
+
 src/commands/concrete/ExampleCommand.o: src/commands/concrete/ExampleCommand.cpp.o
 .PHONY : src/commands/concrete/ExampleCommand.o
 
@@ -872,6 +896,30 @@ src/commands/concrete/HelpCommand.s: src/commands/concrete/HelpCommand.cpp.s
 src/commands/concrete/HelpCommand.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/HelpCommand.cpp.s
 .PHONY : src/commands/concrete/HelpCommand.cpp.s
+
+src/commands/concrete/InflateCommand.o: src/commands/concrete/InflateCommand.cpp.o
+.PHONY : src/commands/concrete/InflateCommand.o
+
+# target to build an object file
+src/commands/concrete/InflateCommand.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/InflateCommand.cpp.o
+.PHONY : src/commands/concrete/InflateCommand.cpp.o
+
+src/commands/concrete/InflateCommand.i: src/commands/concrete/InflateCommand.cpp.i
+.PHONY : src/commands/concrete/InflateCommand.i
+
+# target to preprocess a source file
+src/commands/concrete/InflateCommand.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/InflateCommand.cpp.i
+.PHONY : src/commands/concrete/InflateCommand.cpp.i
+
+src/commands/concrete/InflateCommand.s: src/commands/concrete/InflateCommand.cpp.s
+.PHONY : src/commands/concrete/InflateCommand.s
+
+# target to generate assembly for a file
+src/commands/concrete/InflateCommand.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/v8unpack.dir/build.make CMakeFiles/v8unpack.dir/src/commands/concrete/InflateCommand.cpp.s
+.PHONY : src/commands/concrete/InflateCommand.cpp.s
 
 src/commands/concrete/ListCommand.o: src/commands/concrete/ListCommand.cpp.o
 .PHONY : src/commands/concrete/ListCommand.o
@@ -1521,12 +1569,18 @@ help:
 	@echo "... src/commands/concrete/BuildCommand.o"
 	@echo "... src/commands/concrete/BuildCommand.i"
 	@echo "... src/commands/concrete/BuildCommand.s"
+	@echo "... src/commands/concrete/DeflateCommand.o"
+	@echo "... src/commands/concrete/DeflateCommand.i"
+	@echo "... src/commands/concrete/DeflateCommand.s"
 	@echo "... src/commands/concrete/ExampleCommand.o"
 	@echo "... src/commands/concrete/ExampleCommand.i"
 	@echo "... src/commands/concrete/ExampleCommand.s"
 	@echo "... src/commands/concrete/HelpCommand.o"
 	@echo "... src/commands/concrete/HelpCommand.i"
 	@echo "... src/commands/concrete/HelpCommand.s"
+	@echo "... src/commands/concrete/InflateCommand.o"
+	@echo "... src/commands/concrete/InflateCommand.i"
+	@echo "... src/commands/concrete/InflateCommand.s"
 	@echo "... src/commands/concrete/ListCommand.o"
 	@echo "... src/commands/concrete/ListCommand.i"
 	@echo "... src/commands/concrete/ListCommand.s"
