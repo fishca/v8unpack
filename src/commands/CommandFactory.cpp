@@ -5,8 +5,8 @@
 #include "concrete/PackCommand.h"
 #include "concrete/ParseCommand.h"
 #include "concrete/BuildCommand.h"
-// #include "concrete/DeflateCommand.h"
-// #include "concrete/InflateCommand.h"
+#include "concrete/DeflateCommand.h"
+#include "concrete/InflateCommand.h"
 #include "concrete/ListCommand.h"
 #include "concrete/VersionCommand.h"
 #include "concrete/HelpCommand.h"
@@ -31,8 +31,8 @@ std::shared_ptr<CommandRegistry> CommandFactory::createRegistry() {
     registry->registerCommand(createParseCommand());
     registry->registerCommand(createParseMetadataCommand());
     registry->registerCommand(createBuildCommand());
-    // registry->registerCommand(createDeflateCommand());
-    // registry->registerCommand(createInflateCommand());
+    registry->registerCommand(createDeflateCommand());
+    registry->registerCommand(createInflateCommand());
     registry->registerCommand(createListCommand());
     registry->registerCommand(createVersionCommand());
     registry->registerCommand(createHelpCommand());
@@ -60,6 +60,14 @@ std::unique_ptr<Command> CommandFactory::createParseMetadataCommand() {
 
 std::unique_ptr<Command> CommandFactory::createBuildCommand() {
     return std::make_unique<BuildCommand>(logger_);
+}
+
+std::unique_ptr<Command> CommandFactory::createDeflateCommand() {
+    return std::make_unique<DeflateCommand>(logger_);
+}
+
+std::unique_ptr<Command> CommandFactory::createInflateCommand() {
+    return std::make_unique<InflateCommand>(logger_);
 }
 
 std::unique_ptr<Command> CommandFactory::createListCommand() {

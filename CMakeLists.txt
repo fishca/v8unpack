@@ -62,6 +62,8 @@ set (V8UNPACK_SOURCES
 	src/commands/concrete/ParseCommand.cpp
 	src/commands/concrete/ParseMetadataCommand.cpp
 	src/commands/concrete/BuildCommand.cpp
+	src/commands/concrete/DeflateCommand.cpp
+	src/commands/concrete/InflateCommand.cpp
 	src/commands/concrete/VersionCommand.cpp
 	src/commands/concrete/HelpCommand.cpp
 	src/commands/concrete/ListCommand.cpp

@@ -13,7 +13,6 @@ class PackCommand;
 class ParseCommand;
 class BuildCommand;
 class DeflateCommand;
-class DeflateCommand;
 class InflateCommand;
 class ListCommand;
 class VersionCommand;

@@ -108,6 +108,14 @@ int Inflate(const std::string &in_filename, const std::string &out_filename)
 	} else {
 
 		fs::path ouf(out_filename);
+		// Создаем родительский каталог, если он не существует
+	if (ouf.has_parent_path()) {
+			boost::system::error_code ec;
+			fs::create_directories(ouf.parent_path(), ec);
+			if (ec) {
+				return V8UNPACK_INFLATE_OUT_FILE_NOT_CREATED;
+			}
+		}
 		output.reset(new fs::ofstream (ouf, std::ios_base::binary));
 
 		if (!*output) {
