@@ -16,6 +16,7 @@ Makefile
 /bin
 gmon.out
 /build
+/test_data
 
 cmake-build-*/*
 .idea/*
