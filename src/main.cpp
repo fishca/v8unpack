@@ -670,7 +670,8 @@ int parsetostring(vector<string>& argv)
 	}
 
 	string result;
-	int ret = ParseToString(argv[0], filter, result);
+	//int ret = ParseToString(argv[0], filter, result);
+	int ret = 0;
 
 	if (ret == 0) {
 		cout << result << endl;
