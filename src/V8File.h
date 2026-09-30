@@ -241,9 +241,12 @@ struct Format15
 	typedef stBlockHeader block_header_t;
 	typedef stElemAddr    elem_addr_t;
 
-	static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
+	//static const uint32_t UNDEFINED_VALUE = 0x7fffffff;
+	static const uint32_t UNDEFINED_VALUE = 0x7FFFFFFF;
 	static const std::streamoff BASE_OFFSET = 0;
-	static const uint32_t DEFAULT_PAGE_SIZE = 512;
+	//static const uint32_t DEFAULT_PAGE_SIZE = 512;
+	static const uint64_t DEFAULT_PAGE_SIZE_TOC = 0x200;
+	static const uint64_t DEFAULT_PAGE_SIZE     = 0x200;
 
 	template <class _Elem, class _Traits>
 	static std::basic_ostream<_Elem, _Traits>&
@@ -258,9 +261,12 @@ struct Format16
 	typedef stBlockHeader64 block_header_t;
 	typedef stElemAddr64    elem_addr_t;
 
-	static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
+	//static const uint64_t UNDEFINED_VALUE = 0xffffffffffffffff;
+	static const uint64_t UNDEFINED_VALUE = 0xFFFFFFFFFFFFFFFF;
 	static const std::streamoff BASE_OFFSET = 0x1359;
-	static const uint64_t DEFAULT_PAGE_SIZE = 512;
+	//static const uint64_t DEFAULT_PAGE_SIZE = 512;
+	static const uint64_t DEFAULT_PAGE_SIZE_TOC = 0x10000;
+	static const uint64_t DEFAULT_PAGE_SIZE     = 0x200;
 
 	static std::basic_ostream<char>&
 	placeholder(std::basic_ostream<char>& _Ostr);
@@ -278,7 +284,6 @@ public:
 	virtual ~CV8File() = default;
 
 	CV8File(const CV8File &src);
-
 
 	void Dispose();
 
@@ -337,6 +342,13 @@ int Parse(
 		const std::string                &dirname,
 		const std::vector< std::string > &filter
 );
+
+int Parse2(
+	const std::string& filename,
+	const std::string& dirname,
+	const std::vector< std::string >& filter
+);
+
 
 int Parse_Test(
 	const std::string& filename,
@@ -403,35 +415,6 @@ try_inflate(
 		const boost::filesystem::path &dest
 		);
 
-/**
- * @brief Распаковывание конфигурации 1C v8 в строку
- * Функция аналогична Parse, но сохраняет все распакованные данные в строку вместо директория
- * @param filename_in Входной файл V8 (cf, epf, erf)
- * @param filter Список имен элементов для распаковки (если пустой - все элементы)
- * @param result Выходная строка с распакованными данными
- * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
- */
-int ParseToString(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
-
-/**
- * @brief Распаковывание конфигурации 1C v8 в организованную файловую структуру по GUID метаданных
- * Функция анализирует результаты ParseToString и сохраняет данные в поддиректории по типам метаданных
- * @param config_string Входная строка с распакованными данными от ParseToString
- * @param dirname Каталог для сохранения файлов
- * @return Код возврата (0 - успешно, отрицательные значения - ошибки)
- */
-int ParseToStringWithFiles(const std::string &config_string, const std::string &dirname);
-
-/**
- * @brief Рекурсивная распаковка V8 файла (* .cf, .epf и т.д.) в строку с сохранением иерархии путей
- * Аналог Parse(), но вместо папки выводит в строку с разделителями "--- path/to/elem ---" и рекурсивной обработкой вложенных V8.
- * @param filename_in Входной файл V8
- * @param filter Список имен элементов для распаковки (пустой - все)
- * @param result Выходная строка с данными
- * @return 0 - успех, отрицательно - ошибка
- */
-//int ParseToString2(const std::string &filename_in, const std::vector<std::string> &filter, std::string &result);
-
 template<typename T>
 void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)
 {
@@ -441,5 +424,7 @@ void full_copy(std::basic_istream<T> &in_file, std::basic_ostream<T> &out_file)
 			std::ostreambuf_iterator<T>(out_file)
 	);
 }
+
+int ParseListFiles(const string& filename);
 
 } // namespace v8unpack
